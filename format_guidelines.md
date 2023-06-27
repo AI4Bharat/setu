@@ -14,9 +14,10 @@
                         /               |                   \
               Line -> Line            Line                 Line
 ```
+
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-## SOURCE LEVEL FORMAT
+## Source Level Format
 
 ```python
 {
@@ -35,7 +36,7 @@
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-## FOLDER LEVEL FORMAT
+## Folder Level Format
 
 ```python
 {
@@ -51,7 +52,7 @@
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-## DOCUMENT LEVEL FORMAT
+## Document Level Format
 
 ```python
 {   
@@ -88,12 +89,12 @@
 - 1 jsonl will contain jsons of all the documents for a given folder.
 - Naming Convention:
     - Suppose, in sangraha, in `AajTak` website, we are at blog `123134123`
-    - Name: `<source-name>_<dataset-type>_<website_name>_<blog_id>.jsonl`
+    - Name: `<source-name>_<dataset-type>_<website_name>_<id>.jsonl`
     - Here, name will be: sangraha_crawl_aajtak_123134123.jsonl
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-# LINE LEVEL FORMAT
+## Line Level Format
 
 ```python
 {
@@ -114,6 +115,17 @@
 - 1 jsonl will contain jsons of all the lines for a given document.
 - Naming Convention:
     - Suppose, in sangraha, in aajtak website, in blog `123134123`, we are at line 10
-    - Name: `<source-name>_<dataset-type>_<website_name>_<blog_id>_lines.jsonl`
+    - Name: `<source-name>_<dataset-type>_<website_name>_<id>_lines.jsonl`
     - Here, the name will be: sangraha_crawl_aajtak_123134123_lines.jsonl
     - The json at 10th place should contain line-level stats of line 10 in the document.
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+## Name Convention Table
+
+|   Level   |                                Name                                 |                    Sections                     |
+|:---------:|:-------------------------------------------------------------------:|:-----------------------------------------------:|
+| Source    | `<source-name>_<dataset-type>.jsonl`                                | [source-level format](#source-level-format)     |
+| Folder    | `<source-name>_<dataset-type>_<website_name>.jsonl`                 | [folder-level format](#folder-level-format)     |
+| Document  | `<source-name>_<dataset-type>_<website_name>_<id>.jsonl`            | [document-level format](#document-level-format) |
+| Line      | `<source-name>_<dataset-type>_<website_name>_<id>_lines.jsonl`      | [line-level format](#line-level-format)         |
