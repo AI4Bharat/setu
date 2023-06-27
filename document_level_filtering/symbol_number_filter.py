@@ -14,6 +14,7 @@ def symbol_number_filter(text, alphanumeric_threshold, num_to_alpha_ratio):
     print(doc_counter)
 
     
+
     
 
     return drop_or_not
