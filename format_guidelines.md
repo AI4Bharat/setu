@@ -30,6 +30,9 @@
 ```
 
 - 1 jsonl will contain jsons of all the sources.
+- Large collection of text obtained through a method like crawling - eg: Github, ArXiv paper, Youtube Videos
+- Whether the source is existing or are we creating them?
+- All the features of interest for a particular source.
 - Naming Convention:
         - Name: `<source-name>_<dataset-type>.jsonl`
         - Eg: sangraha_crawl.jsonl, sangraha_pdf.jsonl, pile_crawl.jsonl etc
@@ -45,6 +48,10 @@
 ```
 
 - 1 jsonl will contain jsons of all folders for a given source.
+- For a given folder - `channel`. All the flags coming from human annotators should be here.
+- Also, recompute all the distribution statistics here.
+- A statistics object should be for analysis.
+- Also, have a human annotation object which contains certain flags like toxicity.
 - Naming Convention:
     - Suppose for crawl, we are crawling `AajTak"` website.
     - Name: `<source-name>_<dataset-type>_<website_name>.jsonl`
@@ -87,6 +94,7 @@
 ```
 
 - 1 jsonl will contain jsons of all the documents for a given folder.
+- Add raw data.
 - Naming Convention:
     - Suppose, in sangraha, in `AajTak` website, we are at blog `123134123`
     - Name: `<source-name>_<dataset-type>_<website_name>_<id>.jsonl`
