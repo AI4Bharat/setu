@@ -1,3 +1,0 @@
-For Devanagari:
-Hindi, Marathi, Bodo, Maithili, Sindhi, Nepali and Sanskrit.
-Unicode range for characters to be considered in symbol set = [u0966, u0970]

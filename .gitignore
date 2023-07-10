@@ -160,3 +160,7 @@ cython_debug/
 #.idea/
 
 models
+dashboard/csv
+dashboard/parquet
+IndicLID
+pdfs

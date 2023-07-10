@@ -16,7 +16,7 @@ def run_indiclid(text):
     indiclid = IndicLID()
     
     results = indiclid.batch_predict([text], 1)
-
+    
     return results
 
 
