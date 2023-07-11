@@ -13,9 +13,9 @@ line_lengths = dict()
 def calc_line_lengths(a):
     ll = dict()
 
-    ll["wc"] = len(a["body"].split())
-    ll["cc"] = len(a["body"])
-    ll["bc"] = len(str.encode(a["body"]))
+    ll["wc"] = len(a["body"].split())          # word count
+    ll["cc"] = len(a["body"])                  # character count
+    ll["bc"] = len(str.encode(a["body"]))      # byte count
 
     line_lengths[a["title"]] = ll
 
