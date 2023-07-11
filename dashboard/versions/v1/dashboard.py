@@ -15,6 +15,11 @@ from minio import Minio
 import streamlit.components.v1 as components
 from boilerpipe.extract import Extractor
 
+PIPELINE_ROOT_DIR = os.path.dirname(    # dashboard
+                        os.path.dirname(    # versions
+                            os.path.dirname(    # v1
+                                os.path.dirname(__file__))))
+
 st.set_page_config(layout="wide")
 
 @st.cache_data
@@ -75,7 +80,7 @@ def extract_using_trafilatura(html_str):
     return cleaned_text
 
 
-ROOT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "parquet")
+ROOT_DIR = os.path.join(PIPELINE_ROOT_DIR, "dashboard", "parquet")
 WEBSITES = load_domain_list()
 EOS_CLIENT = load_minio_client()
 

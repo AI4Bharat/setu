@@ -14,12 +14,16 @@ import minio
 from minio import Minio
 import streamlit.components.v1 as components
 from boilerpipe.extract import Extractor
+
+PIPELINE_ROOT_DIR = os.path.dirname(    # dashboard
+                        os.path.dirname(    # versions
+                            os.path.dirname(    # v2
+                                os.path.dirname(__file__))))
+
 sys.path.insert(0, os.path.join(
-    os.path.dirname(    # phallm-data-cleaning-pipeline
-        os.path.dirname(    # dashboard
-            os.path.dirname(    # versions
-                os.path.dirname(    # v2
-                    os.path.dirname(__file__))))), "pipeline"))
+    PIPELINE_ROOT_DIR, "pipeline"))
+
+from language_identification.lid_pipeline import LIDPipeline
 
 st.set_page_config(layout="wide")
 
@@ -80,10 +84,41 @@ def extract_using_trafilatura(html_str):
     cleaned_text = trafilatura.bare_extraction(html_str, include_images=False)
     return cleaned_text
 
+@st.cache_resource
+def load_lid(
+    IndicLID_FTN_path='models/indiclid-ftn/model_baseline_roman.bin',
+    IndicLID_FTR_path='models/indiclid-ftr/model_baseline_roman.bin',
+    IndicLID_BERT_path='models/indiclid-bert/basline_nn_simple.pt',
+    input_threshold=0.5,
+    roman_lid_threshold=0.6, 
+    nllb_model_path="models/lid218e.bin", 
+    mapping_json_path="./language_mapping.json"):
 
-ROOT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "parquet")
+    return LIDPipeline(
+        IndicLID_FTN_path, IndicLID_FTR_path,
+        IndicLID_BERT_path, input_threshold,
+        roman_lid_threshold, nllb_model_path, 
+        mapping_json_path
+    )
+    
+@st.cache_data
+def perform_lid(text):
+    res = LID_PIPELINE.run_single(text)
+    return res
+
+
+ROOT_DIR = os.path.join(PIPELINE_ROOT_DIR, "dashboard", "parquet")
 WEBSITES = load_domain_list()
 EOS_CLIENT = load_minio_client()
+LID_PIPELINE = load_lid(
+    IndicLID_FTN_path=os.path.join(PIPELINE_ROOT_DIR, 'pipeline', 'language_identification', 'models', 'indiclid-ftn', 'model_baseline_roman.bin'),
+    IndicLID_FTR_path=os.path.join(PIPELINE_ROOT_DIR, 'pipeline', 'language_identification', 'models', 'indiclid-ftr', 'model_baseline_roman.bin'),
+    IndicLID_BERT_path=os.path.join(PIPELINE_ROOT_DIR, 'pipeline', 'language_identification', 'models', 'indiclid-bert', 'basline_nn_simple.pt'),
+    input_threshold=0.5,
+    roman_lid_threshold=0.6, 
+    nllb_model_path=os.path.join(PIPELINE_ROOT_DIR, 'pipeline', 'language_identification', 'models', 'lid218e.bin'), 
+    mapping_json_path=os.path.join(PIPELINE_ROOT_DIR, 'pipeline', 'language_identification', 'language_mapping.json'),
+)
 
 language_website_mapping, languages = load_language_website_mapping()
 
@@ -112,6 +147,7 @@ with raw_html_radio:
 with reextract_pure_boilerpipe_radio:
     pure_boilerpipe_or_not = st.radio("Do you want to re-extract using Boilerpipe without `ok-check`?", (True, False))
 
+cleaned_text = {}
 if bool(raw_html_or_not):
     st.write(raw_html)
 else:
@@ -134,15 +170,14 @@ else:
                 'url': raw_html['url'],
                 'timestamp': raw_html['timestamp']
             }
-            st.write(art)
-        else:
-            st.write(boilerpipe_cleaned_text)
+            boilerpipe_cleaned_text = art
+
+        st.write(boilerpipe_cleaned_text)
 
     with trafilatura_column:
         st.subheader("Trafilatura")
         if selected_url:
             try:
-                cleaned_text = {}
                 trafilatura_cleaned_text = extract_using_trafilatura(raw_html["html"])
                 if bool(trafilatura_output_format_as_boilerpipe):
                     cleaned_text["title"] = trafilatura_cleaned_text["title"]
@@ -159,3 +194,23 @@ else:
         else:
             st.write("Please select a URL to compare")
 
+lid_section, _, _ = st.columns(3)
+
+with lid_section:
+    st.subheader("Language Identification")
+    perform_lid_or_not = st.radio("Perform LID?", (True, False))
+    use_trafilatura_or_boiler = st.radio("Choose which text extraction output to use?", ("Trafilatura", "Boilerpipe"))
+
+    if bool(perform_lid_or_not):
+        in_text = None
+        if use_trafilatura_or_boiler == "Trafilatura":
+            in_text = cleaned_text["body"]
+        else:
+            in_text = boilerpipe_cleaned_text["body"]
+        res = perform_lid(in_text.replace("\n", ""))
+        st.write(in_text)
+        text_section, output_section = st.columns(2)
+        with text_section:
+            st.write("Identified Language/s: ")
+        with output_section:
+            st.write(res)

@@ -162,5 +162,5 @@ cython_debug/
 models
 dashboard/csv
 dashboard/parquet
-IndicLID
+# IndicLID
 pdfs
