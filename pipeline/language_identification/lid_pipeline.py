@@ -87,8 +87,8 @@ class LIDPipeline():
         cld3_results = self.run_cld3([text])
         nllb_results = self.run_nllb([text]) 
 
-        majority_lang = self.hard_vote(indiclid_res=indiclid_results, cld3_res=cld3_results, nllb_res=nllb_results)
-        return majority_lang
+        majority_lang, language_vote = self.hard_vote(indiclid_res=indiclid_results, cld3_res=cld3_results, nllb_res=nllb_results)
+        return majority_lang, language_vote
 
     def run_batch(self, texts):
         indiclid_results = self.run_indiclid(texts)
@@ -103,15 +103,19 @@ class LIDPipeline():
         
         overall_res = indiclid_res + cld3_res + nllb_res
         language_vote = {}
+        detector_mapping = {0: "indiclid", 1: "cld3", 2: "nllb"}
 
         for i in range(len(overall_res)):
             res = overall_res[i]
-            language_vote[res["language"]] = language_vote.get(res["language"], 0) + 1
+            if res["language"] not in language_vote.keys():
+                language_vote[res["language"]] = {}
+            language_vote[res["language"]]["total_votes"] = language_vote[res["language"]].get("total_votes", 0) + 1
+            language_vote[res["language"]][detector_mapping[i]] = res["probability" if "probability" in tuple(res.keys()) else "logits"]
         
         lang_vote_pair = list(language_vote.items())
-        lang_vote_pair.sort(reverse=True, key=lambda x: x[1])
+        lang_vote_pair.sort(reverse=True, key=lambda x: x[1]["total_votes"])
         majority_lang = lang_vote_pair[0]
-        return majority_lang
+        return majority_lang, language_vote
 
     def soft_vote(self, indiclid_res, cld3_res, nllb_res):
         pass
@@ -121,7 +125,8 @@ if __name__ == "__main__":
 
     lid = LIDPipeline()
     text = "صباح الخير، الجو جميل اليوم والسماء صافية."
-    lid.run_single(text)
+    
+    print(lid.run_single(text))
 
     print("\n\n Batched Results\n")
 
@@ -129,4 +134,4 @@ if __name__ == "__main__":
         "صباح الخير، الجو جميل اليوم والسماء صافية.",
         "This text is written in English.",
     ]
-    lid.run_batch(texts)
+    print(lid.run_batch(texts))

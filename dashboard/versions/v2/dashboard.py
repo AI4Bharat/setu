@@ -15,24 +15,31 @@ from minio import Minio
 import streamlit.components.v1 as components
 from boilerpipe.extract import Extractor
 
+st.set_page_config(layout="wide")
+
 PIPELINE_ROOT_DIR = os.path.dirname(    # dashboard
                         os.path.dirname(    # versions
                             os.path.dirname(    # v2
                                 os.path.dirname(__file__))))
 
-sys.path.insert(0, os.path.join(
-    PIPELINE_ROOT_DIR, "pipeline"))
+sys.path.insert(0, os.path.join(PIPELINE_ROOT_DIR, "pipeline"))
 
 from language_identification.lid_pipeline import LIDPipeline
-
-st.set_page_config(layout="wide")
+from line_filters.run_line_filter import filter_line_level_stats
+# from dashboard.plot.plots import (
+    
+# )
 
 @st.cache_data
 def load_language_website_mapping():
     with open(os.path.join(os.path.dirname(ROOT_DIR), "lang_website_mapping.json")) as lang_website_f:
         language_website_mapping = json.load(lang_website_f)
     languages = tuple(language_website_mapping.keys())
-    return language_website_mapping, languages
+
+    with open(os.path.join(PIPELINE_ROOT_DIR, "pipeline", "language_identification", "lang_iso_mapping.json")) as lang_website_f:
+        language_iso_mapping = json.load(lang_website_f)
+        
+    return language_website_mapping, languages, language_iso_mapping
 
 @st.cache_data
 def load_domain_list(language="*", format=".parquet"):
@@ -103,9 +110,21 @@ def load_lid(
     
 @st.cache_data
 def perform_lid(text):
-    res = LID_PIPELINE.run_single(text)
-    return res
+    majority_lang, votes = LID_PIPELINE.run_single(text)
+    return majority_lang, votes
 
+@st.cache_data
+def perform_line_filters(text, lang, iso_code):
+    data = {
+        "raw_text": text,
+        "metadata": {
+            "lang": lang,
+            "iso_code": iso_code,
+        }
+    }
+    # st.write(data)
+    fmt, lines = filter_line_level_stats(data, LID_PIPELINE)
+    return fmt, lines
 
 ROOT_DIR = os.path.join(PIPELINE_ROOT_DIR, "dashboard", "parquet")
 WEBSITES = load_domain_list()
@@ -120,7 +139,7 @@ LID_PIPELINE = load_lid(
     mapping_json_path=os.path.join(PIPELINE_ROOT_DIR, 'pipeline', 'language_identification', 'language_mapping.json'),
 )
 
-language_website_mapping, languages = load_language_website_mapping()
+language_website_mapping, languages, language_iso_mapping = load_language_website_mapping()
 
 selected_language = st.selectbox("Select Language", languages)
 
@@ -194,23 +213,66 @@ else:
         else:
             st.write("Please select a URL to compare")
 
-lid_section, _, _ = st.columns(3)
+lid_or_not_section, line_filter_or_not_section, document_filter_or_not_section, visualize_cleaned_output_or_not_section = st.columns(4)
+_trafilatura_data, _boilerpipe_data = {}, {}
 
-with lid_section:
-    st.subheader("Language Identification")
+with lid_or_not_section:
     perform_lid_or_not = st.radio("Perform LID?", (True, False))
-    use_trafilatura_or_boiler = st.radio("Choose which text extraction output to use?", ("Trafilatura", "Boilerpipe"))
+with line_filter_or_not_section:
+    perform_line_filter_or_not = st.radio("Perform Line Filter?", (True, False))
+with document_filter_or_not_section:
+    perform_document_filter_or_not = st.radio("Perform Document Filter?", (True, False))
+with visualize_cleaned_output_or_not_section:
+    visualize_cleaned_output_or_not = st.radio("Perform actual filtering and visualize the cleaned text?", (True, False))
 
-    if bool(perform_lid_or_not):
-        in_text = None
-        if use_trafilatura_or_boiler == "Trafilatura":
-            in_text = cleaned_text["body"]
-        else:
-            in_text = boilerpipe_cleaned_text["body"]
-        res = perform_lid(in_text.replace("\n", ""))
-        st.write(in_text)
-        text_section, output_section = st.columns(2)
-        with text_section:
-            st.write("Identified Language/s: ")
-        with output_section:
-            st.write(res)
+st.markdown(">### IMPORTANT: Left-side = `Trafilatura` & Right-side = `Boilerpipe`")
+
+@st.cache_data
+def lid_pipe(in_text):
+    majority_lang, votes = perform_lid(in_text.replace("\n", ""))
+    majority_lang_section, votes_section = st.columns(2)
+    with majority_lang_section:
+        st.markdown("##### Majority Language")
+        st.write(dict.fromkeys([majority_lang[0]], majority_lang[1]))
+    with votes_section:
+        st.markdown("##### Votes")
+        st.write(votes)
+    return majority_lang, votes
+
+if perform_lid_or_not:
+    st.subheader("Language Identification")
+    lid_traf_col, lid_boil_col = st.columns(2)
+    in_text = None
+    with lid_traf_col:
+        in_text = cleaned_text["body"]
+        _trafilatura_data["majority_lang"], _trafilatura_data["votes"] = lid_pipe(in_text)
+    with lid_boil_col:
+        in_text = boilerpipe_cleaned_text["body"]
+        _boilerpipe_data["majority_lang"], _boilerpipe_data["votes"] = lid_pipe(in_text)
+
+if perform_line_filter_or_not:
+    st.subheader("Line Filter")
+    lf_traf_col, lf_boil_col = st.columns(2)
+    in_text = None
+    with lf_traf_col:
+        in_text = cleaned_text["body"]
+        _trafilatura_data["line_filter_stats"], _trafilatura_data["input_lines"] = perform_line_filters(in_text, _trafilatura_data["majority_lang"][0], language_iso_mapping[_trafilatura_data["majority_lang"][0]])
+        # st.write(_trafilatura_data["input_lines"])
+        # st.write(_trafilatura_data["line_filter_stats"])
+        zipped_res = list(zip(_trafilatura_data["input_lines"], _trafilatura_data["line_filter_stats"]))
+        st.markdown(">Please expand below given LIST to see sentence segmentation results")
+        st.json(_trafilatura_data["input_lines"], expanded=False)
+        st.markdown(">Please expand below given JSON to see line-level metadata")
+        st.json(zipped_res, expanded=False)
+        st.markdown("##### Plots for Line-Level Filters")
+    with lf_boil_col:
+        in_text = boilerpipe_cleaned_text["body"]
+        _boilerpipe_data["line_filter_stats"], _boilerpipe_data["input_lines"] = perform_line_filters(in_text, _boilerpipe_data["majority_lang"][0], language_iso_mapping[_boilerpipe_data["majority_lang"][0]])
+        # st.write(_boilerpipe_data["input_lines"])
+        # st.write(_boilerpipe_data["line_filter_stats"])
+        zipped_res = list(zip(_boilerpipe_data["input_lines"], _boilerpipe_data["line_filter_stats"]))
+        st.markdown(">Please expand below given LIST to see sentence segmentation results")
+        st.json(_boilerpipe_data["input_lines"], expanded=False)
+        st.markdown(">Please expand below given JSON to see line-level metadata")
+        st.json(zipped_res, expanded=False)
+        st.markdown("##### Plots for Line-Level Filters")
