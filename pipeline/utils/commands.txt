@@ -1,0 +1,8 @@
+Start Master
+./spark-3.4.1-bin-hadoop3/sbin/start-master.sh
+
+Start a worker
+./spark-3.4.1-bin-hadoop3/sbin/start-worker.sh spark://e2e-100-5.ssdcloudindia.net:7077  -c 56 -m 150G
+
+Submit a job
+spark-submit --master spark://e2e-100-5.ssdcloudindia.net:7077 --num-executors 56 --executor-cores 1 --executor-memory 2G --driver-memory 2G ~/phallm-data-cleaning-pipeline/pipeline/utils/convert_to_parquet.py

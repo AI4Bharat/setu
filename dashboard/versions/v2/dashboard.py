@@ -24,11 +24,11 @@ PIPELINE_ROOT_DIR = os.path.dirname(    # dashboard
 
 sys.path.insert(0, os.path.join(PIPELINE_ROOT_DIR, "pipeline"))
 
-from language_identification.lid_pipeline import LIDPipeline
-from line_filters.run_line_filter import filter_line_level_stats
-# from dashboard.plot.plots import (
-    
-# )
+from language_identification import LIDPipeline
+from document_filters import document_level_filters
+from line_filters import filter_line_level_stats
+from plots import extract_document_level_plots
+from plots import extract_line_level_plots
 
 @st.cache_data
 def load_language_website_mapping():
@@ -114,6 +114,21 @@ def perform_lid(text):
     return majority_lang, votes
 
 @st.cache_data
+def perform_document_filters(source, text, lang, lang_code, ngram_start, ngram_end):
+    data = {
+        "source": source,
+        "body": text
+    }
+
+    output, word_segmented_data = document_level_filters(data, lang, lang_code, ngram_start, ngram_end)
+    return output, word_segmented_data
+
+@st.cache_resource
+def get_doc_plots(document_level_stats):
+    doc_plots = extract_document_level_plots(document_level_stats)
+    return doc_plots
+
+@st.cache_data
 def perform_line_filters(text, lang, iso_code):
     data = {
         "raw_text": text,
@@ -122,9 +137,13 @@ def perform_line_filters(text, lang, iso_code):
             "iso_code": iso_code,
         }
     }
-    # st.write(data)
     fmt, lines = filter_line_level_stats(data, LID_PIPELINE)
     return fmt, lines
+
+@st.cache_resource
+def get_line_plots(line_level_stats):
+    line_plots = extract_line_level_plots(line_level_stats)
+    return line_plots
 
 ROOT_DIR = os.path.join(PIPELINE_ROOT_DIR, "dashboard", "parquet")
 WEBSITES = load_domain_list()
@@ -250,29 +269,66 @@ if perform_lid_or_not:
         in_text = boilerpipe_cleaned_text["body"]
         _boilerpipe_data["majority_lang"], _boilerpipe_data["votes"] = lid_pipe(in_text)
 
+@st.cache_data
+def document_filter_pipe(cleaned_text, lang, lang_code, ngram_start, ngram_end):
+    in_text = cleaned_text["body"]
+    document_filter_stats, word_segmented_data = perform_document_filters(cleaned_text["source"], in_text, _trafilatura_data["majority_lang"][0], language_iso_mapping[_trafilatura_data["majority_lang"][0]], 5, 10)
+    st.markdown(">Please expand below given LIST to see word segmentation results")
+    st.json(word_segmented_data, expanded=False)
+    st.markdown(">Please expand below given JSON to see document-level stats")
+    st.json(document_filter_stats, expanded=False)
+    return document_filter_stats, word_segmented_data
+
+if perform_document_filter_or_not:
+    st.subheader("Document Filter")
+    lf_traf_col, lf_boil_col = st.columns(2)
+    in_text = None
+    with lf_traf_col:
+        _trafilatura_data["document_filter_stats"], _trafilatura_data["word_segmented_data"] = document_filter_pipe(cleaned_text, _trafilatura_data["majority_lang"][0], language_iso_mapping[_trafilatura_data["majority_lang"][0]], 5, 10)
+        st.markdown("##### Plots for Document-Level Filters")
+        doc_plots = get_doc_plots(_trafilatura_data["document_filter_stats"]) 
+        
+        wc_f_col, cc_f_col, bc_f_col = st.columns(3)
+        with wc_f_col:
+            st.pyplot(doc_plots["ll"]["wc"])
+        with cc_f_col:
+            st.pyplot(doc_plots["ll"]["cc"])
+        with bc_f_col:
+            st.pyplot(doc_plots["ll"]["bc"])
+        # st.pyplot(doc_plots["word_dist"])
+
+    with lf_boil_col:
+        _boilerpipe_data["document_filter_stats"], _boilerpipe_data["word_segmented_data"] = document_filter_pipe(boilerpipe_cleaned_text, _boilerpipe_data["majority_lang"][0], language_iso_mapping[_boilerpipe_data["majority_lang"][0]], 5, 10)
+        st.markdown("##### Plots for Document-Level Filters")
+        doc_plots = get_doc_plots(_boilerpipe_data["document_filter_stats"]) 
+        
+        wc_f_col, cc_f_col, bc_f_col = st.columns(3)
+        with wc_f_col:
+            st.pyplot(doc_plots["ll"]["wc"])
+        with cc_f_col:
+            st.pyplot(doc_plots["ll"]["cc"])
+        with bc_f_col:
+            st.pyplot(doc_plots["ll"]["bc"])
+
+
+@st.cache_data
+def line_filter_pipe(in_text, lang, lang_code):
+    in_text = cleaned_text["body"]
+    line_filter_stats, input_lines = perform_line_filters(in_text, lang, lang_code)
+    zipped_res = list(zip(input_lines, line_filter_stats))
+    st.markdown(">Please expand below given LIST to see sentence segmentation results")
+    st.json(input_lines, expanded=False)
+    st.markdown(">Please expand below given JSON to see line-level metadata")
+    st.json(zipped_res, expanded=False)
+    return line_filter_stats, input_lines
+
 if perform_line_filter_or_not:
     st.subheader("Line Filter")
     lf_traf_col, lf_boil_col = st.columns(2)
     in_text = None
     with lf_traf_col:
-        in_text = cleaned_text["body"]
-        _trafilatura_data["line_filter_stats"], _trafilatura_data["input_lines"] = perform_line_filters(in_text, _trafilatura_data["majority_lang"][0], language_iso_mapping[_trafilatura_data["majority_lang"][0]])
-        # st.write(_trafilatura_data["input_lines"])
-        # st.write(_trafilatura_data["line_filter_stats"])
-        zipped_res = list(zip(_trafilatura_data["input_lines"], _trafilatura_data["line_filter_stats"]))
-        st.markdown(">Please expand below given LIST to see sentence segmentation results")
-        st.json(_trafilatura_data["input_lines"], expanded=False)
-        st.markdown(">Please expand below given JSON to see line-level metadata")
-        st.json(zipped_res, expanded=False)
+        _trafilatura_data["line_filter_stats"], _trafilatura_data["input_lines"] = line_filter_pipe(cleaned_text["body"], _trafilatura_data["majority_lang"][0], language_iso_mapping[_trafilatura_data["majority_lang"][0]])
         st.markdown("##### Plots for Line-Level Filters")
     with lf_boil_col:
-        in_text = boilerpipe_cleaned_text["body"]
-        _boilerpipe_data["line_filter_stats"], _boilerpipe_data["input_lines"] = perform_line_filters(in_text, _boilerpipe_data["majority_lang"][0], language_iso_mapping[_boilerpipe_data["majority_lang"][0]])
-        # st.write(_boilerpipe_data["input_lines"])
-        # st.write(_boilerpipe_data["line_filter_stats"])
-        zipped_res = list(zip(_boilerpipe_data["input_lines"], _boilerpipe_data["line_filter_stats"]))
-        st.markdown(">Please expand below given LIST to see sentence segmentation results")
-        st.json(_boilerpipe_data["input_lines"], expanded=False)
-        st.markdown(">Please expand below given JSON to see line-level metadata")
-        st.json(zipped_res, expanded=False)
+        _boilerpipe_data["line_filter_stats"], _boilerpipe_data["input_lines"] = line_filter_pipe(boilerpipe_cleaned_text["body"], _boilerpipe_data["majority_lang"][0], language_iso_mapping[_boilerpipe_data["majority_lang"][0]])
         st.markdown("##### Plots for Line-Level Filters")
