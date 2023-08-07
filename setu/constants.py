@@ -2,6 +2,7 @@ import os
 import glob
 import multiprocessing
 from nltk.corpus import stopwords
+from flashtext import KeywordProcessor
 
 class Constants():
 
@@ -16,21 +17,27 @@ class Constants():
             "assamese",
             "bengali",
             "bodo",
+            "dogri",
             "english",
             "gujarati",
             "hindi",
             "kannada",
+            "kashmiri",
+            "konkani",
             "maithili",
             "malayalam",
+            "marathi",
             "manipuri",
             "nepali",
-            "odia",
+            "oriya",
             "punjabi",
             "sanskrit",
+            "santali",
             "sindhi",
             "tamil",
             "telugu",
-            "urdu"
+            "urdu",
+            "other",
         ]
     ):
         self.filter_data_root = filter_data_root
@@ -60,7 +67,37 @@ class Constants():
             } for lang in langs
         }
 
-        self.TERMINAL_PUNCTUATIONS = (".", "!", "?", "।") # TODO: See if string / nltk can be more extensive
+        self.non_indic_non_latin_re_pattern = (
+            r'[^'
+            r'\p{Script=Latin}'
+            r'\p{Script=Devanagari}'
+            r'\p{Script=Bengali}'
+            r'\p{Script=Gujarati}'
+            r'\p{Script=Gurmukhi}'
+            r'\p{Script=Kannada}'
+            r'\p{Script=Malayalam}'
+            r'\p{Script=Oriya}'
+            r'\p{Script=Tamil}'
+            r'\p{Script=Telugu}'
+            r'\p{Script=Meetei Mayek}'
+            r'\p{Script=Arabic}'
+            r'\p{Script=Dogra}'
+            r'\p{Script=Ol Chiki}'
+            r'\p{P}'
+            r'\s'
+            r']'
+        )
+        # This gets converted into a single raw string. Python's functionality
+
+        self.TERMINAL_PUNCTUATIONS = (
+            ".", "!", "?", "।", "।।", ":", ",",
+            "؟", "۔" # this 2 are specifically for Urdu.
+        ) # TODO: See if string / nltk can be more extensive
+
+        # chunks ending with these patterns should be completely removed.
+        self.TERMINAL_PUNCTUATIONS_EXCEPTION = (
+            "...",
+        )
 
         self.MIN_WORDS = 3
         self.MAX_WORDS = 8
@@ -91,3 +128,27 @@ class Constants():
             file_name = os.path.basename(lang_file)
             with open(lang_file, "r") as f:
                 self._nsfw_words[os.path.splitext(file_name)[0]] = list(map(lambda x: x.strip(), f.readlines()))
+
+def create_kwpr(keywords):
+    keyword_processor = KeywordProcessor()
+    if isinstance(keywords, dict):
+        keyword_processor.add_keywords_from_dict(keywords)
+    elif isinstance(keywords, list):
+        keyword_processor.add_keywords_from_list(keywords)
+    else:
+        raise Exception("Please send keywords as a dict or list")
+    return keyword_processor
+
+
+def init_kwprs(CONSTANTS):
+    kw_processors = {}
+    for lang, values in CONSTANTS.FILTER_WORDS.items():
+        kw_processors[lang] = {}
+        for flter, kws in values.items():
+            kw_processors[lang][flter] = create_kwpr(kws)
+    return kw_processors
+
+CONSTANTS = Constants(
+    filter_data_root="/mnt/phallm-data/priyam/setu/pipeline/data"
+)
+KW_PROCESSORS = init_kwprs(CONSTANTS)

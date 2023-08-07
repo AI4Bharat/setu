@@ -19,7 +19,7 @@ st.set_page_config(layout="wide")
 
 PIPELINE_ROOT_DIR = os.path.dirname(    # dashboard
                         os.path.dirname(    # versions
-                            os.path.dirname(    # v3
+                            os.path.dirname(    # v4
                                 os.path.dirname(__file__))))
 
 sys.path.insert(0, PIPELINE_ROOT_DIR)
@@ -66,18 +66,7 @@ def download_objects(url, _eos_client):
         raw_response.close()
         raw_response.release_conn()
         
-    try:
-        boilerpipe_response = _eos_client.get_object(
-            bucket_name='ai4b-public-nlu-nlg',
-            object_name=url.replace("/html/", "/articles/"),
-        )
-        boilerpipe_str = json.loads(boilerpipe_response.data.decode())
-        boilerpipe_response.close()
-        boilerpipe_response.release_conn()
-    except minio.error.S3Error:
-        boilerpipe_str = "Boilerpipe extracted text not found on S3. Boilerpipe didn't extract article for this webpage or it had not been uploaded yet!"
-        
-    return html_str, boilerpipe_str
+    return html_str
 
 @st.cache_data
 def extract_using_trafilatura(html_str):
@@ -96,6 +85,31 @@ ROOT_DIR = os.path.join(PIPELINE_ROOT_DIR, "dashboard", "parquet")
 WEBSITES = load_domain_list()
 EOS_CLIENT = load_minio_client()
 
+@st.cache_data
+def run_setu(
+    doc, 
+    setu_config, 
+    use_code_filter=True, 
+    use_terminal_punc=True,
+    enable_flagging=True,
+):
+    return SETU.run_pipeline(
+        doc,
+        use_code_filter=use_code_filter,
+        use_terminal_punc_filter=use_terminal_punc,
+        enable_analysis=True,
+        enable_flagging=enable_flagging,
+        lid_probability_threshold=setu_config["lid_probability_threshold"],
+        chunk_len_threshold=2, # TODO: Not used in anymore. So, remove this.
+        non_li_threshold=setu_config["non_li_char_threshold"],
+        nsfw_threshold=setu_config["nsfw_threshold"],
+        symbol_number_threshold=setu_config["symbol_numbers_threshold"],
+        min_line_count=setu_config["min_line_count"],
+        min_mean_line_len=setu_config["min_mean_line_len"],
+        word_ngram_cum_thresholds=setu_config["word_ngram_cum_thresholds"],
+        char_ngram_cum_thresholds=setu_config["char_ngram_cum_thresholds"]
+    )
+
 language_website_mapping, languages = load_language_website_mapping()
 
 st.header("Setu Dashboard")
@@ -112,9 +126,9 @@ if selected_domain:
     urls_df, urls = load_url_list(ROOT_DIR, language=selected_language, domain=selected_domain)
 selected_url = st.selectbox("Select URL", urls)
 
-raw_html, boilerpipe_cleaned_text = download_objects(selected_url, _eos_client=EOS_CLIENT)
+raw_html = download_objects(selected_url, _eos_client=EOS_CLIENT)
 
-output_format_radio, raw_html_radio, reextract_pure_boilerpipe_radio = st.columns(3)
+output_format_radio, raw_html_radio = st.columns(2)
 
 with output_format_radio:
     trafilatura_output_format_as_boilerpipe = st.radio("Do you want same JSON structure as Boilerpipe for better comparison?", (True, False))
@@ -122,65 +136,8 @@ with output_format_radio:
 with raw_html_radio:
     raw_html_or_not = st.radio("Do you want to view raw html?", (False, True))
 
-with reextract_pure_boilerpipe_radio:
-    pure_boilerpipe_or_not = st.radio("Do you want to re-extract using Boilerpipe without `ok-check`?", (True, False))
-
 cleaned_text = {}
-_trafilatura_data, _boilerpipe_data = {}, {}
-
-if bool(raw_html_or_not):
-    st.write(raw_html)
-else:
-    raw_column, trafilatura_column, boilerpipe_column = st.columns(3)
-    with raw_column:
-        st.subheader("Raw")
-        components.iframe(raw_html["url"], height=1000, scrolling=True)
-
-    with trafilatura_column:
-        st.subheader("Trafilatura")
-        if selected_url:
-            try:
-                trafilatura_cleaned_text = extract_using_trafilatura(raw_html["html"])
-                if bool(trafilatura_output_format_as_boilerpipe):
-                    cleaned_text["title"] = trafilatura_cleaned_text["title"]
-                    cleaned_text["body"] = trafilatura_cleaned_text["text"]
-                    cleaned_text["source"] = trafilatura_cleaned_text["sitename"]
-                    cleaned_text["url"] = trafilatura_cleaned_text["url"]
-                else:
-                    cleaned_text = trafilatura_cleaned_text
-                
-                cleaned_text['timestamp'] = raw_html['timestamp']
-                st.write(cleaned_text)
-            except Exception as e:
-                st.write("Error occurred during scraping:", str(e))
-        else:
-            st.write("Please select a URL to compare")
-
-        cleaned_text["id"] = os.path.split(selected_url)[1]
-        _trafilatura_data = cleaned_text
-        _trafilatura_data["text"] = _trafilatura_data.pop("body")
-
-    with boilerpipe_column:
-        st.subheader("Boilerpipe")
-        if bool(pure_boilerpipe_or_not):
-            extractor = Extractor(extractor='ArticleExtractor',
-                                  html=raw_html['html'])
-            body = str(extractor.getText())
-            title = str(extractor.source.getTitle())
-            art = {
-                'title': title,
-                'body': body,
-                'source': raw_html['source'],
-                'url': raw_html['url'],
-                'timestamp': raw_html['timestamp']
-            }
-            boilerpipe_cleaned_text = art
-
-        boilerpipe_cleaned_text["id"] = os.path.split(selected_url)[1]
-        st.write(boilerpipe_cleaned_text)
-
-        _boilerpipe_data = boilerpipe_cleaned_text
-        _boilerpipe_data["text"] = _boilerpipe_data.pop("body")
+_trafilatura_data = {}
 
 setu_config = {
     "lid_probability_threshold": 0.7,
@@ -194,15 +151,13 @@ setu_config = {
     "char_ngram_cum_thresholds": {},
 }
 
-setu_col, col_A, col_B = st.columns(3)
-
 use_code_filter, use_terminal_punc, enable_flagging, view_option = True, True, True, "trafilatura"
 
-with setu_col:
+with st.sidebar:
 
     st.header("Setu Config")
 
-    code_filter_or_not_col, terminal_punc_or_not_col, flagging_or_not_col, view_col = st.columns(4)
+    code_filter_or_not_col, terminal_punc_or_not_col, flagging_or_not_col = st.columns(3)
     word_ngram_cum_thresholds_col, char_ngram_cum_thresholds_col = st.columns(2)
 
     with code_filter_or_not_col:
@@ -213,9 +168,6 @@ with setu_col:
 
     with flagging_or_not_col:
         enable_flagging = bool(st.radio("Flag Document?", (True, False)))  
-
-    with view_col:
-        view_option = str(st.radio("View", ("trafilatura", "boilerpipe", "both")))
 
     with word_ngram_cum_thresholds_col:
         word_ngram_range = st.slider("word_ngrams", 0, 20, (5, 5), key="word_ngrams")
@@ -258,9 +210,6 @@ with setu_col:
         st.text("lid_probability_threshold")
         setu_config["lid_probability_threshold"] = float(st.slider('lid_probability_threshold', 0.0, 1.0, 0.7, key="lid_probability_threshold", label_visibility="hidden"))
 
-        # st.text("chunk_len_threshold")
-        # setu_config["chunk_len_threshold"] = int(st.slider('chunk_len_threshold', 0, 50, 2, key="chunk_len_threshold", label_visibility="hidden"))
-
         st.text("nsfw_threshold")
         setu_config["nsfw_threshold"] = float(st.slider('nsfw_threshold', 0.0, 1.0, 1.0, key="nsfw_threshold", label_visibility="hidden"))
 
@@ -282,69 +231,121 @@ with setu_col:
 
         st.write(setu_config)
 
-@st.cache_data
-def run_setu(
-    doc, 
-    setu_config, 
-    use_code_filter=True, 
-    use_terminal_punc=True,
-    enable_flagging=True,
-):
-    return SETU.run_pipeline(
-        doc,
-        use_code_filter=use_code_filter,
-        use_terminal_punc_filter=use_terminal_punc,
-        enable_analysis=True,
-        enable_flagging=enable_flagging,
-        lid_probability_threshold=setu_config["lid_probability_threshold"],
-        # chunk_len_threshold=setu_config["chunk_len_threshold"],
-        chunk_len_threshold=2, # TODO: Not used in anymore. So, remove this.
-        non_li_threshold=setu_config["non_li_char_threshold"],
-        nsfw_threshold=setu_config["nsfw_threshold"],
-        symbol_number_threshold=setu_config["symbol_numbers_threshold"],
-        min_line_count=setu_config["min_line_count"],
-        min_mean_line_len=setu_config["min_mean_line_len"],
-        word_ngram_cum_thresholds=setu_config["word_ngram_cum_thresholds"],
-        char_ngram_cum_thresholds=setu_config["char_ngram_cum_thresholds"]
-    )
+if bool(raw_html_or_not):
+    st.write(raw_html)
+else:
+    raw_column, extracted_col_A = st.columns(2)
+    with raw_column:
+        st.subheader("Webpage")
+        components.iframe(raw_html["url"], height=1000, scrolling=True)
 
-keys_to_remove = ["repeated_line_dist", "repeated_ngram_dist"]
+    with extracted_col_A:
+        st.subheader("Extracted Text")
+        if selected_url:
+            try:
+                trafilatura_cleaned_text = extract_using_trafilatura(raw_html["html"])
+                if bool(trafilatura_output_format_as_boilerpipe):
+                    cleaned_text["title"] = trafilatura_cleaned_text["title"]
+                    cleaned_text["body"] = trafilatura_cleaned_text["text"]
+                    cleaned_text["source"] = trafilatura_cleaned_text["sitename"]
+                    cleaned_text["url"] = trafilatura_cleaned_text["url"]
+                else:
+                    cleaned_text = trafilatura_cleaned_text
+                
+                cleaned_text['timestamp'] = raw_html['timestamp']
+                st.write(cleaned_text)
+            except Exception as e:
+                st.write("Error occurred during scraping:", str(e))
+        else:
+            st.write("Please select a URL to compare")
 
-with col_A:
-    
-    st.header("Trafilatura Cleaned Document")
+        cleaned_text["id"] = os.path.split(selected_url)[1]
+        _trafilatura_data = cleaned_text
+        _trafilatura_data["text"] = _trafilatura_data.pop("body")
 
-    trafilatura_output, _trafilatura_data["code_span_cleaned_text"], _trafilatura_data["terminal_cleaned_text"] = run_setu(
-        doc=_trafilatura_data,
-        setu_config=setu_config,
-        use_code_filter=use_code_filter,
-        use_terminal_punc=use_terminal_punc,
-        enable_flagging=enable_flagging
-    )
+    extracted_col_B, cleaned_col = st.columns(2)
 
-    if len(_trafilatura_data["terminal_cleaned_text"]):
-        for key in keys_to_remove:
-            _ = trafilatura_output["analysis"].pop(key)
+    with extracted_col_B:
+        st.subheader("Extracted Text")
+        tmp_json = {
+            "text": cleaned_text["text"],
+        }
+        st.json(tmp_json)
 
-        st.json(trafilatura_output, expanded=True)
+    with cleaned_col:
+        st.subheader("Cleaned Text")
+        trafilatura_output, _trafilatura_data["code_span_cleaned_text"], _trafilatura_data["terminal_cleaned_text"], _trafilatura_data["lines"] = run_setu(
+            doc=_trafilatura_data,
+            setu_config=setu_config,
+            use_code_filter=use_code_filter,
+            use_terminal_punc=use_terminal_punc,
+            enable_flagging=enable_flagging
+        )
 
-with col_B:
-    
-    st.header("Boilerpipe Cleaned Document")
+        tmp_json = {
+            "text": trafilatura_output["analysis"]["text"],
+        }
+        st.json(tmp_json, expanded=True)
 
-    boilerpipe_output, _boilerpipe_data["code_span_cleaned_text"], _boilerpipe_data["terminal_cleaned_text"] = run_setu(
-        doc=_boilerpipe_data,
-        setu_config=setu_config,
-        use_code_filter=use_code_filter,
-        use_terminal_punc=use_terminal_punc,
-        enable_flagging=enable_flagging
-    )
+    cleaned_text_col, lines_col = st.columns(2)
 
-    if len(_boilerpipe_data["terminal_cleaned_text"]):
-        for key in keys_to_remove:
-            _ = boilerpipe_output["analysis"].pop(key)
+    with cleaned_text_col:
+        st.subheader("Cleaned Text")
+        tmp_json = {
+            "text": trafilatura_output["analysis"]["text"],
+        }
+        st.json(tmp_json, expanded=True)
 
-        st.json(boilerpipe_output, expanded=True)
-    else:
-        st.write("`terminal_punctuation_filter` removed all the data from the document!")
+    with lines_col:
+        st.subheader("Sentence Tokenization")
+        st.json(_trafilatura_data["lines"])
+
+    analysis_col, flag_col = st.columns(2)
+
+    with analysis_col:
+
+        st.subheader("Analysis of Cleaned Text")
+
+        analysis_json = {
+            "lid output": {
+                "majority": trafilatura_output["analysis"]["lid_major"],
+                "all": trafilatura_output["analysis"]["lid_all"],
+            },
+            "number of lines": trafilatura_output["analysis"]["num_of_lines"],
+            "nsfw word count": trafilatura_output["analysis"]["stats"]["nsfw_words_count"],
+            "symbol numbers count": trafilatura_output["analysis"]["stats"]["symbol_numbers_count"],
+            "non latin/indic character count": trafilatura_output["analysis"]["stats"]["non_li_count"],
+            "byte size of document": trafilatura_output["analysis"]["stats"]["bytes"],
+            "total word count": trafilatura_output["analysis"]["stats"]["words_count"],
+            "total character count": trafilatura_output["analysis"]["stats"]["char_count"],
+            "line length statistics": trafilatura_output["analysis"]["line_length_stats"],
+            "code spans found": trafilatura_output["analysis"]["code_spans"],
+            "word n-gram repetition scores": {},
+            "character n-gram repetition scores": {},
+        }
+
+        for key in trafilatura_output["analysis"]["repeated_ngram_dist"]:
+            
+            for inner_key, ngrams in [("word", "word_ngram_cum_thresholds"), ("character", "char_ngram_cum_thresholds")]:
+
+                for ng in setu_config[ngrams].keys():
+                    
+                    analysis_json[f"{inner_key} n-gram repetition scores"][ng] = trafilatura_output["analysis"]["repeated_ngram_dist"][inner_key][f"{ng}_gram_{inner_key}s_repetition_score"]
+
+        st.json(analysis_json)
+
+    with flag_col:
+
+        st.subheader("Flags for Cleaned Text")
+        
+        if enable_flagging:
+
+            flags_json = trafilatura_output["flags"]
+
+            st.json(flags_json)
+        
+        else:
+            st.write("Flagging is disabled")
+
+        
 

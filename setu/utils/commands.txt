@@ -1,0 +1,89 @@
+Start Master
+~/spark-3.4.1-bin-hadoop3/sbin/start-master.sh
+
+Start a worker
+~/spark-3.4.1-bin-hadoop3/sbin/start-worker.sh spark://e2e-100-5.ssdcloudindia.net:7077  -c 48 -m 300G
+
+Submit a job
+spark-submit --master spark://e2e-100-5.ssdcloudindia.net:7077 \
+             --num-executors 12 \
+             --executor-cores 4 \
+             --executor-memory 15G \
+             --driver-memory 10G \
+             --py-files /mnt/phallm-data/priyam/setu/pipeline/constants.py,/mnt/phallm-data/priyam/setu/pipeline/document_filters.py,/mnt/phallm-data/priyam/setu/pipeline/line_filters.py,/mnt/phallm-data/priyam/setu/pipeline/lid.py,/mnt/phallm-data/priyam/setu/pipeline/utils.py,/mnt/phallm-data/priyam/setu/pipeline/setu.py \
+             ~/setu/pipeline/run.py \
+             --config ~/setu/pipeline/configs/config.json \
+             --parquet_glob_path "~/../datasets/sangraha/parquets-trafilatura/*/*" \
+             --samples_per_partition 20000
+             
+
+spark-submit --master spark://e2e-100-5.ssdcloudindia.net:7077 --num-executors 48 --executor-cores 1 --executor-memory 5G --driver-memory 10G ~/setu/pipeline/utils/convert_to_parquet.py
+
+Stop Master
+~/spark-3.4.1-bin-hadoop3/sbin/stop-master.sh
+
+Stop Workers
+bash ~/spark-3.4.1-bin-hadoop3/sbin/stop-workers.sh
+
+Keys to keep:
+title
+author
+url
+hostname
+description
+sitename
+date
+categories
+tags
+fingerprint
+id
+license 
+body
+comments
+commentsbody
+raw_text
+text
+language
+image
+pagetype
+
+240G    /mnt/phallm-data/priyam/../datasets/sangraha/web_crawls/kannada
+274G    /mnt/phallm-data/priyam/../datasets/sangraha/web_crawls/gujarati
+451G    /mnt/phallm-data/priyam/../datasets/sangraha/web_crawls/english
+600G    /mnt/phallm-data/priyam/../datasets/sangraha/web_crawls/bengali
+274G    /mnt/phallm-data/priyam/../datasets/sangraha/web_crawls/telugu
+305G    /mnt/phallm-data/priyam/../datasets/sangraha/web_crawls/marathi
+1.2G    /mnt/phallm-data/priyam/../datasets/sangraha/web_crawls/bodo
+12G     /mnt/phallm-data/priyam/../datasets/sangraha/web_crawls/sindhi
+45G     /mnt/phallm-data/priyam/../datasets/sangraha/web_crawls/maithili
+70G     /mnt/phallm-data/priyam/../datasets/sangraha/web_crawls/assamese
+1.6T    /mnt/phallm-data/priyam/../datasets/sangraha/web_crawls/hindi
+117G    /mnt/phallm-data/priyam/../datasets/sangraha/web_crawls/odia
+423G    /mnt/phallm-data/priyam/../datasets/sangraha/web_crawls/malayalam
+249G    /mnt/phallm-data/priyam/../datasets/sangraha/web_crawls/nepali
+322G    /mnt/phallm-data/priyam/../datasets/sangraha/web_crawls/tamil
+328G    /mnt/phallm-data/priyam/../datasets/sangraha/web_crawls/urdu
+45G     /mnt/phallm-data/priyam/../datasets/sangraha/web_crawls/sanskrit
+126G    /mnt/phallm-data/priyam/../datasets/sangraha/web_crawls/punjabi
+5.4T    /mnt/phallm-data/priyam/../datasets/sangraha/web_crawls/
+
+70G     ./bengali
+86G     ./punjabi
+119G    ./english
+23G     ./nepali
+235G    ./hindi
+222G    ./telugu
+47G     ./kannada
+287G    ./tamil
+88G     ./marathi
+1.2T    .
+
+6,500,000 docs in malayalam - 423GB - 5hr
+
+1GB = 15366 docs
+7TB = 15366 * 7 * 1024
+
+6,500,000 docs = 5hr
+~110,143,488 docs = 85hr = ~4 days
+
+
