@@ -2,6 +2,7 @@ import argparse
 from setu import Setu
 from pyspark.sql import SparkSession
 import threading
+import traceback
 
 def parse_args():
 
@@ -58,6 +59,8 @@ if __name__ == "__main__":
             args.parquet_glob_path,
         )
 
+        # print(df.schema)
+
         setu.run_spark_pipeline(
             df,
             cols_to_use=[
@@ -68,7 +71,11 @@ if __name__ == "__main__":
             text_col="text",
             docs_per_partition=args.samples_per_partition
         )
+
     except Exception as e:
+        print("Encountered an Error: ", e)
+        traceback.print_exc()
+    finally:
         if not spark_context._jsc.sc().isStopped():
             spark.stop()
 

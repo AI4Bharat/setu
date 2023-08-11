@@ -42,17 +42,39 @@ class ChunkHandler():
 
         join_lines = udf(lambda x: join_symbol.join([line.text for line in x if line]), StringType())
 
-        df = df \
-                .withColumn(text_column, struct([sort_column, text_column])).select(identifier_column, text_column) \
-                .groupBy(identifier_column) \
-                .agg(collect_list(text_column).alias(text_column)) \
-                .withColumn(
-                    text_column,
-                    expr(
-                        f"array_sort(transform({text_column},x->struct(x['{sort_column}'] as {sort_column},x['{text_column}'] as {text_column})))"
-                    )   
-                ) \
-                .withColumn(text_column, join_lines(text_column))
+        # df = df \
+        #         .withColumn(text_column, struct([sort_column, text_column])).select(identifier_column, text_column) \
+        #         .groupBy(identifier_column) \
+        #         .agg(collect_list(text_column).alias(text_column)) \
+        #         .withColumn(
+        #             text_column,
+        #             expr(
+        #                 f"array_sort(transform({text_column},x->struct(x['{sort_column}'] as {sort_column},x['{text_column}'] as {text_column})))"
+        #             )   
+        #         ) \
+        #         .withColumn(text_column, join_lines(text_column))\
+
+        df = df.withColumn(text_column, struct([sort_column, text_column])).select(identifier_column, text_column)
+        df.show(n=5, truncate=False)
+        print("Completed `struct_creation`....")
+
+        df = df.groupBy(identifier_column).agg(collect_list(text_column).alias(text_column))
+
+        df.explain(mode="formatted")
+
+        df.show(n=5, truncate=False)
+        print("Completed `line_list_creation`....")
+
+        df = df.withColumn(
+            text_column,
+            expr(
+                f"array_sort(transform({text_column},x->struct(x['{sort_column}'] as {sort_column},x['{text_column}'] as {text_column})))"
+            )   
+        )
+        df.show(n=5, truncate=False)
+        print("Completed `new_column_creation`....")
+
+        df = df.withColumn(text_column, join_lines(text_column))
 
         return df
     

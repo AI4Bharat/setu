@@ -1,6 +1,5 @@
 from typing import Dict, Tuple
-from .constants import CONSTANTS, KW_PROCESSORS
-# from constants import CONSTANTS, KW_PROCESSORS
+from constants import CONSTANTS, KW_PROCESSORS
 import re
 from ftfy import fix_and_explain
 from indicnlp.tokenize.indic_tokenize import trivial_tokenize
@@ -22,7 +21,7 @@ from functools import partial
 import json
 import statistics
 
-def find_code_spans(text):
+def find_code_spans(doc_id, text):
     patterns = [
         # HTML
         (re.compile(r'<[^>]+?>.+?</[^>]+?>'), 'HTML'),
@@ -35,12 +34,17 @@ def find_code_spans(text):
     ]
     
     spans = []
-    
-    for pattern, lang in patterns:
-        for match in pattern.finditer(text):
-            spans.append((match.start(), match.end()))
 
-    return spans
+    # print({"doc_id": doc_id, "text": text})
+    print("Finding Code Patterns..........")
+    print("Text Type: ", type(text))
+    for pattern, lang in patterns:
+        print("Pattern Type: ", type(pattern))
+        for match in pattern.finditer(text):
+            pass
+            # spans.append([match.start(), match.end()])
+    print("Completed Code Patterns scan...")
+    return spans if len(spans) else None
 
 def is_terminal_valid(text):
     if text.endswith(CONSTANTS.TERMINAL_PUNCTUATIONS_EXCEPTION):
@@ -96,8 +100,8 @@ def has_code(code_spans):
         return True
     return False
 
-def remove_code(text, has_code, code_spans):
-    if not has_code:
+def remove_code(text, code_spans):
+    if not code_spans:
         return text
     
     result = ""
@@ -112,21 +116,16 @@ def remove_code(text, has_code, code_spans):
 
     return result
 
-def terminal_punc_filter(text, chunk_len_threshold):
+def terminal_punc_filter(text):
     total_chunks_flagged = 0
-    # print(text)
     chunks = text.split("\n")
-    # print(chunks)
     cleaned_chunks = []
     for i in range(len(chunks)):
         is_term_valid = is_terminal_valid(chunks[i])
-        # cleaned_chunk = remove_non_terminal_punc_span(chunks[i], is_term_valid, chunk_len_threshold)
         if not is_term_valid:
             total_chunks_flagged += 1
         else:
             cleaned_chunks += [chunks[i]]
-        # if cleaned_chunk:
-        #     cleaned_chunks += [cleaned_chunk]
 
     return "\n".join(cleaned_chunks), total_chunks_flagged
 

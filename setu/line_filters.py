@@ -1,5 +1,5 @@
 from flashtext import KeywordProcessor
-from .constants import CONSTANTS, KW_PROCESSORS
+from constants import CONSTANTS, KW_PROCESSORS
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import udf
 from pyspark.sql.types import BooleanType, IntegerType, ArrayType, MapType, StringType
