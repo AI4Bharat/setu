@@ -33,6 +33,13 @@ def parse_args():
         help="No.of samples per partition",
     )
 
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        help="Whether to add `show()` at each stage.",
+    )
+
     args = parser.parse_args()
 
     return args
@@ -47,6 +54,22 @@ if __name__ == "__main__":
     # spark_timer = threading.Timer(0.5, timer_elapsed)
     # spark_timer.start()
 
+    # # Create a SparkSession
+    # spark = SparkSession.builder.appName("TempDirExample").getOrCreate()
+
+    # # Get the current configuration
+    # conf = spark.sparkContext.getConf()
+
+    # # Set the temporary directory path
+    # new_temp_dir = "/data/priyam/tmp"
+    # conf.set("spark.local.dir", new_temp_dir)
+
+    # spark = SparkSession \
+    #             .builder \
+    #             .config(conf=conf) \
+    #             .appName(setu.config.appname) \
+    #             .getOrCreate()
+
     spark = SparkSession \
                 .builder \
                 .appName(setu.config.appname) \
@@ -55,11 +78,10 @@ if __name__ == "__main__":
     spark_context = spark.sparkContext
     
     try:
+        # print(spark.sparkContext.getConf().getAll())
         df = spark.read.parquet(
             args.parquet_glob_path,
         )
-
-        # print(df.schema)
 
         setu.run_spark_pipeline(
             df,
@@ -69,7 +91,8 @@ if __name__ == "__main__":
             ],
             doc_id_col="doc_id",
             text_col="text",
-            docs_per_partition=args.samples_per_partition
+            docs_per_partition=args.samples_per_partition,
+            verbose=args.verbose,
         )
 
     except Exception as e:

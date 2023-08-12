@@ -15,6 +15,22 @@ spark-submit --master spark://SPK-DGX-O1:7077 \
              --config setu/configs/spark_config.json \
              --parquet_glob_path "../sangraha/parquets/gujarati/*.parquet" \
              --samples_per_partition 20000
+
+spark-submit --master spark://SPK-DGX-O1:7077 \
+             --driver-java-options -Djava.io.tmpdir=/data/priyam/tmp/ \
+             --conf "spark.driver.extraJavaOptions=-Djava.io.tmpdir=/data/priyam/tmp/" \
+             --conf "spark.executor.extraJavaOptions=-Djava.io.tmpdir=/data/priyam/tmp/" \
+             --conf spark.worker.dir="/data/priyam/tmp/" \
+             --conf spark.local.dir="/data/priyam/tmp/" \
+             --num-executors 128 \
+             --executor-cores 1 \
+             --executor-memory 4G \
+             --driver-memory 10G \
+             --py-files setu/constants.py,setu/document_filters.py,setu/line_filters.py,setu/lid.py,setu/utils.py,setu/setu.py \
+             setu/run.py \
+             --config setu/configs/spark_config.json \
+             --parquet_glob_path "../sangraha/parquets/gujarati/1.parquet" \
+             --samples_per_partition 2000
              
 
 spark-submit --master spark://e2e-100-5.ssdcloudindia.net:7077 --num-executors 48 --executor-cores 1 --executor-memory 5G --driver-memory 10G ~/setu/utils/convert_to_parquet.py

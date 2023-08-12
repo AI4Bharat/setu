@@ -35,15 +35,9 @@ def find_code_spans(doc_id, text):
     
     spans = []
 
-    # print({"doc_id": doc_id, "text": text})
-    print("Finding Code Patterns..........")
-    print("Text Type: ", type(text))
     for pattern, lang in patterns:
-        print("Pattern Type: ", type(pattern))
         for match in pattern.finditer(text):
-            pass
-            # spans.append([match.start(), match.end()])
-    print("Completed Code Patterns scan...")
+            spans.append([match.start(), match.end()])
     return spans if len(spans) else None
 
 def is_terminal_valid(text):
@@ -190,6 +184,7 @@ def get_char_ngram_repetition(
     ngrams_arr,
     for_spark: bool = True,
 ):
+
     ngram_repetition = dict()
 
     for n in ngrams_arr:
@@ -197,6 +192,7 @@ def get_char_ngram_repetition(
         n_grams = tuple(map(lambda x: "".join(x), n_grams))
         n_gram_freq_dist = Counter(n_grams)
         total_freq = n_gram_freq_dist.total()
+        print(f"Total {n}-character Frequeny: ", total_freq)
         n_gram_freq_dist = OrderedDict(Counter(n_grams))
         if not for_spark:
             ngram_repetition[f"{n}_gram_characters"] = tuple(n_gram_freq_dist.keys())
@@ -206,9 +202,9 @@ def get_char_ngram_repetition(
         k = int(sqrt(len(sorted_freq_dist)))
         sum_of_top_k = sum([sorted_freq_dist[i][1] for i in range(k)])
 
-        score = sum_of_top_k / total_freq
+        score = sum_of_top_k / total_freq if total_freq else None
 
-        ngram_repetition[f"{n}_gram_characters_repetition_score"] = getattr(score, "tolist", lambda: score)()
+        ngram_repetition[f"{n}_gram_characters_repetition_score"] = getattr(score, "tolist", lambda: score)() if score else None
 
     return ngram_repetition
 
@@ -226,6 +222,7 @@ def get_word_ngram_repetition(
         n_grams = tuple(map(lambda x: " ".join(x), n_grams))
         n_gram_freq_dist = Counter(n_grams)
         total_freq = n_gram_freq_dist.total()
+        print(f"Total {n}-word Frequeny: ", total_freq)
         n_gram_freq_dist = OrderedDict(Counter(n_grams))
 
         if not for_spark:
@@ -235,9 +232,9 @@ def get_word_ngram_repetition(
         x = np.array(tuple(n_gram_freq_dist.values()))
         sum_of_greater_equal_2 = np.where(x >= 2, x, 0).sum()
 
-        score = sum_of_greater_equal_2 / total_freq
+        score = sum_of_greater_equal_2 / total_freq if total_freq else None
 
-        ngram_repetition[f"{n}_gram_words_repetition_score"] = getattr(score, "tolist", lambda: score)()
+        ngram_repetition[f"{n}_gram_words_repetition_score"] = getattr(score, "tolist", lambda: score)() if score else None
 
     return ngram_repetition
 
@@ -250,7 +247,7 @@ def has_repetition(repetition_scores, repetition_thresholds):
     for n_gram, repetition_score in repetition_scores.items():
         n = n_gram.split("_")[0]
         threshold = repetition_thresholds[n]
-        flags += [True if repetition_score >= threshold else False]
+        flags += [True if repetition_score and repetition_score >= threshold else False]
     return True if sum(flags) > 0 else False
 
 def extract_document_metadata(
