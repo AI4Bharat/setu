@@ -90,7 +90,7 @@ class Constants():
         # This gets converted into a single raw string. Python's functionality
 
         self.TERMINAL_PUNCTUATIONS = (
-            ".", "!", "?", "।", "।।", ":", ",",
+            ".", "!", "?", "।", "।।", ":", ",", ";",
             "؟", "۔" # this 2 are specifically for Urdu.
         ) # TODO: See if string / nltk can be more extensive
 

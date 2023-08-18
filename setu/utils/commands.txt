@@ -29,9 +29,17 @@ spark-submit --master spark://SPK-DGX-O1:7077 \
              --py-files setu/constants.py,setu/document_filters.py,setu/line_filters.py,setu/lid.py,setu/utils.py,setu/setu.py \
              setu/run.py \
              --config setu/configs/spark_config.json \
-             --parquet_glob_path "../sangraha/parquets/gujarati/1.parquet" \
+             --parquet_glob_path "../sangraha/parquets/gujarati/37.parquet" \
              --samples_per_partition 2000
-             
+
+python -m text_dedup.suffix_array \
+    --path "parquet" \
+    --name "sangraha-bodo" \
+    --split "train" \
+    --data_dir "/data/priyam/sangraha/spark_out/bodo/final_docs/*.parquet" \
+    --cache_dir "/data/priyam/cache" \
+    --output "/data/priyam/sangraha/dedup/bodo" \
+    --column "text"             
 
 spark-submit --master spark://e2e-100-5.ssdcloudindia.net:7077 --num-executors 48 --executor-cores 1 --executor-memory 5G --driver-memory 10G ~/setu/utils/convert_to_parquet.py
 

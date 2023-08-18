@@ -14,14 +14,14 @@
     "remove_code": true,
     "remove_terminal_invalid": true,
     "save_doc_lid_output": true,
-    "doc_lid_output_path": "sangraha/spark_out/doc_lid_output/",
+    "doc_lid_output_path": "sangraha/spark_out/tmp/doc_lid_output/",
     "save_line_stats_output": true,
-    "line_stats_output_path": "sangraha/spark_out/line_stats_output/",
+    "line_stats_output_path": "sangraha/spark_out/tmp/line_stats_output/",
     "remove_only_number": false,
     "save_doc_stats_output": true,
-    "doc_stats_output_path": "sangraha/spark_out/doc_stats_output/",
+    "doc_stats_output_path": "sangraha/spark_out/tmp/doc_stats_output/",
     "save_nsfw_data": true,
-    "nsfw_output_path": "sangraha/spark_out/nsfw_output/",
+    "nsfw_output_path": "sangraha/spark_out/tmp/nsfw_output/",
     "nsfw_filter": false,
     "nsfw_threshold": 1.0,
     "symbol_number_filter": false,
@@ -46,5 +46,5 @@
         "7": 1.0,
         "8": 1.0
     },
-    "final_output_path": "sangraha/spark_out/final_output/"
+    "final_output_path": "sangraha/spark_out/tmp/final_output/"
 }

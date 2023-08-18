@@ -46,10 +46,6 @@ def get_bytes(line):
 def get_nsfw_words_total_count(nsfw_words_dist):
     return sum(nsfw_words_dist.values())
 
-def get_symbol_number_count(line, lang):
-    # TODO: get language specific unicode range to handle this.
-    return 0
-
 # Step 3: Filter lines containing only numbers
 def is_numbers(line, lang):
     return line.isdigit()
@@ -118,7 +114,6 @@ def extract_line_metadata(
         "char_count": get_char_count(text),
         "bytes": get_bytes(text),
         "nsfw_dist": get_nsfw_word_dist(text, lang),
-        "symbol_numbers_count": get_symbol_number_count(text, lang),
         "only_number": is_numbers(text, lang),
         "non_li_count": non_li_chars_total_count(text),
         "language_id": lang_code,

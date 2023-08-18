@@ -108,9 +108,9 @@ class SparkOptimizedHandlers():
         nsfw_count = grouped_line_df.agg(sum(line_nsfw_count_col_).alias("nsfw_words_count"))
         return nsfw_count
 
-    def get_symbol_number_count(self, grouped_line_df, line_sym_num_count_col_):
-        sym_num_count = grouped_line_df.agg(sum(line_sym_num_count_col_).alias("symbol_number_count"))
-        return sym_num_count
+    # def get_symbol_number_count(self, grouped_line_df, line_sym_num_count_col_):
+    #     sym_num_count = grouped_line_df.agg(sum(line_sym_num_count_col_).alias("symbol_number_count"))
+    #     return sym_num_count
 
     def get_non_li_words_count(self, grouped_line_df, line_non_li_count_col_):
         non_li_count = grouped_line_df.agg(sum(line_non_li_count_col_).alias("non_li_char_count"))
@@ -191,7 +191,7 @@ class SparkOptimizedHandlers():
         doc_id_col,
         text_col,
         line_nsfw_count_col_,
-        line_sym_num_count_col_,
+        # line_sym_num_count_col_,
         line_non_li_count_col_,
         line_bytes_col_,
         line_words_count_col_,
@@ -202,7 +202,7 @@ class SparkOptimizedHandlers():
 
         num_lines_df = self.get_num_lines(grouped_line_df)
         nsfw_words_count_df = self.get_nsfw_words_count(grouped_line_df, line_nsfw_count_col_)
-        symbol_number_count_df = self.get_symbol_number_count(grouped_line_df, line_sym_num_count_col_)
+        # symbol_number_count_df = self.get_symbol_number_count(grouped_line_df, line_sym_num_count_col_)
         non_li_words_count_df = self.get_non_li_words_count(grouped_line_df, line_non_li_count_col_)
         bytes_df = self.get_bytes(grouped_line_df, line_bytes_col_)
         words_count_df = self.get_words_count(grouped_line_df, line_words_count_col_)
@@ -258,12 +258,12 @@ class SparkOptimizedHandlers():
                 .join(min_line_len_df, [doc_id_col]) \
                 .join(max_line_len_df, [doc_id_col]) \
                 .join(nsfw_words_count_df, [doc_id_col]) \
-                .join(symbol_number_count_df, [doc_id_col]) \
                 .join(non_li_words_count_df, [doc_id_col]) \
                 .join(bytes_df, [doc_id_col]) \
                 .join(words_count_df, [doc_id_col]) \
                 .join(char_count_df, [doc_id_col]) \
                 .join(repeated_lines_dist_df, [doc_id_col])
+                # .join(symbol_number_count_df, [doc_id_col]) \
         
         return doc_df
 
@@ -274,8 +274,8 @@ class SparkOptimizedHandlers():
         char_count_col,
         nsfw_count_col,
         nsfw_threshold,
-        symbol_number_count_col,
-        symbol_number_threshold,
+        # symbol_number_count_col,
+        # symbol_number_threshold,
         non_li_count_col, 
         non_li_threshold,
         min_line_count,
@@ -287,8 +287,8 @@ class SparkOptimizedHandlers():
                 .select("*", when(doc_df[line_count_col] <= min_line_count, True).otherwise(False).alias("has_less_lines")) \
                 .select("*", when(doc_df[mean_line_len_col] <= min_mean_line_len, True).otherwise(False).alias("is_short_lines_heavy")) \
                 .select("*", when(doc_df[nsfw_count_col]/doc_df[word_count_col] >= nsfw_threshold, True).otherwise(False).alias("is_nsfw_heavy")) \
-                .select("*", when(doc_df[symbol_number_count_col]/doc_df[char_count_col] >= symbol_number_threshold, True).otherwise(False).alias("is_symbol_number_heavy")) \
                 .select("*", when(doc_df[non_li_count_col]/doc_df[char_count_col] >= non_li_threshold, True).otherwise(False).alias("is_non_li_heavy"))
+                # .select("*", when(doc_df[symbol_number_count_col]/doc_df[char_count_col] >= symbol_number_threshold, True).otherwise(False).alias("is_symbol_number_heavy")) \
 
         # doc_df = doc_df.select("*", when(doc_df[line_count_col] <= min_line_count, True).otherwise(False).alias("has_less_lines"))
         # doc_df.show(n=5)

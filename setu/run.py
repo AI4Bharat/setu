@@ -32,6 +32,75 @@ def parse_args():
         required=False,
         help="No.of samples per partition",
     )
+    
+    parser.add_argument(
+        "--save_doc_lid_output",
+        action="store_true",
+        help="Whether to store lid checkpoint",
+    )
+
+    parser.add_argument(
+        "-i",
+        "--doc_lid_output_path",
+        type=str,
+        required=False,
+        default=None,
+        help="Path of the folder store lid checkpoint",
+    )
+
+    parser.add_argument(
+        "--save_line_stats_output",
+        action="store_true",
+        help="Whether to store line stats checkpoint",
+    )
+
+    parser.add_argument(
+        "-l",
+        "--line_stats_output_path",
+        type=str,
+        required=False,
+        default=None,
+        help="Path of the folder store line stats checkpoint",
+    )
+
+    parser.add_argument(
+        "--save_doc_stats_output",
+        action="store_true",
+        help="Whether to store doc stats checkpoint",
+    )
+
+    parser.add_argument(
+        "-d",
+        "--doc_stats_output_path",
+        type=str,
+        required=False,
+        default=None,
+        help="Path of the folder store doc stats checkpoint",
+    )
+
+    parser.add_argument(
+        "--save_nsfw_data",
+        action="store_true",
+        help="Whether to store nsfw data",
+    )
+
+    parser.add_argument(
+        "-n",
+        "--nsfw_output_path",
+        type=str,
+        required=False,
+        default=None,
+        help="Path of the folder to store nsfw data",
+    )
+
+    parser.add_argument(
+        "-f",
+        "--final_output_path",
+        type=str,
+        required=False,
+        default=None,
+        help="Path to the folder to store final output",
+    )
 
     parser.add_argument(
         "-v",
@@ -48,27 +117,9 @@ if __name__ == "__main__":
 
     args = parse_args()
 
+    print("Entered Commandline Arguments: ", args)
+
     setu = Setu(config_file=args.config)
-
-    # wait for 0.5 sec for Spark job to complete
-    # spark_timer = threading.Timer(0.5, timer_elapsed)
-    # spark_timer.start()
-
-    # # Create a SparkSession
-    # spark = SparkSession.builder.appName("TempDirExample").getOrCreate()
-
-    # # Get the current configuration
-    # conf = spark.sparkContext.getConf()
-
-    # # Set the temporary directory path
-    # new_temp_dir = "/data/priyam/tmp"
-    # conf.set("spark.local.dir", new_temp_dir)
-
-    # spark = SparkSession \
-    #             .builder \
-    #             .config(conf=conf) \
-    #             .appName(setu.config.appname) \
-    #             .getOrCreate()
 
     spark = SparkSession \
                 .builder \
@@ -78,7 +129,6 @@ if __name__ == "__main__":
     spark_context = spark.sparkContext
     
     try:
-        # print(spark.sparkContext.getConf().getAll())
         df = spark.read.parquet(
             args.parquet_glob_path,
         )
@@ -92,6 +142,15 @@ if __name__ == "__main__":
             doc_id_col="doc_id",
             text_col="text",
             docs_per_partition=args.samples_per_partition,
+            save_doc_lid_output=args.save_doc_lid_output,
+            doc_lid_output_path=args.doc_lid_output_path,
+            save_line_stats_output=args.save_line_stats_output,
+            line_stats_output_path=args.line_stats_output_path,
+            save_doc_stats_output=args.save_doc_stats_output,
+            doc_stats_output_path=args.doc_stats_output_path,
+            save_nsfw_data=args.save_nsfw_data,
+            nsfw_output_path=args.nsfw_output_path,
+            final_output_path=args.final_output_path,
             verbose=args.verbose,
         )
 

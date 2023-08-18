@@ -16,6 +16,7 @@ from pyspark.sql.types import (
     MapType, 
     StringType, 
     FloatType,
+    Row
 )
 from functools import partial
 import json
@@ -35,10 +36,13 @@ def find_code_spans(doc_id, text):
     
     spans = []
 
-    for pattern, lang in patterns:
-        for match in pattern.finditer(text):
-            spans.append([match.start(), match.end()])
-    return spans if len(spans) else None
+    try:
+        for pattern, lang in patterns:
+            for match in pattern.finditer(text):
+                spans.append([match.start(), match.end()])
+        return Row("code_spans", "code_spans_success")(spans if len(spans) else None, True)
+    except:
+        return Row("code_spans", "code_spans_success")(None, False)
 
 def is_terminal_valid(text):
     if text.endswith(CONSTANTS.TERMINAL_PUNCTUATIONS_EXCEPTION):
@@ -240,7 +244,7 @@ def get_word_ngram_repetition(
 
 def has_repetition(repetition_scores, repetition_thresholds):
     """
-    Use same function for word and character n-gram repetition. 
+    Use same function for word and character n-gram repetition.
     Just the repetition scores and thresholds will change.
     """
     flags = []

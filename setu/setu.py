@@ -15,6 +15,8 @@ from pyspark.sql.types import (
     MapType, 
     StringType, 
     FloatType,
+    StructType,
+    StructField
 )
 from functools import partial
 import json
@@ -46,7 +48,6 @@ from line_filters import (
     get_char_count,
     get_bytes,
     get_nsfw_words_total_count,
-    get_symbol_number_count,
     is_numbers,
     get_stopword_total_count,
     extract_line_metadata,
@@ -65,9 +66,14 @@ import os
 from math import ceil
 import time
 
-find_code_spans_udf = udf(find_code_spans, ArrayType(ArrayType(IntegerType())))
+find_code_spans_udf = udf(
+    find_code_spans, 
+    StructType([StructField("code_spans",
+                            ArrayType(ArrayType(IntegerType())), True),
+                StructField("code_spans_success",
+                            BooleanType(), True)]))
 is_terminal_valid_udf = udf(is_terminal_valid, BooleanType()) # Doc level
-split_at_terminal_punc_udf = udf(split_at_terminal_punc, ArrayType(StringType()))
+split_with_delimiter_udf = udf(split_with_delimiter, ArrayType(StringType()))
 get_nsfw_word_dist_udf = udf(get_nsfw_word_dist, MapType(StringType(), IntegerType()))
 non_li_chars_total_count_udf = udf(non_li_chars_total_count, IntegerType())
 get_word_count_udf = udf(get_word_count, IntegerType())
@@ -115,7 +121,6 @@ class Setu():
         self.has_char_repetition_udf = udf(self.has_char_repetition, BooleanType()) # Doc level
         self.has_word_repetition_udf = udf(self.has_word_repetition, BooleanType()) # Doc level
         self.get_nsfw_words_total_count_udf = udf(get_nsfw_words_total_count, IntegerType())
-        self.get_symbol_number_count_udf = udf(get_symbol_number_count, IntegerType())
         self.is_numbers_udf = udf(is_numbers, BooleanType()) # Line Level
 
     def run_spark_pipeline(
@@ -125,351 +130,346 @@ class Setu():
         doc_id_col,
         text_col,
         docs_per_partition,
-        verbose:bool = True,
+        save_doc_lid_output,
+        doc_lid_output_path,
+        save_line_stats_output,
+        line_stats_output_path,
+        save_doc_stats_output,
+        doc_stats_output_path,
+        save_nsfw_data,
+        nsfw_output_path,
+        final_output_path,
+        run_analysis = True,
+        run_flagging = True,
+        doc_stats_df = None,
+        verbose:bool = True, 
     ):
 
         print("Starting Spark Pipeline...........")
 
-        self.df_total_rows = df.count()
+        if run_analysis:
 
-        self.n_splits = ceil(self.df_total_rows/docs_per_partition)
+            df = df \
+                .select(cols_to_use) \
+                .filter(df.successful_extraction == True)
 
-        print(f"When required data will be repartitioned into - {self.n_splits} partitions")
+            self.df_total_rows = df.count()
 
-        df = df \
-            .select(cols_to_use) \
-            .filter(df.successful_extraction == True)
-        
-        df = df.select("*", find_code_spans_udf(doc_id_col, text_col).alias("code_spans"))
+            self.n_splits = ceil(self.df_total_rows/docs_per_partition)
 
-        if verbose:
-            df.explain(mode="formatted")
-            df.show(n=5)
-            print("Completed `find_code_spans`....")
+            print(f"When required data will be repartitioned into - {self.n_splits} partitions")
 
-        if self.config.remove_code:
-
-            df = df.withColumn(text_col, self.remove_code_udf(text_col, "code_spans"))
+            curr_cols = list(df.schema.names)
+            
+            df = df.select("*", find_code_spans_udf(doc_id_col, text_col).alias("code_span_results")) \
+                   .select(*curr_cols, "code_span_results.*")
 
             if verbose:
                 df.explain(mode="formatted")
                 df.show(n=5)
-                print("Completed `remove_code`....")
+                print("Completed `find_code_spans`....")
 
-        spans_df = self.chunk_handler.doc2lines(df, text_col, "\n")
+            if self.config.remove_code:
 
-        if verbose:
-            spans_df.explain(mode="formatted")
-            spans_df.show(n=5, truncate=False)
-            print("Completed `doc2lines` via `\\n`....")
+                df = df.withColumn(text_col, self.remove_code_udf(text_col, "code_spans"))
 
-        spans_df = spans_df.select("*", is_terminal_valid_udf(text_col).alias("is_terminal_valid"))
+                if verbose:
+                    df.explain(mode="formatted")
+                    df.show(n=5)
+                    print("Completed `remove_code`....")
 
-        if verbose:
-            spans_df.explain(mode="formatted")
-            spans_df.show(n=5, truncate=False)
-            print("Completed `is_terminal_valid`....")
-        
-        if self.config.remove_terminal_invalid:
-
-            spans_df = spans_df.filter(spans_df.is_terminal_valid == True)
+            spans_df = self.chunk_handler.doc2lines(df, text_col, "\n")
 
             if verbose:
                 spans_df.explain(mode="formatted")
                 spans_df.show(n=5, truncate=False)
-                print("Completed `remove_non_terminal_punc_span`....")
+                print("Completed `doc2lines` via `\\n`....")
 
-        doc_df = self.chunk_handler.lines2doc(spans_df, text_col, doc_id_col, "pos", '\n')
+            spans_df = spans_df.select("*", is_terminal_valid_udf(text_col).alias("is_terminal_valid"))
 
-        if verbose:
-            doc_df.show(n=5, truncate=False)
-            print("Completed `lines2doc` via ` `....")
-
-        df = df \
-            .drop(text_col) \
-            .join(doc_df, [doc_id_col])
-
-        if verbose:
-            df.show(n=5, truncate=False)
-            print("Updated Text column with cleaned text....")
-
-        prev_num_of_partitions = df.rdd.getNumPartitions()
-
-        df = df.repartition(self.n_splits)
-
-        df = run_lid_spark_pipeline(self.config, df, [doc_id_col], text_col, "doc_lang", "doc_lang_iso")
-
-        df = df.repartition(prev_num_of_partitions)
-
-        if verbose:
-            df.show(n=5)
-            print("Completed `doc_lang`....")
-
-        if self.config.save_doc_lid_output:
-
-            df \
-            .write \
-            .mode("overwrite") \
-            .parquet(self.config.doc_lid_output_path)
-
-            print("Completed `doc_lang` level `df` parquet write....")
-
-        line_df = df.withColumn(text_col, split_at_terminal_punc_udf(text_col, "doc_lang", "doc_lang_iso"))
-
-        if verbose:
-            line_df.show(n=5)
-            print("Completed `split_at_terminal` ....")
-
-        line_df = line_df.select("*", posexplode(text_col)).drop(text_col).withColumnRenamed("col", text_col)
-
-        if verbose:
-            line_df.show(n=5)
-            print("Completed `posexplode` to get line-level `df` ....")
-
-
-        line_df = line_df.select("*", get_word_count_udf(text_col).alias("words_count"))
-
-        if verbose:
-            line_df.show(n=5)
-            print("Completed `words_count`....")
-        
-
-        line_df = line_df.select("*", get_char_count_udf(text_col).alias("char_count"))
-
-        if verbose:
-            line_df.show(n=5)
-            print("Completed `char_count`....")
-        
-
-        line_df = line_df.select("*", get_bytes_udf(text_col).alias("bytes"))
-
-        if verbose:
-            line_df.show(n=5)
-            print("Completed `bytes`....")
-        
-        line_df = line_df.select("*", get_nsfw_word_dist_udf(text_col, "doc_lang").alias("nsfw_word_dist"))
-
-        if verbose:
-            line_df.show(n=5)
-            print("Completed `nsfw_word_dist`....")
-        
-
-        line_df = line_df.select("*", self.get_nsfw_words_total_count_udf("nsfw_word_dist").alias("nsfw_words_count"))
-
-        if verbose:
-            line_df.show(n=5)
-            print("Completed `nsfw_words_count`....")
-        
-
-        line_df = line_df.select("*", self.get_symbol_number_count_udf(text_col, "doc_lang").alias("symbol_number_count"))
-
-        if verbose:
-            line_df.show(n=5)
-            print("Completed `symbol_number_count`....")
-        
-
-        line_df = line_df.select("*", self.is_numbers_udf(text_col, "doc_lang").alias("is_number"))
-
-        if verbose:
-            line_df.show(n=5)
-            print("Completed `is_number`....")
-        
-
-        line_df = line_df.select("*", non_li_chars_total_count_udf(text_col).alias("non_li_char_count"))
-
-        if verbose:
-            line_df.show(n=5)
-            print("Completed `non_li_char_count`....")
-        
-        
-        if self.config.save_line_stats_output:
-            line_df \
-            .write \
-            .mode("overwrite") \
-            .parquet(self.config.line_stats_output_path)
-
-            print("Completed line-level `df` parquet write....")
-        
-        if self.config.remove_only_number:
-            line_df = line_df.filter(line_df.is_number == True)
+            if verbose:
+                spans_df.explain(mode="formatted")
+                spans_df.show(n=5, truncate=False)
+                print("Completed `is_terminal_valid`....")
             
+            if self.config.remove_terminal_invalid:
+
+                spans_df = spans_df.filter(spans_df.is_terminal_valid == True)
+
+                if verbose:
+                    spans_df.explain(mode="formatted")
+                    spans_df.show(n=5, truncate=False)
+                    print("Completed `remove_non_terminal_punc_span`....")
+
+            doc_df = self.chunk_handler.lines2doc(spans_df, text_col, doc_id_col, "pos", '\n')
+
+            if verbose:
+                doc_df.show(n=5, truncate=False)
+                print("Completed `lines2doc` via ` `....")
+
+            df = df \
+                .drop(text_col) \
+                .join(doc_df, [doc_id_col])
+
+            if verbose:
+                df.show(n=5, truncate=False)
+                print("Updated Text column with cleaned text....")
+
+            prev_num_of_partitions = df.rdd.getNumPartitions()
+
+            df = df.repartition(self.n_splits)
+
+            df = run_lid_spark_pipeline(self.config, df, [doc_id_col], text_col, "doc_lang", "doc_lang_iso")
+
+            df = df.repartition(prev_num_of_partitions)
+
+            if verbose:
+                df.show(n=5)
+                print("Completed `doc_lang`....")
+
+            if self.config.save_doc_lid_output:
+
+                df \
+                .write \
+                .mode("overwrite") \
+                .parquet(doc_lid_output_path if doc_lid_output_path else self.config.doc_lid_output_path)
+
+                print("Completed `doc_lang` level `df` parquet write....")
+
+            line_df = df.withColumn(text_col, split_with_delimiter_udf(text_col))
+
             if verbose:
                 line_df.show(n=5)
-                print("Completed `is_number` removal filter....")
+                print("Completed `split_at_terminal` ....")
 
-        doc_stats_df = self.spark_optimized_handler.run_analysis(
-            line_df=line_df,
-            doc_id_col=doc_id_col,
-            text_col=text_col,
-            line_nsfw_count_col_="nsfw_words_count",
-            line_sym_num_count_col_="symbol_number_count",
-            line_non_li_count_col_="non_li_char_count",
-            line_bytes_col_="bytes",
-            line_words_count_col_="words_count",
-            line_char_count_col_="char_count",
-        )
+            line_df = line_df.select("*", posexplode(text_col)).drop(text_col).withColumnRenamed("col", text_col)
 
-        if verbose:
-            doc_stats_df.show(n=5)
-            print("Completed `line2doc` run with metadata/stats aggregation....")
-
-        doc_stats_df = self.spark_optimized_handler.run_flagging(
-            doc_df=doc_stats_df,
-            word_count_col="words_count",
-            char_count_col="char_count",
-            nsfw_count_col="nsfw_words_count",
-            nsfw_threshold=self.config.nsfw_threshold,
-            symbol_number_count_col="symbol_number_count",
-            symbol_number_threshold=self.config.symbol_number_threshold,
-            non_li_count_col="non_li_char_count",
-            non_li_threshold=self.config.non_li_char_threshold,
-            line_count_col="lines_count",
-            min_line_count=self.config.min_line_count,
-            mean_line_len_col="mean_line_length",
-            min_mean_line_len=self.config.min_mean_line_len,
-        )
+            if verbose:
+                line_df.show(n=5)
+                print("Completed `posexplode` to get line-level `df` ....")
 
 
-        if verbose:
-            doc_stats_df.show(n=5)
-            print("Completed `doc_flagging`....")
+            line_df = line_df.select("*", get_word_count_udf(text_col).alias("words_count"))
 
-        doc_df = self.chunk_handler.lines2doc(line_df, text_col, doc_id_col, "pos", " ")
+            if verbose:
+                line_df.show(n=5)
+                print("Completed `words_count`....")
+            
 
-        if verbose:
-            doc_df.show(n=5)
-            print("Completed `lines2doc` via ` `....")
+            line_df = line_df.select("*", get_char_count_udf(text_col).alias("char_count"))
+
+            if verbose:
+                line_df.show(n=5)
+                print("Completed `char_count`....")
+            
+
+            line_df = line_df.select("*", get_bytes_udf(text_col).alias("bytes"))
+
+            if verbose:
+                line_df.show(n=5)
+                print("Completed `bytes`....")
+            
+            line_df = line_df.select("*", get_nsfw_word_dist_udf(text_col, "doc_lang").alias("nsfw_word_dist"))
+
+            if verbose:
+                line_df.show(n=5)
+                print("Completed `nsfw_word_dist`....")
+            
+
+            line_df = line_df.select("*", self.get_nsfw_words_total_count_udf("nsfw_word_dist").alias("nsfw_words_count"))
+
+            if verbose:
+                line_df.show(n=5)
+                print("Completed `nsfw_words_count`....")
         
-        df = df \
-            .drop(text_col) \
-            .join(doc_df, [doc_id_col])    
+            line_df = line_df.select("*", self.is_numbers_udf(text_col, "doc_lang").alias("is_number"))
 
-        if verbose:    
-            doc_stats_df.show(n=5)
-            print("Updated Text columne with cleaned text....")
+            if verbose:
+                line_df.show(n=5)
+                print("Completed `is_number`....")
+            
 
-        df = df.join(doc_stats_df, [doc_id_col])
+            line_df = line_df.select("*", non_li_chars_total_count_udf(text_col).alias("non_li_char_count"))
 
-        if verbose:
-            df.show(n=5)
-            print("Completed `join` for doc and doc_stats via `doc_id`....")
+            if verbose:
+                line_df.show(n=5)
+                print("Completed `non_li_char_count`....")
+            
+            if self.config.save_line_stats_output:
+                line_df \
+                .write \
+                .mode("overwrite") \
+                .parquet(line_stats_output_path if line_stats_output_path else self.config.line_stats_output_path)
 
-        df = df.select("*", self.get_char_ngram_repetition_udf(text_col).alias("char_ngram_repetition_score"))
+                print("Completed line-level `df` parquet write....")
+            
+            if self.config.remove_only_number:
+                line_df = line_df.filter(line_df.is_number == True)
+                
+                if verbose:
+                    line_df.show(n=5)
+                    print("Completed `is_number` removal filter....")
 
-        if verbose:
-            df.show(n=5)
-            print("Completed `char_ngram_reptition_score`....")
+            doc_stats_df = self.spark_optimized_handler.run_analysis(
+                line_df=line_df,
+                doc_id_col=doc_id_col,
+                text_col=text_col,
+                line_nsfw_count_col_="nsfw_words_count",
+                line_non_li_count_col_="non_li_char_count",
+                line_bytes_col_="bytes",
+                line_words_count_col_="words_count",
+                line_char_count_col_="char_count",
+            )
 
-        df = df.select("*", self.has_char_repetition_udf("char_ngram_repetition_score").alias("has_char_repetition"))
+            if verbose:
+                doc_stats_df.show(n=5)
+                print("Completed `line2doc` run with metadata/stats aggregation....")
 
-        if verbose:
-            df.show(n=5)
-            print("Completed `has_char_reptition`....")
+            doc_df = self.chunk_handler.lines2doc(line_df, text_col, doc_id_col, "pos", " ")
 
-        df = df.select("*", self.get_word_ngram_repetition_udf(text_col, "doc_lang_iso").alias("word_ngram_repetition_score"))
+            if verbose:
+                doc_df.show(n=5)
+                print("Completed `lines2doc` via ` `....")
+            
+            df = df \
+                .drop(text_col) \
+                .join(doc_df, [doc_id_col])    
 
-        if verbose:
-            df.show(n=5)
-            print("Completed `word_ngram_reptition_score`....")
+            if verbose:    
+                doc_stats_df.show(n=5)
+                print("Updated Text column with cleaned text....")
 
-        df = df.select("*", self.has_word_repetition_udf("word_ngram_repetition_score").alias("has_word_repetition"))
+            if verbose:
+                df.show(n=5)
+                print("Completed `join` for doc and doc_stats via `doc_id`....")
 
-        if verbose:
-            df.show(n=5)
-            print("Completed `has_word_reptition`....")
+            df = df.select("*", self.get_char_ngram_repetition_udf(text_col).alias("char_ngram_repetition_score"))
 
-        if self.config.save_doc_stats_output:
-            df \
-            .write \
-            .mode("overwrite") \
-            .parquet(self.config.doc_stats_output_path)
+            if verbose:
+                df.show(n=5)
+                print("Completed `char_ngram_reptition_score`....")
+
+            df = df.select("*", self.get_word_ngram_repetition_udf(text_col, "doc_lang_iso").alias("word_ngram_repetition_score"))
+
+            if verbose:
+                df.show(n=5)
+                print("Completed `word_ngram_reptition_score`....")
+
+            df = df.drop("local_path", "repeated_line_dist")
+
+        if run_flagging:
+
+            doc_stats_df = self.spark_optimized_handler.run_flagging(
+                doc_df=doc_stats_df,
+                word_count_col="words_count",
+                char_count_col="char_count",
+                nsfw_count_col="nsfw_words_count",
+                nsfw_threshold=self.config.nsfw_threshold,
+                non_li_count_col="non_li_char_count",
+                non_li_threshold=self.config.non_li_char_threshold,
+                line_count_col="lines_count",
+                min_line_count=self.config.min_line_count,
+                mean_line_len_col="mean_line_length",
+                min_mean_line_len=self.config.min_mean_line_len,
+            )
+
+            if verbose:
+                doc_stats_df.show(n=5)
+                print("Completed `doc_flagging`....")
+
+            df = df.join(doc_stats_df, [doc_id_col])
+
+            df = df.select("*", self.has_char_repetition_udf("char_ngram_repetition_score").alias("has_char_repetition"))
+
+            if verbose:
+                df.show(n=5)
+                print("Completed `has_char_reptition`....")
+
+            df = df.select("*", self.has_word_repetition_udf("word_ngram_repetition_score").alias("has_word_repetition"))
+
+            if verbose:
+                df.show(n=5)
+                print("Completed `has_word_reptition`....")
+
+            if self.config.save_doc_stats_output:
+                df \
+                .drop(text_col) \
+                .write \
+                .mode("overwrite") \
+                .parquet(doc_stats_output_path if doc_stats_output_path else self.config.doc_stats_output_path)
+
+                if verbose:
+                    df.show(n=5)
+                    print("Completed doc-level `df` parquet write....")
+
+            if self.config.line_count_filter:
+
+                df = df.filter(df.has_less_lines == False)
+
+                if verbose:
+                    df.show(n=5)
+                    print("Completed `is_number` removal filter....")
+
+            if self.config.line_length_filter:
+
+                df = df.filter(df.is_short_lines_heavy == False)
+
+                if verbose:
+                    df.show(n=5)
+                    print("Completed `is_number` removal filter....")
+
+            if self.config.nsfw_filter:
+
+                if self.config.save_nsfw_data:
+                    df.filter(df.is_nsfw_heavy == True) \
+                        .write \
+                        .mode("overwrite") \
+                        .parquet(nsfw_output_path if nsfw_output_path else self.config.nsfw_output_path)
+
+                    if verbose:
+                        nsfw_df.show(n=5)
+                        print("Completed nsfw `df` parquet write....")
+
+                df = df.filter(df.is_nsfw_heavy == False)
+                
+                if verbose:
+                    df.show(n=5)                
+
+            if self.config.non_li_filter:
+
+                df = df.filter(df.is_non_li_heavy == False)
+
+                if verbose:
+                    df.show(n=5)
+                    print("Completed `is_non_li_heavy` removal filter....")
+
+            if self.config.word_repetition_filter:
+
+                df = df.filter(df.has_word_repetition == False)
+
+                if verbose:
+                    df.show(n=5)
+                    print("Completed `has_word_repetition` removal filter....")
+                
+
+            if self.config.char_repetition_filter:
+                
+                df = df.filter(df.has_char_repetition == False)
+
+                if verbose:
+                    df.show(n=5)
+                    print("Completed `has_char_repetition` removal filter....")
 
             if verbose:
                 df.show(n=5)
                 print("Completed doc-level `df` parquet write....")
 
-        if self.config.line_count_filter:
-
-            df = df.filter(df.has_less_lines == True)
-
-            if verbose:
-                df.show(n=5)
-                print("Completed `is_number` removal filter....")
-
-        if self.config.line_length_filter:
-
-            df = df.filter(df.is_short_lines_heavy == True)
-
-            if verbose:
-                df.show(n=5)
-                print("Completed `is_number` removal filter....")
-
-        if self.config.nsfw_filter:
-
-            nsfw_df = df.filter(df.is_nsfw_heavy == False)
-
-            df = df.filter(df.is_nsfw_heavy == True)
-
-            if self.config.save_nsfw_data:
-                nsfw_df \
-                .write \
-                .mode("overwrite") \
-                .parquet(self.config.nsfw_output_path)
-
-                if verbose:
-                    nsfw_df.show(n=5)
-                    print("Completed nsfw `df` parquet write....")
-            
-            if verbose:
-                df.show(n=5)
-
-        if self.config.symbol_number_filter:
-
-            df = df.filter(df.is_symbol_number_heavy == True)
-
-            if verbose:
-                df.show(n=5)
-                print("Completed `is_symbol_number_heavy` removal filter....")
-            
-
-        if self.config.non_li_filter:
-
-            df = df.filter(df.is_non_li_heavy == True)
-
-            if verbose:
-                df.show(n=5)
-                print("Completed `is_non_li_heavy` removal filter....")
-
-        if self.config.word_repetition_filter:
-
-            df = df.filter(df.has_word_repetition == True)
-
-            if verbose:
-                df.show(n=5)
-                print("Completed `has_word_repetition` removal filter....")
-            
-
-        if self.config.char_repetition_filter:
-            
-            df = df.filter(df.has_char_repetition == True)
-
-            if verbose:
-                df.show(n=5)
-                print("Completed `has_char_repetition` removal filter....")
-            
-
-        final_sample_count = df.count()
-        print(f"Final Sample Count = {final_sample_count}")
-
-        if verbose:
-            df.show(n=5)
-
         df \
         .write \
         .mode("overwrite") \
-        .parquet(self.config.final_output_path)
+        .parquet(final_output_path if final_output_path else self.config.final_output_path)
 
-        print("Completed final `df` parquet write....")        
+        print("Completed final `df` parquet write....")
 
     def run_pipeline(
         self,
@@ -528,7 +528,6 @@ class Setu():
         )
 
         doc["iso"] = self.lid.get_iso_code(doc["lid_major"][0])
-        # lines = split_at_terminal_punc(doc["text"], doc["lid_major"][0], doc["iso"])
         lines = split_with_delimiter(doc["text"])
 
         if enable_analysis:
