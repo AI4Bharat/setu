@@ -36,10 +36,23 @@ python -m text_dedup.suffix_array \
     --path "parquet" \
     --name "sangraha-bodo" \
     --split "train" \
-    --data_dir "/data/priyam/sangraha/spark_out/bodo/final_docs/*.parquet" \
+    --data_files "/data/priyam/sangraha/spark_out/bodo/filtered_docs/dataset/*.parquet" \
     --cache_dir "/data/priyam/cache" \
     --output "/data/priyam/sangraha/dedup/bodo" \
-    --column "text"             
+    --column "text" \
+    --google_repo_path "/data/priyam/setu/text-dedup/deduplicate-text-datasets"  
+
+python -m text_dedup.minhash \
+    --path "parquet" \
+    --name "sangraha-dogri" \
+    --split "train" \
+    --data_files "/data/priyam/sangraha/spark_out/dogri/analysis/dataset/*.parquet" \
+    --cache_dir "/data/priyam/cache" \
+    --output "/data/priyam/sangraha/dedup/dogri" \
+    --column "text" \
+    --batch_size 10000
+
+--data_dir "/data/priyam/sangraha/spark_out/bodo/filtered_docs/dataset/*.parquet" \ 
 
 spark-submit --master spark://e2e-100-5.ssdcloudindia.net:7077 --num-executors 48 --executor-cores 1 --executor-memory 5G --driver-memory 10G ~/setu/utils/convert_to_parquet.py
 

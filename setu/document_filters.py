@@ -22,8 +22,7 @@ from functools import partial
 import json
 import statistics
 
-def find_code_spans(doc_id, text):
-    patterns = [
+patterns = [
         # HTML
         (re.compile(r'<[^>]+?>.+?</[^>]+?>'), 'HTML'),
         
@@ -33,9 +32,9 @@ def find_code_spans(doc_id, text):
         # CSS
         (re.compile(r'(?s)\..*?\{.*?\}'), 'CSS'),
     ]
-    
-    spans = []
 
+def find_code_spans(doc_id, text):
+    spans = []
     try:
         for pattern, lang in patterns:
             for match in pattern.finditer(text):
@@ -43,6 +42,13 @@ def find_code_spans(doc_id, text):
         return Row("code_spans", "code_spans_success")(spans if len(spans) else None, True)
     except:
         return Row("code_spans", "code_spans_success")(None, False)
+
+# def find_code_spans(doc_id, text):
+#     spans = []
+#     for pattern, lang in patterns:
+#         for match in pattern.finditer(text):
+#             spans.append([match.start(), match.end()])
+#     return spans if len(spans) else None
 
 def is_terminal_valid(text):
     if text.endswith(CONSTANTS.TERMINAL_PUNCTUATIONS_EXCEPTION):

@@ -10,7 +10,7 @@
     "nllb_model_path": "/data/priyam/setu/setu/data/models/lid218e.bin",
     "mapping_json_path": "/data/priyam/setu/setu/data/language_mapping.json",
     "iso_mapping_json_path": "/data/priyam/setu/setu/data/lang_iso_mapping.json",
-    "lid_probability_threshold": 0.7,
+    "lid_probability_threshold": 0.9,
     "remove_code": true,
     "remove_terminal_invalid": true,
     "save_doc_lid_output": true,

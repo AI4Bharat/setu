@@ -18,8 +18,11 @@ from pyspark.sql.functions import (
     expr,
     map_from_arrays,
     posexplode,
-    struct
+    struct,
+    broadcast,
+    rand
 )
+
 from pyspark.sql.types import (
     BooleanType,
     IntegerType, 
@@ -28,13 +31,34 @@ from pyspark.sql.types import (
 from functools import partial
 import json
 from pyspark.sql.window import Window
+import os
+import shutil
+
+def rename_partitioned_directories(base_dir, partition_column_name):
+    for dir_name in os.listdir(base_dir):
+        if dir_name.startswith(partition_column_name + "="):
+            new_name = dir_name.split("=")[1]
+            old_path = os.path.join(base_dir, dir_name)
+            new_path = os.path.join(base_dir, new_name)
+            shutil.move(old_path, new_path)
 
 class ChunkHandler():
 
     def doc2lines(self, df, text_column, split_symbol):
+
         df = df \
             .withColumn(text_column, split(text_column, split_symbol, -1)) \
             .select("*", posexplode(text_column)).drop(text_column).withColumnRenamed("col", text_column) \
+
+        # df = df.withColumn("salt", (rand() * 10).cast("int"))
+
+        # df = df \
+        #     .withColumn(text_column, split(text_column, split_symbol, -1)) \
+        #     .select("*", posexplode(text_column)).drop(text_column) \
+        #     .withColumnRenamed("col", text_column)
+
+        # Drop or ignore the salt column post processing if not needed
+        # df = df.drop("salt")
         
         return df
 
@@ -42,8 +66,7 @@ class ChunkHandler():
 
         join_lines = udf(lambda x: join_symbol.join([line.text for line in x if line]), StringType())
 
-        df = df \
-                .withColumn(text_column, struct([sort_column, text_column])).select(identifier_column, text_column) \
+        df = df.withColumn(text_column, struct([sort_column, text_column])).select(identifier_column, text_column) \
                 .groupBy(identifier_column) \
                 .agg(collect_list(text_column).alias(text_column)) \
                 .withColumn(
@@ -130,48 +153,6 @@ class SparkOptimizedHandlers():
 
     def get_repeated_line_dist(self, line_df, id_col, text_col):
 
-        # col_name = "repeated_line_dist"
-
-        # repeated_line_dist = line_df.groupBy(id_col, text_col) \
-        #                             .agg(count("*").alias(col_name))
-        # repeated_line_dist.show(n=5)
-
-        # print("Completed `count by doc_id for repeated_line_dist`....")
-                        
-        # repeated_line_dist = repeated_line_dist \
-        #                             .groupBy(id_col) \
-        #                             .agg(collect_list(
-        #                                     create_map([text_col, col_name])) \
-        #                                     .alias(col_name))
-
-        # repeated_line_dist.show(n=5)
-
-        # print("Completed `structure creation for repeated_line_dist`....")
-
-        # repeated_line_dist = repeated_line_dist.withColumn("keys", expr(f"transform({col_name}, x -> map_keys(x)[0])"))
-
-        # repeated_line_dist.show(n=5)
-
-        # print("Completed `creation of key column for repeated_lines_dist`....")
-
-        # repeated_line_dist = repeated_line_dist.withColumn("values", expr(f"transform({col_name}, x -> map_values(x)[0])"))
-
-        # repeated_line_dist.show(n=5)
-
-        # print("Completed `creation of value column for repeated_lines_dist`....")
-
-        # repeated_line_dist = repeated_line_dist.withColumn(col_name, map_from_arrays(col("keys"), col("values")))
-
-        # repeated_line_dist.show(n=5)
-
-        # print("Completed `creation of map from arrays for repeated_lines_dist`....")
-
-        # repeated_line_dist = repeated_line_dist.drop("keys", "values")
-
-        # repeated_line_dist.show(n=5)
-
-        # print("Completed `repeated_lines_dist`....")
-
         col_name = "repeated_line_dist"
 
         repeated_line_dist = line_df.groupBy(id_col, text_col) \
@@ -207,49 +188,26 @@ class SparkOptimizedHandlers():
         bytes_df = self.get_bytes(grouped_line_df, line_bytes_col_)
         words_count_df = self.get_words_count(grouped_line_df, line_words_count_col_)
         char_count_df = self.get_char_count(grouped_line_df, line_char_count_col_)
-        repeated_lines_dist_df = self.get_repeated_line_dist(line_df, doc_id_col, text_col)
+        # repeated_lines_dist_df = self.get_repeated_line_dist(line_df, doc_id_col, text_col)
         mean_line_len_df = self.get_mean_line_length(grouped_line_df, "words_count")
         median_line_len_df = self.get_median_line_length(grouped_line_df, "words_count")
         mode_line_len_df = self.get_mode_line_length(grouped_line_df, "words_count")
         min_line_len_df = self.get_min_line_length(grouped_line_df, "words_count")
         max_line_len_df = self.get_max_line_length(grouped_line_df, "words_count")
-        
 
-        # doc_df = num_lines_df.join(mean_line_len_df, [doc_id_col]) 
-        # doc_df = doc_df.join(median_line_len_df, [doc_id_col]) 
-        # doc_df = doc_df.join(mode_line_len_df, [doc_id_col]) 
-        # doc_df = doc_df.join(min_line_len_df, [doc_id_col]) 
-        # doc_df = doc_df.join(max_line_len_df, [doc_id_col]) 
-        # doc_df.show(n=5)
-        # print("Completed `join max_line_len`....")
-
-        # doc_df = doc_df.join(nsfw_words_count_df, [doc_id_col]) 
-        # doc_df.show(n=5)
-        # print("Completed `join nsfw_words_count`....")
-
-        # doc_df = doc_df.join(symbol_number_count_df, [doc_id_col])
-        # doc_df.show(n=5)
-        # print("Completed `join symbol_words_count`....")
-
-        # doc_df = doc_df.join(non_li_words_count_df, [doc_id_col])
-        # doc_df.show(n=5)
-        # print("Completed `join non_li_words_count`....")
-
-        # doc_df = doc_df.join(bytes_df, [doc_id_col])
-        # doc_df.show(n=5)
-        # print("Completed `join bytes`....")
-
-        # doc_df = doc_df.join(words_count_df, [doc_id_col])
-        # doc_df.show(n=5)
-        # print("Completed `join words_count`....")
-
-        # doc_df = doc_df.join(char_count_df, [doc_id_col])
-        # doc_df.show(n=5)
-        # print("Completed `join char_count`....")
-
-        # doc_df = doc_df.join(repeated_lines_dist_df, [doc_id_col])
-        # doc_df.show(n=5)
-        # print("Completed `join repeated_lines_dist`....")
+        # doc_df = num_lines_df \
+        #         .join(broadcast(mean_line_len_df), [doc_id_col]) \
+        #         .join(broadcast(median_line_len_df), [doc_id_col]) \
+        #         .join(broadcast(mode_line_len_df), [doc_id_col]) \
+        #         .join(broadcast(min_line_len_df), [doc_id_col]) \
+        #         .join(broadcast(max_line_len_df), [doc_id_col]) \
+        #         .join(broadcast(nsfw_words_count_df), [doc_id_col]) \
+        #         .join(broadcast(non_li_words_count_df), [doc_id_col]) \
+        #         .join(broadcast(bytes_df), [doc_id_col]) \
+        #         .join(broadcast(words_count_df), [doc_id_col]) \
+        #         .join(broadcast(char_count_df), [doc_id_col])
+                # .join(broadcast(repeated_lines_dist_df), [doc_id_col])
+                # .join(symbol_number_count_df, [doc_id_col]) \
 
         doc_df = num_lines_df \
                 .join(mean_line_len_df, [doc_id_col]) \
@@ -261,9 +219,7 @@ class SparkOptimizedHandlers():
                 .join(non_li_words_count_df, [doc_id_col]) \
                 .join(bytes_df, [doc_id_col]) \
                 .join(words_count_df, [doc_id_col]) \
-                .join(char_count_df, [doc_id_col]) \
-                .join(repeated_lines_dist_df, [doc_id_col])
-                # .join(symbol_number_count_df, [doc_id_col]) \
+                .join(char_count_df, [doc_id_col])
         
         return doc_df
 
@@ -289,25 +245,5 @@ class SparkOptimizedHandlers():
                 .select("*", when(doc_df[nsfw_count_col]/doc_df[word_count_col] >= nsfw_threshold, True).otherwise(False).alias("is_nsfw_heavy")) \
                 .select("*", when(doc_df[non_li_count_col]/doc_df[char_count_col] >= non_li_threshold, True).otherwise(False).alias("is_non_li_heavy"))
                 # .select("*", when(doc_df[symbol_number_count_col]/doc_df[char_count_col] >= symbol_number_threshold, True).otherwise(False).alias("is_symbol_number_heavy")) \
-
-        # doc_df = doc_df.select("*", when(doc_df[line_count_col] <= min_line_count, True).otherwise(False).alias("has_less_lines"))
-        # doc_df.show(n=5)
-        # print("Completed `has_less_lines`....")
-
-        # doc_df = doc_df.select("*", when(doc_df[mean_line_len_col] <= min_mean_line_len, True).otherwise(False).alias("is_short_lines_heavy"))
-        # doc_df.show(n=5)
-        # print("Completed `is_short_lines_heavy`....")
-
-        # doc_df = doc_df.select("*", when(doc_df[nsfw_count_col]/doc_df[word_count_col] >= nsfw_threshold, True).otherwise(False).alias("is_nsfw_heavy"))
-        # doc_df.show(n=5)
-        # print("Completed `is_nsfw_heavy`....")
-
-        # doc_df = doc_df.select("*", when(doc_df[symbol_number_count_col]/doc_df[char_count_col] >= symbol_number_threshold, True).otherwise(False).alias("is_symbol_number_heavy"))
-        # doc_df.show(n=5)
-        # print("Completed `is_symbol_number_heavy`....")
-
-        # doc_df = doc_df.select("*", when(doc_df[non_li_count_col]/doc_df[char_count_col] >= non_li_threshold, True).otherwise(False).alias("is_non_li_heavy"))
-        # doc_df.show(n=5)
-        # print("Completed `is_non_li_heavy`....")
         
         return doc_df

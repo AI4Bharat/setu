@@ -50,46 +50,6 @@ def get_nsfw_words_total_count(nsfw_words_dist):
 def is_numbers(line, lang):
     return line.isdigit()
 
-# Step 3: Filter lines containing only numbers
-# def is_numbers(line, lang):
-    # # Define dictionaries to map digits from different scripts to Arabic numerals
-    # numeral_systems = {
-    #     'arabic': "0123456789", # not sure if this is correct
-    #     'hindi': "०१२३४५६७८९",
-    #     'bengali': "০১২৩৪৫৬৭৮৯",
-    #     'telugu': "౦౧౨౩౪౫౬౭౮౯",
-    #     'tamil': "௦௧௨௩௪௫௬௭௮௯",# Define dictionaries to map digits from different scripts to Arabic numerals
-    # numeral_systems = {
-    #     'arabic': "0123456789", # not sure if this is correct
-    #     'hindi': "०१२३४५६७८९",
-    #     'bengali': "০১২৩৪৫৬৭৮৯",
-    #     'telugu': "౦౧౨౩౪౫౬౭౮౯",
-    #     'tamil': "௦௧௨௩௪௫௬௭௮௯",
-    #     'kannada': "೦೧೨೩೪೫೬೭೮೯"
-    # }
-
-    # # Extract all digits from the input string
-    # digits = ''.join([char for char in line if char.isdigit()])
-
-    # # Check if the extracted digits belong to any supported Indian script
-    # for script in numeral_systems.get(lang, "0123456789"):
-    #     if all(digit in script for digit in digits):
-    #         return True
-
-    # return False
-    #     'kannada': "೦೧೨೩೪೫೬೭೮೯"
-    # }
-
-    # # Extract all digits from the input string
-    # digits = ''.join([char for char in line if char.isdigit()])
-
-    # # Check if the extracted digits belong to any supported Indian script
-    # for script in numeral_systems.get(lang, "0123456789"):
-    #     if all(digit in script for digit in digits):
-    #         return True
-
-    # return False
-
 def get_stopword_total_count(stop_word_dist):
     return sum(stop_word_dist.values())
 

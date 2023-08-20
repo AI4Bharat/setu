@@ -3,115 +3,7 @@ from setu import Setu
 from pyspark.sql import SparkSession
 import threading
 import traceback
-
-def parse_args():
-
-    parser = argparse.ArgumentParser(description="Runs Setu")
-
-    parser.add_argument(
-        "-c",
-        "--config",
-        type=str,
-        required=True,
-        help="Path to config file",
-    )
-
-    parser.add_argument(
-        "-p",
-        "--parquet_glob_path",
-        type=str,
-        required=True,
-        help="Path to folder containing parquets",
-    )
-
-    parser.add_argument(
-        "-s",
-        "--samples_per_partition",
-        type=int,
-        default=20000,
-        required=False,
-        help="No.of samples per partition",
-    )
-    
-    parser.add_argument(
-        "--save_doc_lid_output",
-        action="store_true",
-        help="Whether to store lid checkpoint",
-    )
-
-    parser.add_argument(
-        "-i",
-        "--doc_lid_output_path",
-        type=str,
-        required=False,
-        default=None,
-        help="Path of the folder store lid checkpoint",
-    )
-
-    parser.add_argument(
-        "--save_line_stats_output",
-        action="store_true",
-        help="Whether to store line stats checkpoint",
-    )
-
-    parser.add_argument(
-        "-l",
-        "--line_stats_output_path",
-        type=str,
-        required=False,
-        default=None,
-        help="Path of the folder store line stats checkpoint",
-    )
-
-    parser.add_argument(
-        "--save_doc_stats_output",
-        action="store_true",
-        help="Whether to store doc stats checkpoint",
-    )
-
-    parser.add_argument(
-        "-d",
-        "--doc_stats_output_path",
-        type=str,
-        required=False,
-        default=None,
-        help="Path of the folder store doc stats checkpoint",
-    )
-
-    parser.add_argument(
-        "--save_nsfw_data",
-        action="store_true",
-        help="Whether to store nsfw data",
-    )
-
-    parser.add_argument(
-        "-n",
-        "--nsfw_output_path",
-        type=str,
-        required=False,
-        default=None,
-        help="Path of the folder to store nsfw data",
-    )
-
-    parser.add_argument(
-        "-f",
-        "--final_output_path",
-        type=str,
-        required=False,
-        default=None,
-        help="Path to the folder to store final output",
-    )
-
-    parser.add_argument(
-        "-v",
-        "--verbose",
-        action="store_true",
-        help="Whether to add `show()` at each stage.",
-    )
-
-    args = parser.parse_args()
-
-    return args
+from parse_args import parse_args
 
 if __name__ == "__main__":
 
@@ -124,40 +16,93 @@ if __name__ == "__main__":
     spark = SparkSession \
                 .builder \
                 .appName(setu.config.appname) \
+                .config("spark.sql.execution.arrow.pyspark.enabled", "true") \
+                .config("spark.sql.broadcastTimeout", "36000") \
+                .config("spark.driver.maxResultSize", "0") \
                 .getOrCreate()
+
+    # spark.conf.set("spark.sql.autoBroadcastJoinThreshold", 104857600)
         
     spark_context = spark.sparkContext
+
+    spark.sparkContext.setCheckpointDir(args.checkpoint_dir)
     
     try:
-        df = spark.read.parquet(
-            args.parquet_glob_path,
-        )
 
-        setu.run_spark_pipeline(
-            df,
-            cols_to_use=[
-                "doc_id", "url", "source", "text", "timestamp", 
-                "language", "local_path", "successful_extraction"
-            ],
-            doc_id_col="doc_id",
-            text_col="text",
-            docs_per_partition=args.samples_per_partition,
-            save_doc_lid_output=args.save_doc_lid_output,
-            doc_lid_output_path=args.doc_lid_output_path,
-            save_line_stats_output=args.save_line_stats_output,
-            line_stats_output_path=args.line_stats_output_path,
-            save_doc_stats_output=args.save_doc_stats_output,
-            doc_stats_output_path=args.doc_stats_output_path,
-            save_nsfw_data=args.save_nsfw_data,
-            nsfw_output_path=args.nsfw_output_path,
-            final_output_path=args.final_output_path,
-            verbose=args.verbose,
-        )
+        if args.run_analysis:
+
+            if args.is_df_path_batched:
+                parquet_list = args.df_parquets_path.strip().split(",")
+                df = spark.read.parquet(*parquet_list)
+            else:
+                df = spark.read.parquet(args.df_parquets_path)
+
+            setu.run_analysis_spark_pipeline(
+                df,
+                cols_to_use=[
+                    "doc_id", "url", "source", "text", 
+                    "language", "successful_extraction"
+                ],
+                doc_id_col="doc_id",
+                text_col="text",
+                docs_per_partition=args.samples_per_partition,
+                save_doc_lid_output=args.save_doc_lid_output,
+                doc_lid_output_path=args.doc_lid_output_path,
+                save_line_stats_output=args.save_line_stats_output,
+                line_stats_output_path=args.line_stats_output_path,
+                save_doc_stats_output=args.save_doc_stats_output,
+                doc_stats_output_path=args.doc_stats_output_path,
+                analysis_output_path=args.analysis_output_path,
+                verbose=args.verbose,
+            )
+
+        if args.run_flag_and_filter:
+
+            if args.is_doc_stats_path_batched:
+                parquet_list = args.doc_stats_parquets_path.strip().split(",")
+                doc_stats_df = spark.read.parquet(*parquet_list)
+            else:
+                doc_stats_df = spark.read.parquet(args.doc_stats_parquets_path)
+
+            setu.run_flagging_and_filtering_spark_pipeline(
+                doc_stats_df,
+                docs_per_partition=args.samples_per_partition,
+                save_nsfw_data=args.save_nsfw_data,
+                nsfw_output_path=args.nsfw_output_path,
+                filtered_doc_stats_output_path=args.filtered_doc_stats_output_path,
+                verbose=args.verbose,
+            )
+
+        if args.remove_documents:
+
+            if args.is_doc_stats_path_batched:
+                raise Exception("For document removal stage - `is_doc_stats_path_batched` cannot be set to true.")
+
+            if args.is_df_path_batched:
+                parquet_list = args.df_parquets_path.strip().split(","),
+                df = spark.read.parquet(*parquet_list)
+            else:
+                df = spark.read.parquet(args.df_parquets_path)
+
+            doc_stats_df = spark.read.parquet(args.doc_stats_parquets_path)
+
+            setu.remove_documents(
+                df=df,
+                doc_stats_df=doc_stats_df,
+                docs_per_partition=args.samples_per_partition,
+                doc_id_col="doc_id",
+                filtered_docs_path=args.filtered_docs_path,
+            )
+
+        if not spark_context._jsc.sc().isStopped():
+                spark.stop()
 
     except Exception as e:
+
         print("Encountered an Error: ", e)
         traceback.print_exc()
-    finally:
         if not spark_context._jsc.sc().isStopped():
             spark.stop()
+        raise Exception("Job Failed with above mentioned exception")
+        
 
