@@ -9,6 +9,7 @@ from pyspark.sql.functions import (
     when,
     broadcast,
     rand,
+    col,
 )
 from pyspark.sql.types import (
     BooleanType,
@@ -222,7 +223,7 @@ class Setu():
 
         return df
 
-    def lid_stage(self, df, doc_id_col, text_col, doc_lid_output_path):
+    def lid_stage(self, df, doc_id_col, text_col):
         df = self.salting(df, self.n_splits)
         df = run_lid_spark_pipeline(self.config, df, [doc_id_col], text_col, "doc_lang", "doc_lang_iso")
         df.cache()
@@ -306,13 +307,13 @@ class Setu():
             print("Completed `non_li_char_count`....")
 
         line_df.write.mode("overwrite") \
-                .parquet(line_stats_output_path if line_stats_output_path else self.config.line_stats_output_path)
+                .parquet(line_stats_output_path)
 
-        print("Completed line-level `df` parquet write....")
+        print(f"Completed line-level `df` parquet write.... to: {line_stats_output_path}")
 
         return line_df
         
-    def aggregate_to_doc_stats(self, line_df, doc_id_col, text_col, doc_stats_output_path, drop_repeated_line_dist,  verbose):
+    def aggregate_to_doc_stats(self, line_df, doc_id_col, text_col, drop_repeated_line_dist,  verbose):
 
         doc_stats_df = self.spark_optimized_handler.run_analysis(
             line_df=line_df,
@@ -361,7 +362,7 @@ class Setu():
     def collect_repetition_scores(self, df, doc_stats_df, doc_id_col, text_col, verbose):
 
         char_ngram_score = df.select(doc_id_col, self.get_char_ngram_repetition_udf(text_col).alias("char_ngram_repetition_score"))
-        char_ngram_score = char_ngram_score.select(doc_id_col, *[char_ngram_score.char_ngram_repetition_score[f"{i}_gram_characters_repetition_score"].alias(f"{i}_gram_characters_repetition_score") 
+        char_ngram_score = char_ngram_score.select("*", *[char_ngram_score.char_ngram_repetition_score[f"{i}_gram_characters_repetition_score"].alias(f"{i}_gram_characters_repetition_score") 
                                                                                     for i in self.config.char_ngram_cum_thresholds.keys()])        
 
         if verbose:
@@ -369,7 +370,7 @@ class Setu():
             print("Completed `char_ngram_reptition_score`....")
 
         word_ngram_score = df.select(doc_id_col, self.get_word_ngram_repetition_udf(text_col, "doc_lang_iso").alias("word_ngram_repetition_score"))
-        word_ngram_score = word_ngram_score.select(doc_id_col, *[word_ngram_score.word_ngram_repetition_score[f"{i}_gram_words_repetition_score"].alias(f"{i}_gram_words_repetition_score") 
+        word_ngram_score = word_ngram_score.select("*", *[word_ngram_score.word_ngram_repetition_score[f"{i}_gram_words_repetition_score"].alias(f"{i}_gram_words_repetition_score") 
                                                                                     for i in self.config.word_ngram_cum_thresholds.keys()])
 
         if verbose:
@@ -382,54 +383,14 @@ class Setu():
 
         return doc_stats_df
 
-    def run_analysis_spark_pipeline(
-        self,
-        df,
-        doc_id_col,
-        text_col,
-        docs_per_partition,
-        save_line_stats_output,
-        line_stats_output_path,
-        save_doc_stats_output,
-        doc_stats_output_path,
-        analysis_output_path,
-        verbose:bool = True,
-    ):
-
-        print("Starting SETU Analysis Spark Pipeline...........")
-
-        # df = df.select(cols_to_use) \
-        #         .filter(df.successful_extraction == True)
-
-        df = self.set_split_count_and_salt(df, docs_per_partition)
-        # df = self.doc_clean_stage(df, cols_to_use, text_col, doc_id_col, verbose)
-        # df = self.lid_stage(df, doc_id_col, text_col, doc_lid_output_path)
-        line_df = self.convert_to_line(df, text_col, verbose)
-        line_df = self.line_stats_collection(line_df, text_col, line_stats_output_path, verbose)
-        doc_stats_df = self.aggregate_to_doc_stats(line_df, doc_id_col, text_col, doc_stats_output_path, True,  verbose)
-        df = self.convert_to_doc(df, line_df, text_col, doc_id_col, verbose)
-        doc_stats_df = self.collect_repetition_scores(df, doc_stats_df, doc_id_col, text_col, verbose)
-
-        doc_stats_df.drop(text_col) \
-                    .write.mode("overwrite") \
-                    .parquet(doc_stats_output_path if doc_stats_output_path else self.config.doc_stats_output_path)
-
-        if verbose:
-            doc_stats_df.show(n=5)
-            print("Completed doc-level `doc_stats_df` parquet write....")
-
-        df.write.mode("overwrite") \
-                .parquet(analysis_output_path if analysis_output_path else self.config.analysis_output_path)
-
-        print("Completed analysis `df` parquet write....")
-
-
-    def run_lid_segregation(
+    def run_lid_segregation_spark_pipeline(
         self,
         df,
         cols_to_use,
         doc_id_col,
         text_col,
+        docs_per_partition,
+        doc_lid_output_path,
         verbose: bool = True,
     ):
         print("Starting SETU LID Segregation Spark Pipeline...........")
@@ -439,17 +400,61 @@ class Setu():
 
         df = self.set_split_count_and_salt(df, docs_per_partition)
         df = self.doc_clean_stage(df, cols_to_use, text_col, doc_id_col, verbose)
-        df = self.lid_stage(df, doc_id_col, text_col, doc_lid_output_path)
+        df = self.lid_stage(df, doc_id_col, text_col)
 
-        write_path = doc_lid_output_path if doc_lid_output_path else self.config.doc_lid_output_path
+        # Duplicate the doc_lang column as doc_lang_partition
+        df = df.withColumn("doc_lang_partition", col("doc_lang"))
 
-        df.write.partitionBy("doc_lang").mode("overwrite") \
-            .parquet(write_path)
+        df.write.partitionBy("doc_lang_partition").mode("overwrite") \
+            .parquet(doc_lid_output_path)
 
-        rename_partitioned_directories(write_path, "doc_lang")
+        rename_partitioned_directories(doc_lid_output_path, "doc_lang_partition")
 
-        print(f"Completed `doc_lang` level `df` parquet write.... to: {write_path}")
+        print(f"Completed `doc_lang` level `df` parquet write.... to: {doc_lid_output_path}")
 
+
+    def run_analysis_spark_pipeline(
+        self,
+        df,
+        doc_id_col,
+        text_col,
+        docs_per_partition,
+        line_stats_output_path,
+        doc_stats_output_path,
+        analysis_output_path,
+        verbose:bool = True,
+    ):
+
+        print("Starting SETU Analysis Spark Pipeline...........")
+
+        df = self.set_split_count_and_salt(df, docs_per_partition)
+        line_df = self.convert_to_line(df, text_col, verbose)
+        line_df = self.line_stats_collection(line_df, text_col, line_stats_output_path, verbose)
+        doc_stats_df = self.aggregate_to_doc_stats(line_df, doc_id_col, text_col, True,  verbose)
+        df = self.convert_to_doc(df, line_df, text_col, doc_id_col, verbose)
+        doc_stats_df = self.collect_repetition_scores(df, doc_stats_df, doc_id_col, text_col, verbose)
+
+        doc_stats_df.drop(text_col) \
+                    .join(df.select(doc_id_col, "doc_lang"), [doc_id_col]) \
+                    .withColumn("doc_lang_partition", col("doc_lang")) \
+                    .write.partitionBy("doc_lang_partition") \
+                    .mode("overwrite") \
+                    .parquet(doc_stats_output_path)
+
+        rename_partitioned_directories(doc_stats_output_path, "doc_lang_partition")
+
+        if verbose:
+            doc_stats_df.show(n=5)
+
+        print(f"Completed doc-level `doc_stats_df` parquet write.... to: {doc_stats_output_path}")
+
+        df.withColumn("doc_lang_partition", col("doc_lang")) \
+            .write.partitionBy("doc_lang_partition").mode("overwrite") \
+            .parquet(analysis_output_path)
+
+        rename_partitioned_directories(analysis_output_path, "doc_lang_partition")
+
+        print(f"Completed analysis `df` parquet write.... to: {analysis_output_path}")
 
     def run_plotting(
         doc_stats_df,
@@ -497,17 +502,13 @@ class Setu():
             doc_stats_df.show(n=5)
             print("Completed `doc_flagging`....")
 
-        doc_stats_df = doc_stats_df.select("*", self.has_char_repetition_udf("char_ngram_repetition_score").alias("has_char_repetition"))
+        doc_stats_df = doc_stats_df.select("*", self.has_char_repetition_udf("char_ngram_repetition_score").alias("has_char_repetition")) \
+                                    .select("*", self.has_word_repetition_udf("word_ngram_repetition_score").alias("has_word_repetition")) \
+                                    .drop("char_ngram_repetition_score", "word_ngram_repetition_score")
 
         if verbose:
             doc_stats_df.show(n=5)
-            print("Completed `has_char_reptition`....")
-
-        doc_stats_df = doc_stats_df.select("*", self.has_word_repetition_udf("word_ngram_repetition_score").alias("has_word_repetition"))
-
-        if verbose:
-            doc_stats_df.show(n=5)
-            print("Completed `has_word_reptition`....")
+            print("Completed `has_char_reptition` & `has_word_reptition`....")
 
         if self.config.line_count_filter:
 
@@ -571,11 +572,10 @@ class Setu():
 
         doc_stats_df = self.salting(doc_stats_df, self.n_splits)
 
-        write_path = filtered_doc_stats_output_path if filtered_doc_stats_output_path else self.config.filtered_doc_stats_output_path
         doc_stats_df.write.mode("overwrite") \
-                    .parquet(write_path)
+                    .parquet(filtered_doc_stats_output_path)
 
-        print(f"Completed filtered `doc_stats_df` parquet write...written to: {write_path}")
+        print(f"Completed filtered `doc_stats_df` parquet write...written to: {filtered_doc_stats_output_path}")
 
     def remove_documents(
         self,
@@ -589,13 +589,12 @@ class Setu():
         
         df = self.set_split_count_and_salt(df, docs_per_partition)
         doc_stats_df = self.salting(doc_stats_df, self.n_splits)
-        df = df.join(doc_stats_df, [doc_id_col])
+        df = df.join(doc_stats_df, [doc_id_col, "doc_lang"])
 
-        write_path = filtered_docs_path if filtered_docs_path else self.config.filtered_docs_path
         df.write.mode("overwrite") \
-                .parquet(write_path)
+                .parquet(filtered_docs_path)
 
-        print(f"Completed `filtered_docs` parquet write...written to: {write_path}")
+        print(f"Completed `filtered_docs` parquet write...written to: {filtered_docs_path}")
 
 
     def run_pipeline(

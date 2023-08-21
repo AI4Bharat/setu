@@ -25,9 +25,9 @@ if [[ "$run_minhash" && "$local" ]]; then
         --path "parquet" \
         --name "sangraha-dogri" \
         --split "train" \
-        --data_files "/data/priyam/sangraha/spark_out/dogri/analysis/dataset/*.parquet" \
+        --data_files "/data/priyam/sangraha/spark_out/dogri/*/filtered_docs/dataset/*.parquet" \
         --cache_dir "/data/priyam/cache" \
-        --output "/data/priyam/sangraha/dedup/dogri" \
+        --output "/data/priyam/sangraha/dedup/minhash/dogri" \
         --column "text" \
         --batch_size 10000
 
@@ -70,13 +70,13 @@ elif [[ "$run_minhash" && "$dataproc" ]]; then
 fi
 
 if [ "$run_exact" ]; then
-    python -m text_dedup.suffix_array \
-        --path "parquet" \
-        --name "sangraha-bodo" \
+      python -m text_dedup.suffix_array \
+        --path "arrow" \
+        --name "sangraha-dogri" \
         --split "train" \
-        --data_files "/data/priyam/sangraha/spark_out/bodo/filtered_docs/dataset/*.parquet" \
+        --data_files "/data/priyam/sangraha/dedup/minhash/dogri/*.arrow" \
         --cache_dir "/data/priyam/cache" \
-        --output "/data/priyam/sangraha/dedup/bodo" \
+        --output "/data/priyam/sangraha/dedup/exact/dogri" \
         --column "text" \
         --google_repo_path "/data/priyam/setu/text-dedup/deduplicate-text-datasets"
 fi

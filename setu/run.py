@@ -21,7 +21,7 @@ if __name__ == "__main__":
                 .config("spark.driver.maxResultSize", "0") \
                 .getOrCreate()
 
-    # spark.conf.set("spark.sql.autoBroadcastJoinThreshold", 104857600)
+                # .config("spark.sql.autoBroadcastJoinThreshold", "104857600") \
         
     spark_context = spark.sparkContext
 
@@ -29,16 +29,19 @@ if __name__ == "__main__":
     
     try:
 
-        if args.run_analysis:
+        if args.run_lid_segregation:
 
-            if args.is_df_path_batched:
-                parquet_list = args.df_parquets_path.strip().split(",")
-                df = spark.read.parquet(*parquet_list)
+            if not args.doc_lid_output_path:
+                raise Exception(f"Please provide `doc_lid_output_path`..... current value: {args.doc_lid_output_path}")
+            
+            if args.is_lid_df_path_batched:
+                parquet_list = args.lid_df_parquets_path.strip().split(",")
+                lid_df = spark.read.parquet(*parquet_list)
             else:
-                df = spark.read.parquet(args.df_parquets_path)
+                lid_df = spark.read.parquet(args.lid_df_parquets_path)
 
-            setu.run_analysis_spark_pipeline(
-                df,
+            setu.run_lid_segregation_spark_pipeline(
+                lid_df,
                 cols_to_use=[
                     "doc_id", "url", "source", "text", 
                     "language", "successful_extraction"
@@ -46,17 +49,36 @@ if __name__ == "__main__":
                 doc_id_col="doc_id",
                 text_col="text",
                 docs_per_partition=args.samples_per_partition,
-                save_doc_lid_output=args.save_doc_lid_output,
                 doc_lid_output_path=args.doc_lid_output_path,
-                save_line_stats_output=args.save_line_stats_output,
+                verbose=args.verbose,
+            )
+
+        if args.run_analysis:
+
+            if not args.line_stats_output_path or not args.doc_stats_output_path or not args.analysis_output_path:
+                raise Exception(f"Please provide whichever one is left: `line_stats_output_path`, `doc_stats_output_path`, `analysis_output_path`.....")
+
+            if args.is_analysis_df_path_batched:
+                parquet_list = args.analysis_df_parquets_path.strip().split(",")
+                analysis_df = spark.read.parquet(*parquet_list)
+            else:
+                analysis_df = spark.read.parquet(args.analysis_df_parquets_path)
+
+            setu.run_analysis_spark_pipeline(
+                analysis_df,
+                doc_id_col="doc_id",
+                text_col="text",
+                docs_per_partition=args.samples_per_partition,
                 line_stats_output_path=args.line_stats_output_path,
-                save_doc_stats_output=args.save_doc_stats_output,
                 doc_stats_output_path=args.doc_stats_output_path,
                 analysis_output_path=args.analysis_output_path,
                 verbose=args.verbose,
             )
 
         if args.run_flag_and_filter:
+
+            if not args.filtered_doc_stats_output_path or (args.save_nsfw_data and not args.nsfw_output_path):
+                raise Exception(f"Please provide `filtered_doc_stats_output_path` and/or `nsfw_output_path` if `save_nsfw_data` is enabled.....")
 
             if args.is_doc_stats_path_batched:
                 parquet_list = args.doc_stats_parquets_path.strip().split(",")
@@ -73,18 +95,23 @@ if __name__ == "__main__":
                 verbose=args.verbose,
             )
 
-        if args.remove_documents:
+        if args.run_document_removal:
+
+            if not args.filtered_docs_path:
+                raise Exception(f"Please provide `filtered_docs_path`..... current value: {args.filtered_docs_path}")
 
             if args.is_doc_stats_path_batched:
                 raise Exception("For document removal stage - `is_doc_stats_path_batched` cannot be set to true.")
 
-            if args.is_df_path_batched:
-                parquet_list = args.df_parquets_path.strip().split(","),
+            if args.is_analysis_df_path_batched:
+                parquet_list = args.analysis_df_parquets_path.strip().split(","),
                 df = spark.read.parquet(*parquet_list)
             else:
-                df = spark.read.parquet(args.df_parquets_path)
+                df = spark.read.parquet(args.analysis_df_parquets_path)
 
-            doc_stats_df = spark.read.parquet(args.doc_stats_parquets_path)
+            print("HIIIII: ", args.doc_stats_path_for_removal)
+
+            doc_stats_df = spark.read.parquet(args.doc_stats_path_for_removal)
 
             setu.remove_documents(
                 df=df,

@@ -8,10 +8,10 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Batch language wise files")
 
     parser.add_argument(
-        "-f",
-        "--folder",
+        "-g",
+        "--glob_path",
         type=str,
-        help="Folder whose files you want to batch based on size",
+        help="Glob path whose files you want to batch based on size",
         required=True,
     )
 
@@ -35,12 +35,13 @@ def parse_args():
 
     return args
 
-def get_files_and_sizes(folder_path):
+def get_files_and_sizes(glob_path):
     """Return a list of (filename, filesize) tuples for all files in the folder."""
     files_and_sizes = []
-    for root, dirs, files in os.walk(folder_path):
-        for filename in files:
-            filepath = os.path.join(root, filename)
+    # for root, dirs, files in os.walk(folder_path):
+    #     for filename in files:
+    #         filepath = os.path.join(root, filename)
+    for filepath in glob.glob(glob_path):
             filesize = os.path.getsize(filepath)
             files_and_sizes.append((filepath, filesize))
     return sorted(files_and_sizes, key=lambda x: x[1], reverse=True)  # sort by filesize
@@ -68,7 +69,7 @@ def main():
 
     args = parse_args()
 
-    files_and_sizes = get_files_and_sizes(args.folder)
+    files_and_sizes = get_files_and_sizes(args.glob_path)
     total_size = sum(size for _, size in files_and_sizes)
     num_of_bins = ceil(total_size/gb_to_bytes(args.bin_size))
     # avg_bin_size = total_size / args.num_of_bins

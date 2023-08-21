@@ -4,6 +4,150 @@ Start Master
 Start a worker
 ~/spark-hadoop3/sbin/start-worker.sh spark://SPK-DGX-O1:7077  -c 128 -m 512G
 
+Run SETU bash
+
+FOR LID Segregation
+
+SETU_DIR=/data/priyam/setu SETU_TMP_DIR=/data/priyam/tmp/ bash setu/scripts/run_setu.sh \
+    -i gujarati \
+    -d "/data/priyam/sangraha/parquets/gujarati/2/*.parquet" \
+    -p 1500 \
+    -s /data/priyam/sangraha/spark_out/gujarati/2 \
+    -b false \
+    -c /data/priyam/tmp \
+    -l true \
+    -a false \
+    -f false \
+    -t true \
+    -r false \
+    -v false \
+    -n 12 \
+    -o 8 \
+    -e 32G \
+    -k 32G \
+    -x 96
+
+FOR LID Segregation
+
+SETU_DIR=/data/priyam/setu SETU_TMP_DIR=/data/priyam/tmp/ bash setu/scripts/run_setu.sh \
+    -i gujarati \
+    -m "/data/priyam/sangraha/spark_out/gujarati/1/lid_batch.info" \
+    -p 1500 \
+    -s /data/priyam/sangraha/spark_out/gujarati/1 \
+    -b false \
+    -c /data/priyam/tmp \
+    -l true \
+    -a false \
+    -f false \
+    -t true \
+    -r false \
+    -v false \
+    -n 12 \
+    -o 8 \
+    -e 32G \
+    -k 32G \
+    -x 96
+
+FOR Analysis
+
+# Desired glob pattern
+/data/priyam/sangraha/spark_out/gujarati/2/doc_lid/*/*/*.parquet
+
+SETU_DIR=/data/priyam/setu SETU_TMP_DIR=/data/priyam/tmp/ bash setu/scripts/run_setu.sh \
+    -i gujarati \
+    -d "/data/priyam/sangraha/spark_out/gujarati/2/doc_lid/*/*/*.parquet" \
+    -p 1500 \
+    -s /data/priyam/sangraha/spark_out/gujarati/2 \
+    -b false \
+    -c /data/priyam/tmp \
+    -l false \
+    -a true \
+    -f false \
+    -t true \
+    -r false \
+    -v false \
+    -n 12 \
+    -o 8 \
+    -e 32G \
+    -k 32G \
+    -x 96
+
+FOR Analysis
+
+# Desired glob pattern
+
+SETU_DIR=/data/priyam/setu SETU_TMP_DIR=/data/priyam/tmp/ bash setu/scripts/run_setu.sh \
+    -i gujarati \
+    -m "/data/priyam/sangraha/spark_out/gujarati/1/analysis_batch.info" \
+    -p 1500 \
+    -s /data/priyam/sangraha/spark_out/gujarati/1 \
+    -b false \
+    -c /data/priyam/tmp \
+    -l false \
+    -a true \
+    -f false \
+    -t true \
+    -r false \
+    -v false \
+    -n 12 \
+    -o 8 \
+    -e 32G \
+    -k 32G \
+    -x 96
+
+FOR Plotting # todo
+
+FOR Flagging-Filtering
+
+# Desired glob pattern
+/data/priyam/sangraha/spark_out/*/*/doc_stats/*/dogri/*.parquet
+
+SETU_DIR=/data/priyam/setu SETU_TMP_DIR=/data/priyam/tmp/ bash setu/scripts/run_setu.sh \
+    -i dogri \
+    -d "/data/priyam/sangraha/spark_out/*/*/doc_stats/*/dogri/*.parquet" \
+    -p 1500 \
+    -s /data/priyam/sangraha/spark_out/dogri/1 \
+    -b false \
+    -c /data/priyam/tmp \
+    -l false \
+    -a false \
+    -f true \
+    -t true \
+    -r false \
+    -v false \
+    -n 12 \
+    -o 8 \
+    -e 32G \
+    -k 32G \
+    -x 96
+
+FOR Document Removal
+
+# Desired glob pattern
+analysis = /data/priyam/sangraha/spark_out/*/*/analysis/*/dogri/*.parquet
+doc_stats = /data/priyam/sangraha/spark_out/dogri/*/filtered_doc_stats/*/*.parquet
+
+SETU_DIR=/data/priyam/setu SETU_TMP_DIR=/data/priyam/tmp/ bash setu/scripts/run_setu.sh \
+    -i dogri \
+    -d "/data/priyam/sangraha/spark_out/*/*/analysis/*/dogri/*.parquet" \
+    -p 1500 \
+    -s /data/priyam/sangraha/spark_out/dogri/1 \
+    -b false \
+    -c /data/priyam/tmp \
+    -l false \
+    -a false \
+    -f false \
+    -t true \
+    -r true \
+    -q "/data/priyam/sangraha/spark_out/dogri/*/filtered_doc_stats/*/*.parquet" \
+    -v false \
+    -n 12 \
+    -o 8 \
+    -e 32G \
+    -k 32G \
+    -x 96
+
+
 Submit a job
 spark-submit --master spark://SPK-DGX-O1:7077 \
              --num-executors 12 \

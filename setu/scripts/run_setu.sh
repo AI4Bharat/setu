@@ -1,25 +1,39 @@
 #!/bin/bash
 
 # Check if the required number of arguments are provided
-# if [ "$#" -ne 22 ]; then
-#     echo "Usage: $0 -m <batch_info> -d <directory> -p <docs_per_partition> -s <base_save_dir> -b <run_batch> -c <checkpoint_dir> -a <run_analysis> -f <run_flag_and_filter> -o <doc_stats_parquets_path> -r <remove_documents> -v <verbose>"
+# if [ "$#" -ne 26 ]; then
+#     echo "Usage: $0 -i <language> -m <batch_info> -d <directories> -p <docs_per_partition> -s <base_save_dir> -b <run_batch> -c <checkpoint_dir> -l <run_lid_segregation> -a <run_analysis> -f <run_flag_and_filter> -t <save_nsfw_data> -r <run_document_removal> -q <doc_stats_path_for_removal> -v <verbose> -n <num_of_executors> -o <executor_cores> -e <executor_memory> -k <driver_memory> -x <spark_parallelism>"
 #     exit 1
 # fi
 
-while getopts "l:m:d:p:s:b:c:a:f:o:r:v:" opt; do
+# default spark configs
+num_of_executors="12"
+executor_cores="8"
+executor_memory="32G"
+driver_memory="32G"
+spark_parallelism="96"
+
+while getopts "i:m:d:p:s:b:c:l:a:f:t:r:q:v:n:o:e:k:x:" opt; do
   case $opt in
-    l) language="$OPTARG" ;;
+    i) language="$OPTARG" ;;
     m) batch_info="$OPTARG" ;;
     d) directory="$OPTARG" ;;
     p) docs_per_partition="$OPTARG" ;;
     s) base_save_dir="$OPTARG" ;;
     b) run_batch="$OPTARG" ;;
     c) checkpoint_dir="$OPTARG" ;;
+    l) run_lid_segregation="$OPTARG" ;;
     a) run_analysis="$OPTARG" ;;
     f) run_flag_and_filter="$OPTARG" ;;
-    o) doc_stats_parquets_path="$OPTARG" ;;
-    r) remove_documents="$OPTARG" ;;
+    t) save_nsfw_data="$OPTARG" ;;
+    r) run_document_removal="$OPTARG" ;;
+    q) doc_stats_path_for_removal="$OPTARG" ;;
     v) verbose="$OPTARG" ;;
+    n) num_of_executors="$OPTARG" ;;
+    o) executor_cores="$OPTARG" ;;
+    e) executor_memory="$OPTARG" ;;
+    k) driver_memory="$OPTARG" ;;
+    x) spark_parallelism="$OPTARG" ;;
     \?) echo "Invalid option -$OPTARG" >&2; exit 1 ;;
     :) echo "Option -$OPTARG requires an argument." >&2; exit 1 ;;
   esac
@@ -40,9 +54,11 @@ check_boolean() {
 
 check_boolean $run_batch "run_batch"
 check_boolean $verbose "verbose"
+check_boolean $run_lid_segregation "run_lid_segregation"
 check_boolean $run_analysis "run_analysis"
 check_boolean $run_flag_and_filter "run_flag_and_filter"
-check_boolean $remove_documents "remove_documents"
+check_boolean $run_document_removal "run_document_removal"
+check_boolean $save_nsfw_data "save_nsfw_data"
 
 echo -e "\n"
 echo "Environment Variables:"
@@ -56,11 +72,18 @@ echo "directory=$directory"
 echo "docs_per_partition=$docs_per_partition"
 echo "base_save_dir=$base_save_dir"
 echo "checkpoint_dir=$checkpoint_dir"
+echo "run_lid_segregation=$run_lid_segregation"
 echo "run_analysis=$run_analysis"
 echo "run_flag_and_filter=$run_flag_and_filter"
-echo "doc_stats_parquets_path=$doc_stats_parquets_path"
-echo "remove_documents=$remove_documents"
+echo "save_nsfw_data=$save_nsfw_data"
+echo "run_document_removal=$run_document_removal"
+echo "doc_stats_path_for_removal=$doc_stats_path_for_removal"
 echo "verbose=$verbose"
+echo "num_of_executors=$num_of_executors"
+echo "executor_cores=$executor_cores"
+echo "executor_memory=$executor_memory"
+echo "driver_memory=$driver_memory"
+echo "spark_parallelism=$spark_parallelism"
 echo -e "\n"
 
 # Function to display the progress bar
@@ -109,9 +132,15 @@ run_spark() {
     local on_dataset=$2
     local batch_name=$3
     local on_batch_info=$4
+    local is_lid_df_path_batched=false
+    local is_analysis_df_path_batched=false
+    local is_doc_stats_path_batched=false
 
     if [ $on_batch_info == true ]; then
         echo "Processing line $batch_name in the provided batch_info: $batch_info..."
+        local is_lid_df_path_batched=true
+        local is_analysis_df_path_batched=true
+        local is_doc_stats_path_batched=true
     else
         echo "Processing $BATCH..."
     fi
@@ -137,38 +166,37 @@ run_spark() {
             --conf "spark.worker.dir=$SETU_TMP_DIR" \
             --conf "spark.local.dir=$SETU_TMP_DIR" \
             --conf "spark.sql.autoBroadcastJoinThreshold=1073741824" \
-            --num-executors 12 \
-            --executor-cores 8 \
-            --executor-memory 32G \
-            --driver-memory 32G \
+            --conf "spark.default.parallelism=$spark_parallelism" \
+            --num-executors $num_of_executors \
+            --executor-cores $executor_cores \
+            --executor-memory $executor_memory \
+            --driver-memory $driver_memory \
             --py-files "$SETU_DIR/setu/parse_args.py,$SETU_DIR/setu/constants.py,$SETU_DIR/setu/document_filters.py,$SETU_DIR/setu/line_filters.py,$SETU_DIR/setu/lid.py,$SETU_DIR/setu/utils.py,$SETU_DIR/setu/setu.py" \
             "$PYTHON_SCRIPT" \
             --config "$SETU_DIR/setu/configs/spark_"$language"_config.json" \
             --samples_per_partition $docs_per_partition \
             --verbose $verbose \
             --checkpoint_dir "$checkpoint_dir" \
-            --run_analysis $run_analysis \
-            --df_parquets_path "$BATCH" \
-            --is_df_path_batched "true" \
-            --save_doc_lid_output "true" \
+            --run_lid_segregation $run_lid_segregation \
+            --lid_df_parquets_path "$BATCH" \
+            --is_lid_df_path_batched "$is_lid_df_path_batched" \
             --doc_lid_output_path "$base_save_dir/doc_lid/$batch_name" \
-            --save_line_stats_output "true" \
+            --run_analysis $run_analysis \
+            --analysis_df_parquets_path "$BATCH" \
+            --is_analysis_df_path_batched "$is_analysis_df_path_batched" \
             --line_stats_output_path "$base_save_dir/line_stats/$batch_name" \
-            --save_doc_stats_output "true" \
             --doc_stats_output_path "$base_save_dir/doc_stats/$batch_name" \
             --analysis_output_path "$base_save_dir/analysis/$batch_name" \
             --run_flag_and_filter $run_flag_and_filter \
-            --doc_stats_parquets_path "$doc_stats_parquets_path" \
-            --is_doc_stats_path_batched "false" \
-            --save_nsfw_data "true" \
+            --doc_stats_parquets_path "$BATCH" \
+            --is_doc_stats_path_batched "$is_doc_stats_path_batched" \
+            --save_nsfw_data $save_nsfw_data \
             --nsfw_output_path "$base_save_dir/nsfw_doc_stats/$batch_name" \
             --filtered_doc_stats_output_path "$base_save_dir/filtered_doc_stats/$batch_name" \
-            --remove_documents $remove_documents \
+            --run_document_removal $run_document_removal \
+            --doc_stats_path_for_removal "$doc_stats_path_for_removal" \
             --filtered_docs_path "$base_save_dir/filtered_docs/$batch_name" \
              >> "$base_save_dir/logs/$batch_name.txt" \
-
-            # --conf "spark.default.parallelism=256" \
-
 
     # Check the exit status of the Python script
     if [ $? -ne 0 ]; then

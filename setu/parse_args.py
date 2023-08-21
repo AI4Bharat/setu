@@ -43,6 +43,42 @@ def add_commmon_args(parser):
 
     return parser
 
+def add_lid_segregation_args(parser):
+
+    parser.add_argument(
+        "--run_lid_segregation",
+        type=str2bool,
+        required=False,
+        default=False,
+        help="Whether to run lid_segregation",
+    )
+
+    parser.add_argument(
+        "--lid_df_parquets_path",
+        type=str,
+        required=False,
+        default=None,
+        help="Path to folder containing parquets",
+    )
+
+    parser.add_argument(
+        "--is_lid_df_path_batched",
+        type=str2bool,
+        required=False,
+        default=True,
+        help="Is path a batch path or not?",
+    )
+
+    parser.add_argument(
+        "--doc_lid_output_path",
+        type=str,
+        required=False,
+        default=None,
+        help="Path of the folder store lid checkpoint",
+    )
+
+    return parser
+
 def add_analysis_args(parser):
 
     parser.add_argument(
@@ -54,7 +90,7 @@ def add_analysis_args(parser):
     )
 
     parser.add_argument(
-        "--df_parquets_path",
+        "--analysis_df_parquets_path",
         type=str,
         required=False,
         default=None,
@@ -62,35 +98,11 @@ def add_analysis_args(parser):
     )
 
     parser.add_argument(
-        "--is_df_path_batched",
+        "--is_analysis_df_path_batched",
         type=str2bool,
         required=False,
         default=True,
         help="Is path a batch path or not?",
-    )
-
-    parser.add_argument(
-        "--save_doc_lid_output",
-        type=str2bool,
-        default=True,
-        required=False,
-        help="Whether to store lid checkpoint",
-    )
-
-    parser.add_argument(
-        "--doc_lid_output_path",
-        type=str,
-        required=False,
-        default=None,
-        help="Path of the folder store lid checkpoint",
-    )
-
-    parser.add_argument(
-        "--save_line_stats_output",
-        type=str2bool,
-        default=True,
-        required=False,
-        help="Whether to store line stats checkpoint",
     )
 
     parser.add_argument(
@@ -99,14 +111,6 @@ def add_analysis_args(parser):
         required=False,
         default=None,
         help="Path of the folder store line stats checkpoint",
-    )
-
-    parser.add_argument(
-        "--save_doc_stats_output",
-        type=str2bool,
-        default=True,
-        required=False,
-        help="Whether to store doc stats checkpoint",
     )
 
     parser.add_argument(
@@ -188,11 +192,19 @@ def add_filtering_args(parser):
 def add_doc_removal_args(parser):
 
     parser.add_argument(
-        "--remove_documents",
+        "--run_document_removal",
         type=str2bool,
         required=False,
         default=False,
         help="Whether to remove documents or not",
+    )
+
+    parser.add_argument(
+        "--doc_stats_path_for_removal",
+        type=str,
+        required=False,
+        default=None,
+        help="Path to the filtered doc stats used to perform inner join",
     )
 
     parser.add_argument(
@@ -207,9 +219,11 @@ def add_doc_removal_args(parser):
 
 def parse_args():
 
-    parser = argparse.ArgumentParser(description="Runs Setu for Analysis/Plotting/Flagging/Filtering")
+    parser = argparse.ArgumentParser(description="Runs Setu for LID/Analysis/Plotting/Flagging-Filtering/Removal")
 
     parser = add_commmon_args(parser)
+
+    parser = add_lid_segregation_args(parser)
 
     parser = add_analysis_args(parser)
 
