@@ -41,6 +41,74 @@ def add_commmon_args(parser):
         help="Path to the folder which will store checkpoints",
     )
 
+    parser.add_argument(
+        "--run_data_parallel_mode",
+        type=str2bool,
+        required=False,
+        default=False,
+        help="Whether to run data parallel mode or not. Currently, available for stages: doc_clean",
+    )
+
+    return parser
+
+def add_doc_clean_args(parser):
+
+    parser.add_argument(
+        "--run_doc_clean",
+        type=str2bool,
+        required=False,
+        default=False,
+        help="Whether to run doc_clean",
+    )
+
+    parser.add_argument(
+        "--doc_df_parquets_path",
+        type=str,
+        required=False,
+        default=None,
+        help="Path to folder containing parquets",
+    )
+
+    parser.add_argument(
+        "--is_doc_df_path_batched",
+        type=str2bool,
+        required=False,
+        default=True,
+        help="Is path a batch path or not?",
+    )
+
+    parser.add_argument(
+        "--use_symbol_filter",
+        type=str2bool,
+        required=False,
+        default=True,
+        help="Whether to use symbol filter",
+    )
+
+    parser.add_argument(
+        "--save_symbol_heavy_docs",
+        type=str2bool,
+        required=False,
+        default=True,
+        help="Whether to save documents filtered by symbol filter",
+    )
+
+    parser.add_argument(
+        "--symbol_filter_output_path",
+        type=str,
+        required=False,
+        default=None,
+        help="Path of the folder store symbol filter flagged documents",
+    )
+
+    parser.add_argument(
+        "--cleaned_doc_output_path",
+        type=str,
+        required=False,
+        default=None,
+        help="Path of the folder store cleaned doc checkpoint",
+    )
+
     return parser
 
 def add_lid_segregation_args(parser):
@@ -223,11 +291,13 @@ def parse_args():
 
     parser = add_commmon_args(parser)
 
+    parser = add_doc_clean_args(parser)
+
     parser = add_lid_segregation_args(parser)
 
     parser = add_analysis_args(parser)
 
-    parser = add_plotting_args(parser)
+    # parser = add_plotting_args(parser)
 
     parser = add_filtering_args(parser)
 

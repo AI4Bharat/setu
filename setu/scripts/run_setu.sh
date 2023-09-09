@@ -9,11 +9,11 @@
 # default spark configs
 num_of_executors="12"
 executor_cores="8"
-executor_memory="32G"
-driver_memory="32G"
+executor_memory="50G"
+driver_memory="50G"
 spark_parallelism="96"
 
-while getopts "i:m:d:p:s:b:c:l:a:f:t:r:q:v:n:o:e:k:x:" opt; do
+while getopts "i:m:d:p:s:b:c:w:u:l:a:f:t:r:q:v:n:o:e:k:x:" opt; do
   case $opt in
     i) language="$OPTARG" ;;
     m) batch_info="$OPTARG" ;;
@@ -22,6 +22,8 @@ while getopts "i:m:d:p:s:b:c:l:a:f:t:r:q:v:n:o:e:k:x:" opt; do
     s) base_save_dir="$OPTARG" ;;
     b) run_batch="$OPTARG" ;;
     c) checkpoint_dir="$OPTARG" ;;
+    w) run_data_parallel_mode="$OPTARG" ;;
+    u) run_doc_clean="$OPTARG" ;;
     l) run_lid_segregation="$OPTARG" ;;
     a) run_analysis="$OPTARG" ;;
     f) run_flag_and_filter="$OPTARG" ;;
@@ -54,6 +56,8 @@ check_boolean() {
 
 check_boolean $run_batch "run_batch"
 check_boolean $verbose "verbose"
+check_boolean $run_data_parallel_mode "run_data_parallel_mode"
+check_boolean $run_doc_clean "run_doc_clean"
 check_boolean $run_lid_segregation "run_lid_segregation"
 check_boolean $run_analysis "run_analysis"
 check_boolean $run_flag_and_filter "run_flag_and_filter"
@@ -72,6 +76,8 @@ echo "directory=$directory"
 echo "docs_per_partition=$docs_per_partition"
 echo "base_save_dir=$base_save_dir"
 echo "checkpoint_dir=$checkpoint_dir"
+echo "run_data_parallel_mode=$run_data_parallel_mode"
+echo "run_doc_clean=$run_doc_clean"
 echo "run_lid_segregation=$run_lid_segregation"
 echo "run_analysis=$run_analysis"
 echo "run_flag_and_filter=$run_flag_and_filter"
@@ -132,12 +138,14 @@ run_spark() {
     local on_dataset=$2
     local batch_name=$3
     local on_batch_info=$4
+    local is_doc_df_path_batched=false
     local is_lid_df_path_batched=false
     local is_analysis_df_path_batched=false
     local is_doc_stats_path_batched=false
 
     if [ $on_batch_info == true ]; then
         echo "Processing line $batch_name in the provided batch_info: $batch_info..."
+        local is_doc_df_path_batched=true
         local is_lid_df_path_batched=true
         local is_analysis_df_path_batched=true
         local is_doc_stats_path_batched=true
@@ -158,6 +166,9 @@ run_spark() {
         echo "Parquet path provided: $BATCH"
     fi
 
+    config_file="$SETU_DIR/setu/configs/spark_"$language"_config.json"
+    echo "Config File: $config_file"
+
     spark-submit \
             --master "spark://SPK-DGX-O1:7077" \
             --driver-java-options "-Djava.io.tmpdir=$SETU_TMP_DIR" \
@@ -167,16 +178,25 @@ run_spark() {
             --conf "spark.local.dir=$SETU_TMP_DIR" \
             --conf "spark.sql.autoBroadcastJoinThreshold=1073741824" \
             --conf "spark.default.parallelism=$spark_parallelism" \
+            --conf "spark.sql.shuffle.partitions=512" \
             --num-executors $num_of_executors \
             --executor-cores $executor_cores \
             --executor-memory $executor_memory \
             --driver-memory $driver_memory \
             --py-files "$SETU_DIR/setu/parse_args.py,$SETU_DIR/setu/constants.py,$SETU_DIR/setu/document_filters.py,$SETU_DIR/setu/line_filters.py,$SETU_DIR/setu/lid.py,$SETU_DIR/setu/utils.py,$SETU_DIR/setu/setu.py" \
             "$PYTHON_SCRIPT" \
-            --config "$SETU_DIR/setu/configs/spark_"$language"_config.json" \
+            --config "$config_file" \
             --samples_per_partition $docs_per_partition \
             --verbose $verbose \
             --checkpoint_dir "$checkpoint_dir" \
+            --run_data_parallel_mode "$run_data_parallel_mode" \
+            --run_doc_clean "$run_doc_clean" \
+            --doc_df_parquets_path "$BATCH" \
+            --is_doc_df_path_batched "$is_doc_df_path_batched" \
+            --use_symbol_filter "True" \
+            --save_symbol_heavy_docs "True" \
+            --symbol_filter_output_path "$base_save_dir/symbol_heavy/$batch_name" \
+            --cleaned_doc_output_path "$base_save_dir/cleaned_docs/$batch_name" \
             --run_lid_segregation $run_lid_segregation \
             --lid_df_parquets_path "$BATCH" \
             --is_lid_df_path_batched "$is_lid_df_path_batched" \
@@ -196,7 +216,7 @@ run_spark() {
             --run_document_removal $run_document_removal \
             --doc_stats_path_for_removal "$doc_stats_path_for_removal" \
             --filtered_docs_path "$base_save_dir/filtered_docs/$batch_name" \
-             >> "$base_save_dir/logs/$batch_name.txt" \
+             >> "$base_save_dir/logs/$batch_name.txt"
 
     # Check the exit status of the Python script
     if [ $? -ne 0 ]; then
@@ -212,13 +232,13 @@ if [ "$batch_info" ]; then
 
     batch_no=0
 
-    while read -r line; do
+    for line in $(cat "$batch_info")
+    do
 
         run_spark $line false $batch_no true
-
         ((batch_no++))
-
-    done <$batch_info
+ 
+    done
 
 elif [[ "$directory" == *\** ]]; then
 

@@ -25,9 +25,9 @@ def parse_args():
 
     parser.add_argument(
         "-s",
-        "--batch_metadata_save_file",
+        "--batch_metadata_save_folder",
         type=str,
-        help=".txt file where batch of metadata will be stored.",
+        help="folder where batch of metadata will be stored.",
         required=True,
     )
 
@@ -71,22 +71,40 @@ def main():
 
     files_and_sizes = get_files_and_sizes(args.glob_path)
     total_size = sum(size for _, size in files_and_sizes)
+
+    print(f"Input Bin Size: {gb_to_bytes(args.bin_size):.2f}")
+    print(f"Total size: {bytes_to_gb(total_size)} GB")
+
     num_of_bins = ceil(total_size/gb_to_bytes(args.bin_size))
     # avg_bin_size = total_size / args.num_of_bins
     avg_bin_size = total_size / num_of_bins
 
-    print(f"Total size: {bytes_to_gb(total_size)} GB")
+    
     print(f"Average bin size: {bytes_to_gb(avg_bin_size):.2f} GB")
     print(f"Num of bins: {num_of_bins:.2f} bins")
 
     bins = split_into_bins(files_and_sizes, num_of_bins)
 
-    batch_info = "\n".join(list(map(lambda x: ",".join(x), bins)))
+    print(f"Actual bins count: {len(bins):.2f} bins")
 
-    os.makedirs(os.path.dirname(args.batch_metadata_save_file), exist_ok=True)
+    os.makedirs(args.batch_metadata_save_folder, exist_ok=True)
     
-    with open(args.batch_metadata_save_file, "w") as f:
-        f.write(batch_info.strip())
+    save_paths = []
+
+    for i, batch in enumerate(bins):
+        batch_string = "\n".join(batch)
+        batch_filename = os.path.join(args.batch_metadata_save_folder, f"batch_{i}.info")
+        with open(batch_filename, "w") as batch_f:
+            batch_f.write(batch_string)
+
+        save_paths += [batch_filename]
+
+    batch_metadata_save_file = os.path.join(args.batch_metadata_save_folder, "batchs.info")
+
+    batch_info = "\n".join(save_paths)
+
+    with open(batch_metadata_save_file, "w") as f:
+        f.write(batch_info)
 
 if __name__ == "__main__":
     main()

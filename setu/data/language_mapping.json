@@ -9,11 +9,11 @@
             "script": "latin"
         },
         "ben_Beng": {
-            "language": "bangla",
+            "language": "bengali",
             "script": "bengali"
         },
         "ben_Latn": {
-            "language": "bangla",
+            "language": "bengali",
             "script": "latin"
         },
         "brx_Deva": {
@@ -30,7 +30,7 @@
         },
         "doi_Latn": {
             "language": "dogri",
-            "script": "devanagari"
+            "script": "latin"
         },
         "eng_Latn": {
             "language": "english",
@@ -149,7 +149,7 @@
             "script": "latin"
         },
         "sat_Olch": {
-            "language": "santali",
+            "language": "santhali",
             "script": "ol_chiki"
         },
         "snd_Arab": {
@@ -1221,7 +1221,7 @@
             "script": "devanagari"
         },
         	"sat_Olck": {
-            "language": "santali",
+            "language": "santhali",
             "script": ""
         },
         	"scn_Latn": {

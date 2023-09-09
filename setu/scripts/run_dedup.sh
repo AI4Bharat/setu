@@ -23,11 +23,11 @@ if [[ "$run_minhash" && "$local" ]]; then
 
     python -m text_dedup.minhash \
         --path "parquet" \
-        --name "sangraha-dogri" \
+        --name "sangraha-hindi" \
         --split "train" \
-        --data_files "/data/priyam/sangraha/spark_out/dogri/*/filtered_docs/dataset/*.parquet" \
+        --data_files "/data/priyam/sangraha/spark_out/hindi/1/filtered_docs/filtered_docs/dataset/*.parquet" \
         --cache_dir "/data/priyam/cache" \
-        --output "/data/priyam/sangraha/dedup/minhash/dogri" \
+        --output "/data/priyam/sangraha/dedup/minhash/hindi/1" \
         --column "text" \
         --batch_size 10000
 
@@ -58,7 +58,7 @@ elif [[ "$run_minhash" && "$dataproc" ]]; then
         --image-version $IMAGE_VERSION \
         --project $PROJECT_ID
 
-    gcloud dataproc jobs submit pyspark --cluster ${CLUSTER_NAME}\
+    gcloud dataproc jobs submit pyspark --cluster ${CLUSTER_NAME} \
         --region $REGION \
         --jars gs://spark-lib/bigquery/spark-3.3-bigquery-0.32.2.jar \
         --driver-log-levels root=FATAL,__main__=DEBUG \
@@ -72,11 +72,11 @@ fi
 if [ "$run_exact" ]; then
       python -m text_dedup.suffix_array \
         --path "arrow" \
-        --name "sangraha-dogri" \
+        --name "sangraha-hindi" \
         --split "train" \
-        --data_files "/data/priyam/sangraha/dedup/minhash/dogri/*.arrow" \
+        --data_files "/data/priyam/sangraha/dedup/minhash/hindi/1/*.arrow" \
         --cache_dir "/data/priyam/cache" \
-        --output "/data/priyam/sangraha/dedup/exact/dogri" \
+        --output "/data/priyam/sangraha/dedup/exact/hindi/1" \
         --column "text" \
         --google_repo_path "/data/priyam/setu/text-dedup/deduplicate-text-datasets"
 fi

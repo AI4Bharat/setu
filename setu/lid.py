@@ -13,6 +13,8 @@ from pyspark.sql.types import (
     MapType, 
     StringType, 
     FloatType,
+    StructType, 
+    StructField
 )
 
 # import packages
@@ -398,7 +400,9 @@ class LIDPipeline():
             results += [
                 {
                     "language": self.mapping["indiclid"][predictions[i][1]]["language"],
-                    "logits": predictions[i][2],
+                    "script": self.mapping["indiclid"][predictions[i][1]]["script"],
+                    "code": predictions[i][1],
+                    "logits": float(predictions[i][2]) ,
                     "output-head": predictions[i][3],
                 }
             ]
@@ -454,19 +458,26 @@ class LIDPipeline():
             lid_probability_threshold=lid_probability_threshold,
         )
 
+        lang_per_model = {
+            "indiclid_lang": indiclid_results[-1]["language"],
+            "nllb_lang": nllb_results[-1]["language"],
+            "cld3_lang": cld3_results[-1]["language"],
+        }
+
+        out_per_model = {
+            "indiclid_logit": indiclid_results[-1]["logits"],
+            "nllb_probability": nllb_results[-1]["probability"],
+            "cld3_probability": cld3_results[-1]["probability"],
+        }
+        
+        
+        indiclid_code = indiclid_results[-1]["code"]
+        indiclid_script = indiclid_results[-1]["script"]
+
         if for_spark:
-            return majority_lang[0]
+            return majority_lang, lang_per_model, out_per_model, indiclid_code, indiclid_script
 
-        return majority_lang, language_vote
-
-    def run_lid_batch(self, texts, lid_probability_threshold=None):
-        indiclid_results = self.run_indiclid(texts)
-        cld3_results = self.run_cld3(texts)
-        nllb_results = self.run_nllb(texts) 
-
-        merged_results = list(zip(indiclid_results, cld3_results, nllb_results))
-        majority_langs = tuple(map(lambda x: self.hard_vote([x[0]], [x[1]], [x[2]]), merged_results))
-        return majority_langs
+        return majority_lang, language_vote, lang_per_model, out_per_model, indiclid_code, indiclid_script
         
     def hard_vote(self, indiclid_res, cld3_res, nllb_res, lid_probability_threshold=None):
 
@@ -482,7 +493,6 @@ class LIDPipeline():
             if res["language"] not in language_vote.keys():
                 language_vote[res["language"]] = {}
 
-
             language_vote[res["language"]][detector_mapping[i]] = res["probability" if "probability" in tuple(res.keys()) else "logits"]
 
             # if probability is there (like cld3 & NLLB), then it should be above the threshold to be considered, 
@@ -496,9 +506,6 @@ class LIDPipeline():
         lang_vote_pair.sort(reverse=True, key=lambda x: x[1]["total_votes"])
         majority_lang = lang_vote_pair[0]
         return majority_lang, language_vote
-
-    def soft_vote(self, indiclid_res, cld3_res, nllb_res):
-        pass
 
     def get_iso_code(self, lang):
         return self.language_iso_mapping[lang]
@@ -528,16 +535,17 @@ def run_lid_on_each_partition_with_idx(
         "gujarati",
         "hindi",
         "kannada",
+        "kashmiri",
         "konkani",
         "maithili",
         "malayalam",
-        "marathi",
         "manipuri",
+        "marathi",
         "nepali",
         "oriya",
         "punjabi",
         "sanskrit",
-        "santali",
+        "santhali",
         "sindhi",
         "tamil",
         "telugu",
@@ -562,13 +570,14 @@ def run_lid_on_each_partition_with_idx(
     print(f"Loaded LID for partition {idx}...... Starting LID")
 
     for row in partition:
-        lang = lid.run_lid_single(row[text_col].replace('\n', ' '), for_spark=True)
-        if lang not in langs:
-            lang = "other"
+        majority_lang, lang_per_model, out_per_model, indiclid_code, indiclid_script = lid.run_lid_single(row[text_col].replace('\n', ' '), for_spark=True)
+        majority_lang = majority_lang[0]
+        if majority_lang not in langs:
+            majority_lang = "other"
             iso_code = "other"
         else:
-            iso_code = lid.get_iso_code(lang)
-        res_list = [row[id_col] for id_col in identifier_cols] + [lang, iso_code]
+            iso_code = lid.get_iso_code(majority_lang)
+        res_list = [row[id_col] for id_col in identifier_cols] + [majority_lang, iso_code, lang_per_model, out_per_model, indiclid_code, indiclid_script]
         yield res_list
 
     del lid
@@ -576,7 +585,7 @@ def run_lid_on_each_partition_with_idx(
     torch.cuda.empty_cache()
 
 
-def run_lid_spark_pipeline(config, df, identifier_cols, text_col, lang_col_name, iso_col_name):
+def run_lid_spark_pipeline(spark, config, df, identifier_cols, text_col, lang_col_name, iso_col_name):
 
     run_lid = partial(
         run_lid_on_each_partition_with_idx,
@@ -593,10 +602,33 @@ def run_lid_spark_pipeline(config, df, identifier_cols, text_col, lang_col_name,
         lid_probability_threshold=config.lid_probability_threshold,
     )
 
-    lang_df = df \
+    result_schema = StructType([
+            StructField(id_col, StringType(), True)
+                for id_col in identifier_cols
+        ] + [
+            StructField(lang_col_name, StringType(), True), 
+            StructField(iso_col_name, StringType(), True),
+            StructField("lang_per_model", MapType(StringType(), StringType()), True),
+            StructField("out_per_model", MapType(StringType(), FloatType()), True), 
+            StructField("indiclid_code", StringType(), True), 
+            StructField("indiclid_script", StringType(), True),
+        ])
+
+    lang_rdd = df \
             .select(*identifier_cols, text_col) \
-            .rdd.mapPartitionsWithIndex(run_lid) \
-            .toDF(identifier_cols + [lang_col_name, iso_col_name])
+            .rdd.mapPartitionsWithIndex(run_lid)
+
+    lang_df = spark.createDataFrame(lang_rdd, schema=result_schema)
+
+    cols_list = identifier_cols + [lang_col_name, iso_col_name, "indiclid_code", "indiclid_script"]
+
+    lang_df = lang_df.select(
+        *cols_list,
+        *[lang_df.lang_per_model[i].alias(i) 
+                for i in ["indiclid_lang", "nllb_lang", "cld3_lang"]],
+        *[lang_df.out_per_model[i].alias(i) 
+                for i in ["indiclid_logit", "nllb_probability", "cld3_probability"]],
+    )
         
     df = df.join(lang_df, identifier_cols)
     
@@ -605,14 +637,16 @@ def run_lid_spark_pipeline(config, df, identifier_cols, text_col, lang_col_name,
 if __name__ == "__main__":
 
     lid = LIDPipeline()
-    text = "صباح الخير، الجو جميل اليوم والسماء صافية."
-    
-    print(lid.run_lid_single(text))
+    text = """Hi how are you, I am doing very well. I needed your help but you didn't come. Now, hear me speaking kashmiri all day.
+ایوتھلیا ایکونتھیا (Euthalia aconthea)، یَتھ عام طور بارون تہِ ونان چھ ، چھِ نیمفلیڈی خاندانچ تتلی ہنٛز اکھ درمیٲنؠ قَدٕچ نسٕل یم جنوٗبی تہٕ جنوب مشرقی ایشیا ہس مَنٛز لبنہٕ چھِ یوان۔ 1905 منٛز چارلس تھامس بنگھامن کوٚر ریکارڈ ز یہٕ چھ پورٕ جزیرٕ نما ہندوستانَس منٛز لبنہٕ یوان سواے صحرا کیٛن علاقن تہٕ ہِمالیہ کیٚن اعلی سلسلن منٛز۔
+فوٹو گرٛاف کریڈٹ: User:Kritzolina (A)
+وِکیٖپیٖڈیا سُنٛد میزبان چھُ وِکیٖمیٖڈیا فاوٗنڈیشَن، اَکھ غٲر مَنافہٕ تَنظیٖم یُس بیٚیَن اَدارَن میزبٲنی تہِ چھُ کَران:
+یہِ وِکیٖپیٖڈیا چھُ کٲشرِس مَنٛز لؠکھنہٕ آمُت۔ باقؠن زَبانَن مَنٛز تہِ چھُ وِکیٖپیٖڈیا دٕستِیاب؛ کیٚنٛہہ بٔڈؠ وِکیٖپیٖڈیا چھِ بۄنہٕ کَنہِ:"""
 
-    # print("\n\n Batched Results\n")
+    res = lid.run_lid_single(text.replace("\n", " "), for_spark=True)
 
-    # texts = [
-    #     "صباح الخير، الجو جميل اليوم والسماء صافية.",
-    #     "This text is written in English.",
-    # ]
-    # print(lid.run_lid_batch(texts))
+    out = res[3]
+
+    print(type(out["indiclid_logit"]))
+    print(type(out["cld3_probability"]))
+    print(type(out["nllb_probability"]))

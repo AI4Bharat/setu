@@ -10,6 +10,8 @@ from pyspark.sql.functions import (
     broadcast,
     rand,
     col,
+    length,
+    spark_partition_id,
 )
 from pyspark.sql.types import (
     BooleanType,
@@ -29,6 +31,7 @@ from constants import (
 )
 from document_filters import (
     find_code_spans,
+    find_code_spans_spark,
     has_code,
     remove_code,
     is_terminal_valid,
@@ -41,6 +44,7 @@ from document_filters import (
     has_repetition,
     extract_document_metadata,
     perform_doc_flagging,
+    get_symbol_ratio,
 )
 from line_filters import (
     get_stop_word_dist,
@@ -76,12 +80,21 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 find_code_spans_udf = udf(
-    find_code_spans, 
-    StructType([StructField("code_spans",
-                            ArrayType(ArrayType(IntegerType())), True),
-                StructField("code_spans_success",
-                            BooleanType(), True)]))
-# find_code_spans_udf = udf(find_code_spans, ArrayType(ArrayType(IntegerType())))
+    find_code_spans_spark, 
+    StructType([
+        StructField("code_spans", ArrayType(ArrayType(IntegerType())), True),
+        StructField("code_spans_success", BooleanType(), True)
+    ]),
+)
+get_symbol_ratio_udf = udf(
+    partial(get_symbol_ratio, for_spark=True),
+    StructType([
+        StructField("symbol_ratio", FloatType(), True),
+        StructField("invalid_char_count", IntegerType(), True),
+    ])
+)
+# get_symbol_ratio_udf = udf(partial(get_symbol_ratio, for_spark=True), FloatType())
+# find_code_spans_udf = udf(find_code_spans_spark, ArrayType(ArrayType(IntegerType())))
 is_terminal_valid_udf = udf(is_terminal_valid, BooleanType()) # Doc level
 split_with_delimiter_udf = udf(split_with_delimiter, ArrayType(StringType()))
 get_nsfw_word_dist_udf = udf(get_nsfw_word_dist, MapType(StringType(), IntegerType()))
@@ -140,8 +153,10 @@ class Setu():
         # Adding a salt column to the DataFrame
         df = df.withColumn("salt", (rand() * num_buckets).cast("int"))
 
+        # df.show(1000)
+
         # Repartition based on the salted key to ensure more even distribution
-        df = df.repartition("salt")
+        df = df.repartition(n_splits, "salt")
 
         df = df.drop("salt")
 
@@ -159,7 +174,9 @@ class Setu():
 
         return df
 
-    def doc_clean_stage(self, df, cols_to_use, text_col, doc_id_col, verbose):
+    def doc_clean_stage(self, df, cols_to_use, text_col, doc_id_col,
+                        use_symbol_filter, save_symbol_heavy_docs, 
+                        symbol_filter_output_path, verbose):
 
         curr_cols = list(df.schema.names)
         
@@ -181,6 +198,33 @@ class Setu():
                 df.show(n=5)
                 print("Completed `remove_code`....")
 
+        df = df.select("*", length(text_col).alias("uncleaned_chars_count"))
+        df = df.select("*", get_word_count_udf(text_col).alias("uncleaned_words_count"))
+        df = df.select("*", get_bytes_udf(text_col).alias("uncleaned_bytes"))
+
+        curr_cols = list(df.schema.names)
+
+        df = df.select("*", get_symbol_ratio_udf(text_col, "uncleaned_chars_count").alias("symbol_ratio_results")) \
+                .select(*curr_cols, "symbol_ratio_results.*")
+
+        if use_symbol_filter:
+
+            if save_symbol_heavy_docs:
+
+                    df.filter(df.symbol_ratio >=self.config.symbol_threshold) \
+                        .write.mode("overwrite") \
+                        .parquet(symbol_filter_output_path)
+
+                    rename_partitioned_directories(symbol_filter_output_path, "doc_lang_partition")
+
+                    print(f"Completed `symbol heavy df` parquet write.... to: {symbol_filter_output_path}")
+
+            df = df.filter(df.symbol_ratio < self.config.symbol_threshold)
+
+        df.show(n=5)
+
+        df = self.salting(df, self.n_splits)
+                
         spans_df = self.chunk_handler.doc2lines(df, text_col, "\n")
 
         if verbose:
@@ -213,6 +257,7 @@ class Setu():
             print("Completed `lines2doc` via ` `....")
 
         df = df \
+            .withColumn("uncleaned_text", col(text_col)) \
             .drop(text_col) \
             .join(doc_df, [doc_id_col])
 
@@ -223,14 +268,14 @@ class Setu():
 
         return df
 
-    def lid_stage(self, df, doc_id_col, text_col):
+    def lid_stage(self, spark, df, doc_id_col, text_col):
         df = self.salting(df, self.n_splits)
-        df = run_lid_spark_pipeline(self.config, df, [doc_id_col], text_col, "doc_lang", "doc_lang_iso")
         df.cache()
-        df.checkpoint()
+        df = run_lid_spark_pipeline(spark, self.config, df, [doc_id_col], text_col, "doc_lang", "doc_lang_iso")
+        df.cache()
+        df.localCheckpoint()
         df.show(n=5)
         print("Completed `doc_lang`....")
-        df.unpersist(True)
         return df
 
     def convert_to_line(self, df, text_col, verbose):
@@ -383,24 +428,222 @@ class Setu():
 
         return doc_stats_df
 
-    def run_lid_segregation_spark_pipeline(
+    def run_doc_clean_spark_pipeline(
         self,
+        spark,
         df,
         cols_to_use,
         doc_id_col,
-        text_col,
+        text_col,   
+        docs_per_partition,
+        use_symbol_filter,
+        save_symbol_heavy_docs,
+        symbol_filter_output_path,
+        cleaned_doc_output_path,
+        run_data_parallel_mode,
+        verbose: bool = True,
+    ):
+
+        df = df.filter(df.successful_extraction == True) \
+                .dropDuplicates([doc_id_col]) \
+                .select(cols_to_use)
+
+
+        print(f"Count after filtering for extraction: {df.count()}")
+
+        df = df.na.drop(subset=[text_col])
+
+        print(f"Count after filtering for extraction: {df.count()}")
+
+        df = self.set_split_count_and_salt(df, docs_per_partition)
+
+        df.withColumn("partitionId",spark_partition_id()).groupBy("partitionId").count().sort("partitionId").show(df.rdd.getNumPartitions())
+
+        if run_data_parallel_mode:
+
+            print("Running `doc_clean` stage in data-parallel mode....")
+
+            df = self.run_data_parallelized_doc_clean(
+                spark, df, cols_to_use, doc_id_col, text_col,   
+                docs_per_partition, use_symbol_filter, 
+                save_symbol_heavy_docs, symbol_filter_output_path,
+                cleaned_doc_output_path, verbose,
+            )
+        else:
+            df = self.doc_clean_stage(
+                df, cols_to_use, text_col, doc_id_col,
+                use_symbol_filter, save_symbol_heavy_docs,
+                symbol_filter_output_path, verbose
+            )
+
+        df = self.salting(df, self.n_splits)
+
+        df.write.mode("overwrite").parquet(cleaned_doc_output_path)
+
+        print(f"Completed `doc_clean` level `df` parquet write.... to: {cleaned_doc_output_path}")
+
+    def run_data_parallelized_doc_clean(
+        self,
+        spark,
+        df,
+        cols_to_use,
+        doc_id_col,
+        text_col,   
+        docs_per_partition,
+        use_symbol_filter,
+        save_symbol_heavy_docs,
+        symbol_filter_output_path,
+        cleaned_doc_output_path,
+        verbose: bool = True,
+    ):
+        
+        def clean_docs(
+            idx, 
+            partition, 
+            doc_id_col,
+            text_col,
+            use_symbol_filter,
+            symbol_filter_output_path
+        ):
+
+            print(f"Performing Document Cleaning on partition {idx}......")
+
+            os.makedirs(symbol_filter_output_path, exist_ok=True) 
+            symbol_heavy_parquet_path = os.path.join(symbol_filter_output_path, f"{idx}.parquet")
+            symbol_heavy_schema = pa.schema([
+                (doc_id_col, pa.string()),
+                ("url", pa.string()),
+                ("source", pa.string()),
+                (text_col, pa.string()),
+                ("language", pa.string()),
+                ("code_spans", pa.list_(pa.list_(pa.int64()))),
+                ("uncleaned_chars_count", pa.int64()),
+                ("uncleaned_words_count", pa.int64()),
+                ("uncleaned_bytes", pa.int64()),
+                ("symbol_ratio", pa.float64()),
+                ("invalid_char_count", pa.int64()),
+            ])
+
+            symbol_heavy_out = {
+                doc_id_col: [],
+                "url": [],
+                "source": [],
+                text_col: [],
+                "language": [],
+                "code_spans": [],
+                "uncleaned_chars_count": [],
+                "uncleaned_words_count": [],
+                "uncleaned_bytes": [],
+                "symbol_ratio": [],
+                "invalid_char_count": [],
+            }
+            
+            for row in partition:
+                # print(f"Doc ID: {row[doc_id_col]}")
+                # print(f"Text: {row[text_col]}")
+                code_spans = find_code_spans(row[doc_id_col], row[text_col])
+                if self.config.remove_code:
+                    text = remove_code(row[text_col], code_spans)
+
+                # print(f"After remove code: {text}")
+                
+                if not len(text):
+                    continue
+
+                uncleaned_chars_count = get_char_count(text)
+                uncleaned_words_count = get_word_count(text)
+                uncleaned_bytes = get_bytes(text)
+
+                symbol_ratio, invalid_char_count = get_symbol_ratio(text, uncleaned_chars_count)
+
+                if use_symbol_filter and symbol_ratio >=self.config.symbol_threshold :
+                    symbol_heavy_out[doc_id_col] += [row[doc_id_col]]
+                    symbol_heavy_out["url"] += [row["url"]]
+                    symbol_heavy_out["source"] += [row["source"]]
+                    symbol_heavy_out[text_col] += [row[text_col]]
+                    symbol_heavy_out["language"] += [row["language"]]
+                    symbol_heavy_out["code_spans"] += [code_spans]
+                    symbol_heavy_out["uncleaned_chars_count"] += [uncleaned_chars_count]
+                    symbol_heavy_out["uncleaned_words_count"] += [uncleaned_words_count]
+                    symbol_heavy_out["uncleaned_bytes"] += [uncleaned_bytes]
+                    symbol_heavy_out["symbol_ratio"] += [symbol_ratio]
+                    symbol_heavy_out["invalid_char_count"] += [invalid_char_count]
+                else:
+                    chunks = text.split("\n")
+                    terminal_valid = tuple(map(is_terminal_valid, chunks))
+                    cleaned_text = ""
+                    for i, terminal_valid_check in enumerate(terminal_valid):
+                        if terminal_valid_check:
+                            cleaned_text += chunks[i] + "\n"
+                    
+                    if not len(cleaned_text):
+                        continue
+
+                    res_list = [
+                        row[doc_id_col], row["url"], row["source"], row["language"], code_spans,
+                        uncleaned_chars_count, uncleaned_words_count, uncleaned_bytes, symbol_ratio, 
+                        invalid_char_count, text, cleaned_text
+                    ]
+
+                    yield res_list
+
+            if use_symbol_filter:
+
+                symbol_heavy_table = pa.table(symbol_heavy_out, schema=symbol_heavy_schema)
+
+                with pq.ParquetWriter(
+                    symbol_heavy_parquet_path, symbol_heavy_table.schema, compression="SNAPPY"
+                ) as pq_writer:
+                    pq_writer.write_table(symbol_heavy_table)
+
+            print(f"Written symbol-heavy parquet file of partition {idx} -> {symbol_heavy_parquet_path}......")
+
+        result_schema = StructType([
+            StructField(doc_id_col, StringType(), True),
+            StructField("url", StringType(), True), 
+            StructField("source", StringType(), True),
+            StructField("language", StringType(), True),
+            StructField("code_spans", ArrayType(ArrayType(IntegerType())), True), 
+            StructField("uncleaned_chars_count", IntegerType(), True),
+            StructField("uncleaned_words_count", IntegerType(), True),
+            StructField("uncleaned_bytes", IntegerType(), True),
+            StructField("symbol_ratio", FloatType(), True),
+            StructField("invalid_char_count", IntegerType(), True),
+            StructField("uncleaned_text", StringType(), True),
+            StructField(text_col, StringType(), True),
+        ])
+
+        clean_docs_dp = partial(
+            clean_docs, 
+            doc_id_col=doc_id_col,
+            text_col=text_col,
+            use_symbol_filter=use_symbol_filter,
+            symbol_filter_output_path=symbol_filter_output_path,
+        )
+
+        cleaned_doc_rdd = df.rdd.mapPartitionsWithIndex(clean_docs_dp)
+        cleaned_doc_df = spark.createDataFrame(cleaned_doc_rdd, schema=result_schema)
+        return cleaned_doc_df
+
+    def run_lid_segregation_spark_pipeline(
+        self,
+        spark,
+        df,
+        doc_id_col,
+        text_col,   
         docs_per_partition,
         doc_lid_output_path,
         verbose: bool = True,
     ):
         print("Starting SETU LID Segregation Spark Pipeline...........")
 
-        df = df.select(cols_to_use) \
-                .filter(df.successful_extraction == True)
+        df = df.select(doc_id_col, text_col)
 
         df = self.set_split_count_and_salt(df, docs_per_partition)
-        df = self.doc_clean_stage(df, cols_to_use, text_col, doc_id_col, verbose)
-        df = self.lid_stage(df, doc_id_col, text_col)
+
+        df = self.lid_stage(spark, df, doc_id_col, text_col)
+
+        df = self.salting(df, self.n_splits)
 
         # Duplicate the doc_lang column as doc_lang_partition
         df = df.withColumn("doc_lang_partition", col("doc_lang"))
@@ -412,10 +655,10 @@ class Setu():
 
         print(f"Completed `doc_lang` level `df` parquet write.... to: {doc_lid_output_path}")
 
-
     def run_analysis_spark_pipeline(
         self,
         df,
+        cols_to_use,
         doc_id_col,
         text_col,
         docs_per_partition,
@@ -427,7 +670,10 @@ class Setu():
 
         print("Starting SETU Analysis Spark Pipeline...........")
 
+        df = df.select(cols_to_use)
+
         df = self.set_split_count_and_salt(df, docs_per_partition)
+
         line_df = self.convert_to_line(df, text_col, verbose)
         line_df = self.line_stats_collection(line_df, text_col, line_stats_output_path, verbose)
         doc_stats_df = self.aggregate_to_doc_stats(line_df, doc_id_col, text_col, True,  verbose)
@@ -456,14 +702,37 @@ class Setu():
 
         print(f"Completed analysis `df` parquet write.... to: {analysis_output_path}")
 
+    def run_data_parallelized_analysis(
+        self,
+        data_iter,
+        cols_to_use,
+        doc_id_col,
+        text_col,
+        docs_per_partition,
+        line_stats_output_path,
+        doc_stats_output_path,
+        analysis_output_path,
+        verbose:bool = True,
+    ):
+        task_context: TaskContext = TaskContext.get()  # type: ignore
+        partition_id = task_context.partitionId()
+        
+        line_stats_output_file = os.path.join(line_stats_output_path, f"{partition_id}.parquet")
+        doc_stats_output_file = os.path.join(doc_stats_output_path, f"{partition_id}.parquet")
+        analysis_output_file = os.path.join(analysis_output_path, f"{partition_id}.parquet")
+
+        for data in data_iter:
+            pass
+
+
     def run_plotting(
         doc_stats_df,
         save_plot_directory,
         verbose: bool = True,
     ):
-        doc_stats_df = doc_stats_df.toPandas()
-        
+        # TODO: If possible, code this up. Currently left as proper plots are needing manual inspection
 
+        pass
 
     def run_flagging_and_filtering_spark_pipeline(
         self,
@@ -516,7 +785,7 @@ class Setu():
 
             if verbose:
                 doc_stats_df.show(n=5)
-                print("Completed `is_number` removal filter....")
+                print("Completed `has_less_lines` removal filter....")
 
         if self.config.line_length_filter:
 
@@ -524,7 +793,7 @@ class Setu():
 
             if verbose:
                 doc_stats_df.show(n=5)
-                print("Completed `is_number` removal filter....")
+                print("Completed `is_short_lines_heavy` removal filter....")
 
         if self.config.nsfw_filter:
 
@@ -589,7 +858,10 @@ class Setu():
         
         df = self.set_split_count_and_salt(df, docs_per_partition)
         doc_stats_df = self.salting(doc_stats_df, self.n_splits)
-        df = df.join(doc_stats_df, [doc_id_col, "doc_lang"])
+        # df = df.dropDuplicates([doc_id_col, 'doc_lang']) \
+        #         .join(doc_stats_df.drop("doc_lang"), [doc_id_col], "inner")
+
+        df = df.join(doc_stats_df.drop("doc_lang"), [doc_id_col], "inner")
 
         df.write.mode("overwrite") \
                 .parquet(filtered_docs_path)

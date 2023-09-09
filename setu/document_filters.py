@@ -22,6 +22,79 @@ from functools import partial
 import json
 import statistics
 
+def get_symbol_ratio(s, char_count, for_spark=True):
+
+    def is_valid_char(character):
+        # Unicode ranges:
+        # Latin (English): U+0041 - U+005A and U+0061 - U+007A
+        # Devanagari (Hindi, Dogri, Konkani, Maithili, Marathi, Nepali, Sanskrit, Sindhi): U+0900 - U+097F
+        # Bengali (covers Assamese, Bengali, Bodo, and potentially Manipuri): U+0980 - U+09FF
+        # Gujarati: U+0A80 - U+0AFF
+        # Gurmukhi (Punjabi): U+0A00 - U+0A7F
+        # Kannada: U+0C80 - U+0CFF
+        # Malayalam: U+0D00 - U+0D7F
+        # Meitei (for Manipuri): U+ABC0 - U+ABFF
+        # Oriya (Odia): U+0B00 - U+0B7F
+        # Ol Chiki (Santhali): U+1C50 - U+1C7F
+        # Arabic (covers Urdu): U+0600 - U+06FF
+        # Tamil: U+0B80 - U+0BFF
+        # Telugu: U+0C00 - U+0C7F
+        # Arabic: U+0600 - U+06FF 
+        # Arabic Supplement: U+0750 - U+077F 
+        # Arabic Extended-A: U+08A0 - U+08FF 
+        # Arabic Extended-B: U+0870 - U+089F 
+        # Arabic Extended-C: U+10EC0 - U+10EFF 
+        # Arabic Pres. Forms-A: U+FB50 - U+FDFF
+        # Arabic Pres. Forms-B: U+FE70 - U+FEFF 
+        # Arabic Mathematical...: U+1EE00 - U+1EEFF 
+        # Indic Siyaq Numbers: U+1EC70 - U+1ECBF 
+        # Ottoman Siyaq Numbers: U+1ED00 - U+1ED4F 
+        # Rumi Numeral Symbols: U+10E60 - U+10E7F 
+        
+        pattern = (
+            r'['
+            r'\u0030-\u0039'
+            r'\u0061-\u007A'
+            r'\u0041-\u005A'
+            r'\u0900-\u097F'
+            r'\u0980-\u09FF'
+            r'\u0A00-\u0A7F'
+            r'\u0A80-\u0AFF'
+            r'\u0C00-\u0C7F'
+            r'\u0C80-\u0CFF'
+            r'\u0D00-\u0D7F'
+            r'\uABC0-\uABFF'
+            r'\u0B00-\u0B7F'
+            r'\u1C50-\u1C7F'
+            r'\u0B80-\u0BFF'
+            r'\u0600-\u06FF'
+            r'\u0750-\u077F'
+            r'\u08A0-\u08FF'
+            r'\u0870-\u089F'
+            r'\uFB50-\uFDFF'
+            r'\uFE70-\uFEFF'
+            r'\U00010EC0-\U00010EFF'        # for '\u', python exits at 4 hex digits and for '\U', python exits at 8 hex digits. 
+            r'\U0001EE00-\U0001EEFF'
+            r'\U0001EC70-\U0001ECBF'
+            r'\U0001ED00-\U0001ED4F'
+            r'\U00010E60-\U00010E7F'
+            r']'
+        )
+
+        return re.match(pattern, character)
+
+    invalid_characters_count = 0
+    invalid_chars_found = []
+    exception_list = [" ", "\n"]   
+    char_counter = Counter(s)
+    for char in char_counter.keys():
+        if not is_valid_char(char) and char not in exception_list:
+                invalid_characters_count += char_counter[char]
+                invalid_chars_found += [char]
+    if for_spark:
+        return invalid_characters_count/char_count if char_count else None, invalid_characters_count
+    return invalid_characters_count/char_count, invalid_characters_count, invalid_chars_found
+
 patterns = [
         # HTML
         (re.compile(r'<[^>]+?>.+?</[^>]+?>'), 'HTML'),
@@ -33,7 +106,7 @@ patterns = [
         (re.compile(r'(?s)\..*?\{.*?\}'), 'CSS'),
     ]
 
-def find_code_spans(doc_id, text):
+def find_code_spans_spark(doc_id, text):
     spans = []
     try:
         for pattern, lang in patterns:
@@ -43,12 +116,12 @@ def find_code_spans(doc_id, text):
     except:
         return Row("code_spans", "code_spans_success")(None, False)
 
-# def find_code_spans(doc_id, text):
-#     spans = []
-#     for pattern, lang in patterns:
-#         for match in pattern.finditer(text):
-#             spans.append([match.start(), match.end()])
-#     return spans if len(spans) else None
+def find_code_spans(doc_id, text):
+    spans = []
+    for pattern, lang in patterns:
+        for match in pattern.finditer(text):
+            spans.append([match.start(), match.end()])
+    return spans if len(spans) else None
 
 def is_terminal_valid(text):
     if text.endswith(CONSTANTS.TERMINAL_PUNCTUATIONS_EXCEPTION):
@@ -100,7 +173,7 @@ def split_with_delimiter(
     return out
 
 def has_code(code_spans):
-    if len(code_spans):
+    if code_spans:
         return True
     return False
 

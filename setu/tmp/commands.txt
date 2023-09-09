@@ -6,15 +6,60 @@ Start a worker
 
 Run SETU bash
 
+FOR Doc Clean
+
+SETU_DIR=/data/priyam/setu SETU_TMP_DIR=/data/priyam/tmp/ bash setu/scripts/run_setu.sh \
+    -i english \
+    -d "/data/priyam/sangraha/parquets/english/*/*.parquet" \
+    -p 6000 \
+    -s /data/priyam/sangraha/spark_out/english/dataset/cleaned_docs \
+    -b false \
+    -c /data/priyam/tmp \
+    -u true \
+    -l false \
+    -a false \
+    -f false \
+    -t true \
+    -r false \
+    -v false \
+    -n 16 \
+    -o 8 \
+    -e 32G \
+    -k 50G \
+    -x 128
+
+FOR Doc Clean
+
+SETU_DIR=/data/priyam/setu SETU_TMP_DIR=/data/priyam/tmp/ bash setu/scripts/run_setu.sh \
+    -i malayalam \
+    -m "/data/priyam/sangraha/spark_out/malayalam/dataset/batch_infos/doc_clean/batchs.info" \
+    -p 1500 \
+    -s /data/priyam/sangraha/spark_out/malayalam/dataset/cleaned_docs \
+    -b false \
+    -c /data/priyam/tmp \
+    -u true\
+    -l false \
+    -a false \
+    -f false \
+    -t true \
+    -r false \
+    -v false \
+    -n 12 \
+    -o 8 \
+    -e 32G \
+    -k 32G \
+    -x 96
+
 FOR LID Segregation
 
 SETU_DIR=/data/priyam/setu SETU_TMP_DIR=/data/priyam/tmp/ bash setu/scripts/run_setu.sh \
-    -i gujarati \
-    -d "/data/priyam/sangraha/parquets/gujarati/2/*.parquet" \
+    -i punjabi \
+    -d "/data/priyam/sangraha/parquets/punjabi/*/*.parquet" \
     -p 1500 \
-    -s /data/priyam/sangraha/spark_out/gujarati/2 \
+    -s /data/priyam/sangraha/spark_out/punjabi/dataset/lid_segregation \
     -b false \
     -c /data/priyam/tmp \
+    -u false \
     -l true \
     -a false \
     -f false \
@@ -30,12 +75,13 @@ SETU_DIR=/data/priyam/setu SETU_TMP_DIR=/data/priyam/tmp/ bash setu/scripts/run_
 FOR LID Segregation
 
 SETU_DIR=/data/priyam/setu SETU_TMP_DIR=/data/priyam/tmp/ bash setu/scripts/run_setu.sh \
-    -i gujarati \
-    -m "/data/priyam/sangraha/spark_out/gujarati/1/lid_batch.info" \
+    -i marathi \
+    -m "/data/priyam/sangraha/spark_out/marathi/dataset/batch_infos/lid_segregation/batchs.info" \
     -p 1500 \
-    -s /data/priyam/sangraha/spark_out/gujarati/1 \
+    -s /data/priyam/sangraha/spark_out/marathi/dataset/lid_segregation \
     -b false \
     -c /data/priyam/tmp \
+    -u false \
     -l true \
     -a false \
     -f false \
@@ -51,38 +97,40 @@ SETU_DIR=/data/priyam/setu SETU_TMP_DIR=/data/priyam/tmp/ bash setu/scripts/run_
 FOR Analysis
 
 # Desired glob pattern
-/data/priyam/sangraha/spark_out/gujarati/2/doc_lid/*/*/*.parquet
+/data/priyam/sangraha/spark_out/bodo/1/doc_lid/*/*/*.parquet
 
 SETU_DIR=/data/priyam/setu SETU_TMP_DIR=/data/priyam/tmp/ bash setu/scripts/run_setu.sh \
-    -i gujarati \
-    -d "/data/priyam/sangraha/spark_out/gujarati/2/doc_lid/*/*/*.parquet" \
+    -i marathi \
+    -d "/data/priyam/sangraha/spark_out/marathi/dataset/lid_segregation/doc_lid/*/*/*.parquet" \
     -p 1500 \
-    -s /data/priyam/sangraha/spark_out/gujarati/2 \
+    -s /data/priyam/sangraha/spark_out/marathi/dataset/analysis \
     -b false \
     -c /data/priyam/tmp \
+    -u false \
     -l false \
     -a true \
     -f false \
     -t true \
     -r false \
     -v false \
-    -n 12 \
+    -n 16 \
     -o 8 \
     -e 32G \
     -k 32G \
-    -x 96
+    -x 128
 
 FOR Analysis
 
 # Desired glob pattern
 
 SETU_DIR=/data/priyam/setu SETU_TMP_DIR=/data/priyam/tmp/ bash setu/scripts/run_setu.sh \
-    -i gujarati \
-    -m "/data/priyam/sangraha/spark_out/gujarati/1/analysis_batch.info" \
+    -i malayalam \
+    -m "/data/priyam/sangraha/spark_out/malayalam/dataset/batch_infos/analysis/batchs.info" \
     -p 1500 \
-    -s /data/priyam/sangraha/spark_out/gujarati/1 \
+    -s /data/priyam/sangraha/spark_out/malayalam/dataset/analysis \
     -b false \
     -c /data/priyam/tmp \
+    -u false \
     -l false \
     -a true \
     -f false \
@@ -103,12 +151,13 @@ FOR Flagging-Filtering
 /data/priyam/sangraha/spark_out/*/*/doc_stats/*/dogri/*.parquet
 
 SETU_DIR=/data/priyam/setu SETU_TMP_DIR=/data/priyam/tmp/ bash setu/scripts/run_setu.sh \
-    -i dogri \
-    -d "/data/priyam/sangraha/spark_out/*/*/doc_stats/*/dogri/*.parquet" \
+    -i kannada \
+    -d "/data/priyam/sangraha/spark_out/kannada/*/analysis/doc_stats/*/kannada/*.parquet" \
     -p 1500 \
-    -s /data/priyam/sangraha/spark_out/dogri/1 \
+    -s /data/priyam/sangraha/spark_out/kannada/dataset/filtering \
     -b false \
     -c /data/priyam/tmp \
+    -u false \
     -l false \
     -a false \
     -f true \
@@ -124,22 +173,23 @@ SETU_DIR=/data/priyam/setu SETU_TMP_DIR=/data/priyam/tmp/ bash setu/scripts/run_
 FOR Document Removal
 
 # Desired glob pattern
-analysis = /data/priyam/sangraha/spark_out/*/*/analysis/*/dogri/*.parquet
-doc_stats = /data/priyam/sangraha/spark_out/dogri/*/filtered_doc_stats/*/*.parquet
+analysis = /data/priyam/sangraha/spark_out/gujarati/*/analysis/analysis/*/gujarati/*.parquet
+doc_stats = /data/priyam/sangraha/spark_out/gujarati/filtering/filtered_doc_stats/*/*.parquet
 
 SETU_DIR=/data/priyam/setu SETU_TMP_DIR=/data/priyam/tmp/ bash setu/scripts/run_setu.sh \
-    -i dogri \
-    -d "/data/priyam/sangraha/spark_out/*/*/analysis/*/dogri/*.parquet" \
+    -i kannada \
+    -d "/data/priyam/sangraha/spark_out/kannada/dataset/analysis/analysis/*/kannada/*.parquet" \
     -p 1500 \
-    -s /data/priyam/sangraha/spark_out/dogri/1 \
+    -s /data/priyam/sangraha/spark_out/kannada/dataset/filtered_docs \
     -b false \
     -c /data/priyam/tmp \
+    -u false \
     -l false \
     -a false \
     -f false \
     -t true \
     -r true \
-    -q "/data/priyam/sangraha/spark_out/dogri/*/filtered_doc_stats/*/*.parquet" \
+    -q "/data/priyam/sangraha/spark_out/kannada/dataset/filtering/filtered_doc_stats/*/*.parquet" \
     -v false \
     -n 12 \
     -o 8 \
@@ -178,21 +228,21 @@ spark-submit --master spark://SPK-DGX-O1:7077 \
 
 python -m text_dedup.suffix_array \
     --path "parquet" \
-    --name "sangraha-bodo" \
+    --name "sangraha-assamese" \
     --split "train" \
-    --data_files "/data/priyam/sangraha/spark_out/bodo/filtered_docs/dataset/*.parquet" \
+    --data_files "/data/priyam/sangraha/spark_out/assamese/filtered_docs/dataset/*.parquet" \
     --cache_dir "/data/priyam/cache" \
-    --output "/data/priyam/sangraha/dedup/bodo" \
+    --output "/data/priyam/sangraha/dedup/assamese" \
     --column "text" \
     --google_repo_path "/data/priyam/setu/text-dedup/deduplicate-text-datasets"  
 
 python -m text_dedup.minhash \
     --path "parquet" \
-    --name "sangraha-dogri" \
+    --name "sangraha-bodo" \
     --split "train" \
-    --data_files "/data/priyam/sangraha/spark_out/dogri/analysis/dataset/*.parquet" \
+    --data_files "/data/priyam/sangraha/spark_out/bodo/*/filtered_docs/filtered_docs/*/*.parquet" \
     --cache_dir "/data/priyam/cache" \
-    --output "/data/priyam/sangraha/dedup/dogri" \
+    --output "/data/priyam/sangraha/dedup/minhash/bodo" \
     --column "text" \
     --batch_size 10000
 
@@ -268,3 +318,60 @@ pagetype
 ~110,143,488 docs = 85hr = ~4 days
 
 
+In India, there are 22 official languages and `english`. They are listed below:
+- assamese
+- bengali
+- bodo
+- dogri
+- english
+- gujarati
+- hindi
+- kannada
+- kashmiri
+- konkani
+- maithili
+- malayalam
+- marathi
+- manipuri
+- nepali
+- oriya
+- punjabi
+- sanskrit
+- santhali
+- sindhi
+- tamil
+- telugu
+- urdu
+
+Give me a python script which takes a string has input and flags any character that is not a alphabet of any of the above mentioned 23 languages.
+
+
+U+0600–U+06FF Arabic
+U+0750–U+077F Arabic Supplement
+U+08A0–U+08FF Arabic Extended-A
+U+0870–U+089F Arabic Extended-B
+U+10EC0–U+10EFF Arabic Extended-C
+U+FB50–U+FDFF Arabic Pres. Forms-A
+U+FE70–U+FEFF Arabic Pres. Forms-B
+U+1EE00–U+1EEFF Arabic Mathematical...
+U+1EC70–U+1ECBF Indic Siyaq Numbers
+U+1ED00–U+1ED4F Ottoman Siyaq Numbers
+U+10E60–U+10E7F Rumi Numeral Symbols
+
+
+SETU_TMP_DIR=/data/priyam/tmp/ spark-submit \
+    --master "spark://SPK-DGX-O1:7077" \
+    --driver-java-options "-Djava.io.tmpdir=$SETU_TMP_DIR" \
+    --conf "spark.driver.extraJavaOptions=-Djava.io.tmpdir=$SETU_TMP_DIR" \
+    --conf "spark.executor.extraJavaOptions=-Djava.io.tmpdir=$SETU_TMP_DIR" \
+    --conf "spark.worker.dir=$SETU_TMP_DIR" \
+    --conf "spark.local.dir=$SETU_TMP_DIR" \
+    --conf "spark.sql.autoBroadcastJoinThreshold=1073741824" \
+    --num-executors 96 \
+    --executor-cores 1 \
+    --executor-memory 4G \
+    --driver-memory 32G \
+    /data/priyam/setu/setu/helpers/redo_parquet.py \
+    -g "/data/priyam/sangraha/parquets/sanskrit/*.parquet" \
+    -s "/data/priyam/sangraha/parquets/sanskrit_new" \
+    -p 50

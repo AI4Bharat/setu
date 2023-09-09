@@ -32,7 +32,7 @@ class Constants():
             "oriya",
             "punjabi",
             "sanskrit",
-            "santali",
+            "santhali",
             "sindhi",
             "tamil",
             "telugu",

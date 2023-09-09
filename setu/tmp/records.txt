@@ -1,0 +1,55 @@
+Assamese - lid, analysis, filtering, removal DONE
+
+Bengali - doc_clean, lid, analysis, filtering, removal, DONE
+
+Bodo - lid, analysis, filtering, removal DONE
+
+Dogri - lid, analysis, filtering, removal, Minhash, DONE
+
+English - doc_clean, lid, analysis, filtering, removal, Minhash, DONE
+
+Gujarati - lid, analysis, filtering, removal, Minhash, Done
+
+Hindi - 
+    1: doc_clean, lid, analysis, filtering, removal DONE
+    2:
+    3:
+    4:
+    5:
+
+Kannada - lid, analysis, filtering, removal DONE
+
+Kashmiri - lid, analysis, filtering, removal, Minhash, Done
+
+Konkani - lid, analysis, filtering, removal, Minhash, Done
+
+Maithili - lid, analysis, filtering, removal, Minhash, Done
+
+malayalam - doc clean, lid, analysis, filtering, removal, Minhash, Done
+
+Manipuri - lid, analysis, filtering, removal, Minhash, Done
+
+Marathi - doc_clean, lid, analysis, filtering, removal, Minhash, DONE
+
+Nepali - lid, analysis, analysis, filtering, removal, Minhash, DONE
+
+Oriya - lid, analysis, filtering, removal, Minhash, Done
+
+Punjabi - lid, analysis, filtering, removal, Minhash
+
+Sanskrit - doc_clean, lid, analysis, filtering, removal, Minhash
+
+Santhali - lid, analysis, filtering, removal, Minhash
+
+Sindhi - lid, analysis, filtering, removal, Minhash
+
+Tamil - doc_clean, lid, analysis, filtering, removal, Minhash
+
+Telugu - doc_clean, lid, analysis, filterin, removal, Minhash
+
+Urdu - doc_clean, lid, analysis, filtering, removal, Minhash
+
+
+For languages which doesn't have `doc_clean` stage,
+they were done before separation of `doc_clean` and `lid` stage.
+So, `doc_clean` stage was still there, but was a part of `lid`.
