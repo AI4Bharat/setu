@@ -1,8 +1,9 @@
 #!/bin/usr/env bash
 
-lang="hindi"
+for lang in "tamil" "telugu" "urdu";
+do
+    # gsutil -m cp -r /data/priyam/sangraha/dedup/exact/parquets/$lang gs://sangraha/dedup/exact/parquets
 
-gsutil -m cp -r /data/priyam/sangraha/dedup/minhash/parquets/$lang gs://sangraha/dedup/minhash/parquets
-
-rm -rf /data/priyam/sangraha/dedup/minhash/$lang
-rm -rf /data/priyam/sangraha/dedup/minhash/parquets/$lang
+    rm -rf /data/priyam/sangraha/dedup/exact/$lang
+    # rm -rf /data/priyam/sangraha/dedup/exact/parquets/$lang
+done

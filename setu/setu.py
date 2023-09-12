@@ -858,8 +858,6 @@ class Setu():
         
         df = self.set_split_count_and_salt(df, docs_per_partition)
         doc_stats_df = self.salting(doc_stats_df, self.n_splits)
-        # df = df.dropDuplicates([doc_id_col, 'doc_lang']) \
-        #         .join(doc_stats_df.drop("doc_lang"), [doc_id_col], "inner")
 
         df = df.join(doc_stats_df.drop("doc_lang"), [doc_id_col], "inner")
 

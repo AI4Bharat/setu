@@ -35,13 +35,13 @@ Nepali - lid, analysis, analysis, filtering, removal, Minhash, DONE
 
 Oriya - lid, analysis, filtering, removal, Minhash, Done
 
-Punjabi - lid, analysis, filtering, removal, Minhash
+Punjabi - lid, analysis, filtering, removal, Minhash, Done
 
-Sanskrit - doc_clean, lid, analysis, filtering, removal, Minhash
+Sanskrit - doc_clean, lid, analysis, filtering, removal, Minhash, Done
 
-Santhali - lid, analysis, filtering, removal, Minhash
+Santhali - lid, analysis, filtering, removal, Minhash, Done
 
-Sindhi - lid, analysis, filtering, removal, Minhash
+Sindhi - lid, analysis, filtering, removal, Minhash, Done
 
 Tamil - doc_clean, lid, analysis, filtering, removal, Minhash
 

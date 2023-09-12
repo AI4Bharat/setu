@@ -1,12 +1,11 @@
 #!/bin/usr/env bash
 
-lang="bengali"
+lang="hindi"
 spark_out_part="dataset"
 
-mkdir -p /data/priyam/sangraha/spark_out/$lang/$spark_out_part
+# mkdir -p /data/priyam/sangraha/spark_out/$lang/$spark_out_part
 mkdir -p /data/priyam/sangraha/dedup/minhash/$lang
 
-gsutil -m cp -r gs://sangraha/spark_out/$lang/$spark_out_part/filtered_docs /data/priyam/sangraha/spark_out/$lang/$spark_out_part
 
 cd /data/priyam/setu/text-dedup
 
@@ -20,11 +19,19 @@ python -m text_dedup.minhash \
     --column "text" \
     --batch_size 10000
 
-gsutil -m cp -r /data/priyam/sangraha/dedup/minhash/$lang  gs://sangraha/dedup/minhash
+# gsutil -m cp -r /data/priyam/sangraha/dedup/minhash/$lang  gs://sangraha/dedup/minhash
 
-rm -rf /data/priyam/sangraha/spark_out/$lang
-rm -rf /data/priyam/sangraha/dedup/minhash/$lang
-rm -rf /data/priyam/cache/*
+# rm -rf /data/priyam/sangraha/spark_out/$lang
+# rm -rf /data/priyam/sangraha/dedup/minhash/$lang
+# rm -rf /data/priyam/cache/*
+
+
+
+
+
+
+
+
 
 # export CLUSTER_NAME=setu-minhash-dedup-small
 # export PROJECT_ID="sangraha-396106"
