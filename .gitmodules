@@ -1,1 +1,4 @@
 
+[submodule "text-dedup"]
+	path = text-dedup
+	url = git@github.com:ChenghaoMou/text-dedup.git
