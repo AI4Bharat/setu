@@ -2,3 +2,4 @@
 [submodule "text-dedup"]
 	path = text-dedup
 	url = git@github.com:AI4Bharat/text-dedup.git
+	branch = main
