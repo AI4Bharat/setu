@@ -1,0 +1,395 @@
+Using B=25, R=10
+args.input='/data/priyam/sangraha/spark_out/assamese/*/filtered_docs/filtered_docs/*/*.parquet'
+args.output='/data/priyam/sangraha/dedup/minhash/assamese'
+args.threshold=0.7
+args.ngram_size=5
+args.min_length=5
+args.num_perm=250
+args.column='text'
+WRITE_ROWS=1000000
+DATA_SIZE=319536
+doc_id                                                          : string
+url                                                             : string
+source                                                          : string
+language                                                        : string
+doc_lang                                                        : string
+doc_lang_iso                                                    : string
+uncleaned_chars_count                                           : int
+uncleaned_words_count                                           : int
+uncleaned_bytes                                                 : int
+symbol_ratio                                                    : float
+invalid_char_count                                              : int
+text                                                            : string
+lines_count                                                     : bigint
+mean_line_length                                                : double
+median_line_length                                              : double
+mode_line_length                                                : int
+min_line_length                                                 : int
+max_line_length                                                 : int
+nsfw_words_count                                                : bigint
+non_li_char_count                                               : bigint
+bytes                                                           : bigint
+words_count                                                     : bigint
+char_count                                                      : bigint
+6_gram_characters_repetition_score                              : float
+7_gram_characters_repetition_score                              : float
+8_gram_characters_repetition_score                              : float
+9_gram_characters_repetition_score                              : float
+10_gram_characters_repetition_score                             : float
+5_gram_words_repetition_score                                   : float
+6_gram_words_repetition_score                                   : float
+7_gram_words_repetition_score                                   : float
+8_gram_words_repetition_score                                   : float
+9_gram_words_repetition_score                                   : float
+has_less_lines                                                  : boolean
+is_short_lines_heavy                                            : boolean
+is_nsfw_heavy                                                   : boolean
+is_non_li_heavy                                                 : boolean
+has_char_repetition                                             : boolean
+has_word_repetition                                             : boolean
++------+--------------------+--------------------+--------------------+--------+--------+------------+---------------------+---------------------+---------------+------------+------------------+--------------------+-----------+------------------+------------------+----------------+---------------+---------------+----------------+-----------------+-----+-----------+----------+----------------------------------+----------------------------------+----------------------------------+----------------------------------+-----------------------------------+-----------------------------+-----------------------------+-----------------------------+-----------------------------+-----------------------------+--------------+--------------------+-------------+---------------+-------------------+-------------------+-------------+
+|__id__|              doc_id|                 url|              source|language|doc_lang|doc_lang_iso|uncleaned_chars_count|uncleaned_words_count|uncleaned_bytes|symbol_ratio|invalid_char_count|                text|lines_count|  mean_line_length|median_line_length|mode_line_length|min_line_length|max_line_length|nsfw_words_count|non_li_char_count|bytes|words_count|char_count|6_gram_characters_repetition_score|7_gram_characters_repetition_score|8_gram_characters_repetition_score|9_gram_characters_repetition_score|10_gram_characters_repetition_score|5_gram_words_repetition_score|6_gram_words_repetition_score|7_gram_words_repetition_score|8_gram_words_repetition_score|9_gram_words_repetition_score|has_less_lines|is_short_lines_heavy|is_nsfw_heavy|is_non_li_heavy|has_char_repetition|has_word_repetition|__component__|
++------+--------------------+--------------------+--------------------+--------+--------+------------+---------------------+---------------------+---------------+------------+------------------+--------------------+-----------+------------------+------------------+----------------+---------------+---------------+----------------+-----------------+-----+-----------+----------+----------------------------------+----------------------------------+----------------------------------+----------------------------------+-----------------------------------+-----------------------------+-----------------------------+-----------------------------+-----------------------------+-----------------------------+--------------+--------------------+-------------+---------------+-------------------+-------------------+-------------+
+|    26|03745c54716ed0162...|https://pratibimb...|      pratibimbalive|assamese|assamese|         asm|                  555|                   82|           1453| 0.014414415|                 8|যোৰাবাট: ক্ষেত্ৰী...|          6|14.166666666666666|              10.5|              13|              1|             35|               0|                0| 1431|         85|       533|                       0.041275796|                       0.041353382|                       0.041431263|                       0.041509435|                          0.0415879|                         null|                         null|                         null|                         null|                         null|         false|               false|        false|          false|              false|              false|         null|
+|    29|03fd5f1f5a53eb916...|https://www.enews...|          enewsassam|assamese|assamese|         asm|                  803|                  110|           2169|  0.00747198|                 6|অসম আৰক্ষীৰ উপ-পৰ...|          7|16.571428571428573|              14.0|              12|              1|             40|               0|                0| 2169|        116|       803|                       0.028606964|                        0.02988792|                       0.029925186|                       0.031210987|                            0.03125|                   0.12878788|                   0.10687023|                   0.07692308|                  0.062015504|                     0.046875|         false|               false|        false|          false|              false|              false|         null|
+|   474|478fb3fb2319b9a0f...|https://assam.new...|        assam_news18|assamese|assamese|         asm|                 2235|                  350|           5893| 0.017449664|                39|হিন্দু ধৰ্মত প্ৰা...|         30|12.466666666666667|              13.0|              13|              4|             24|               0|                0| 5805|        374|      2201|                       0.018876404|                       0.019784173|                       0.019793073|                       0.020252025|                        0.020261144|                  0.019002376|                  0.004761905|                         null|                         null|                         null|         false|               false|        false|          false|              false|              false|         null|
+|   964|92707e9f4ebc01446...|https://assamese....|assamese_sentinel...|assamese|assamese|         asm|                  668|                   99|           1644| 0.029940119|                20|Begin typing your...|          8|            10.625|              10.5|               7|              1|             22|               0|                0| 1247|         85|       509|                       0.037181996|                       0.039215688|                        0.03929273|                        0.03937008|                        0.039447732|                  0.110091746|                  0.055555556|                  0.028037382|                         null|                         null|         false|               false|        false|          false|              false|              false|          964|
+|  1677|0146280c43c0ee3df...|https://pratibimb...|      pratibimbalive|assamese|assamese|         asm|                  875|                  129|           2349| 0.009142857|                 8|ডিজিটেল ডেস্ক: জল...|          7|19.285714285714285|              19.0|              19|              1|             44|               0|                0| 2349|        135|       875|                        0.03196347|                             0.032|                       0.032036614|                        0.03207331|                         0.03211009|                         null|                         null|                         null|                         null|                         null|         false|               false|        false|          false|              false|              false|         null|
++------+--------------------+--------------------+--------------------+--------+--------+------------+---------------------+---------------------+---------------+------------+------------------+--------------------+-----------+------------------+------------------+----------------+---------------+---------------+----------------+-----------------+-----+-----------+----------+----------------------------------+----------------------------------+----------------------------------+----------------------------------+-----------------------------------+-----------------------------+-----------------------------+-----------------------------+-----------------------------+-----------------------------+--------------+--------------------+-------------+---------------+-------------------+-------------------+-------------+
+only showing top 5 rows
+
+CC converged:                           True
+CC iterations:                          4
+Number of rows before:                  319536
+Number of duplicate rows:               120288
+Number of duplicate clusters:           20068
+Number of rows after:                   199248
+Percentage of rows kept:                62.36%
+------------------------------------------------------------------------------------------------------------------------
+Output:                                 /data/priyam/sangraha/dedup/minhash/assamese
+Time:                                   86.81s
+------------------------------------------------------------------------------------------------------------------------
+Using B=25, R=10
+args.input='/data/priyam/sangraha/spark_out/assamese/*/filtered_docs/filtered_docs/*/*.parquet'
+args.output='/data/priyam/sangraha/dedup/minhash/assamese'
+args.threshold=0.7
+args.ngram_size=5
+args.min_length=5
+args.num_perm=250
+args.column='text'
+WRITE_ROWS=1000000
+DATA_SIZE=319536
+doc_id                                                          : string
+url                                                             : string
+source                                                          : string
+language                                                        : string
+doc_lang                                                        : string
+doc_lang_iso                                                    : string
+uncleaned_chars_count                                           : int
+uncleaned_words_count                                           : int
+uncleaned_bytes                                                 : int
+symbol_ratio                                                    : float
+invalid_char_count                                              : int
+text                                                            : string
+lines_count                                                     : bigint
+mean_line_length                                                : double
+median_line_length                                              : double
+mode_line_length                                                : int
+min_line_length                                                 : int
+max_line_length                                                 : int
+nsfw_words_count                                                : bigint
+non_li_char_count                                               : bigint
+bytes                                                           : bigint
+words_count                                                     : bigint
+char_count                                                      : bigint
+6_gram_characters_repetition_score                              : float
+7_gram_characters_repetition_score                              : float
+8_gram_characters_repetition_score                              : float
+9_gram_characters_repetition_score                              : float
+10_gram_characters_repetition_score                             : float
+5_gram_words_repetition_score                                   : float
+6_gram_words_repetition_score                                   : float
+7_gram_words_repetition_score                                   : float
+8_gram_words_repetition_score                                   : float
+9_gram_words_repetition_score                                   : float
+has_less_lines                                                  : boolean
+is_short_lines_heavy                                            : boolean
+is_nsfw_heavy                                                   : boolean
+is_non_li_heavy                                                 : boolean
+has_char_repetition                                             : boolean
+has_word_repetition                                             : boolean
++------+--------------------+--------------------+--------------------+--------+--------+------------+---------------------+---------------------+---------------+------------+------------------+--------------------+-----------+------------------+------------------+----------------+---------------+---------------+----------------+-----------------+-----+-----------+----------+----------------------------------+----------------------------------+----------------------------------+----------------------------------+-----------------------------------+-----------------------------+-----------------------------+-----------------------------+-----------------------------+-----------------------------+--------------+--------------------+-------------+---------------+-------------------+-------------------+-------------+
+|__id__|              doc_id|                 url|              source|language|doc_lang|doc_lang_iso|uncleaned_chars_count|uncleaned_words_count|uncleaned_bytes|symbol_ratio|invalid_char_count|                text|lines_count|  mean_line_length|median_line_length|mode_line_length|min_line_length|max_line_length|nsfw_words_count|non_li_char_count|bytes|words_count|char_count|6_gram_characters_repetition_score|7_gram_characters_repetition_score|8_gram_characters_repetition_score|9_gram_characters_repetition_score|10_gram_characters_repetition_score|5_gram_words_repetition_score|6_gram_words_repetition_score|7_gram_words_repetition_score|8_gram_words_repetition_score|9_gram_words_repetition_score|has_less_lines|is_short_lines_heavy|is_nsfw_heavy|is_non_li_heavy|has_char_repetition|has_word_repetition|__component__|
++------+--------------------+--------------------+--------------------+--------+--------+------------+---------------------+---------------------+---------------+------------+------------------+--------------------+-----------+------------------+------------------+----------------+---------------+---------------+----------------+-----------------+-----+-----------+----------+----------------------------------+----------------------------------+----------------------------------+----------------------------------+-----------------------------------+-----------------------------+-----------------------------+-----------------------------+-----------------------------+-----------------------------+--------------+--------------------+-------------+---------------+-------------------+-------------------+-------------+
+|    26|03745c54716ed0162...|https://pratibimb...|      pratibimbalive|assamese|assamese|         asm|                  555|                   82|           1453| 0.014414415|                 8|যোৰাবাট: ক্ষেত্ৰী...|          6|14.166666666666666|              10.5|              13|              1|             35|               0|                0| 1431|         85|       533|                       0.041275796|                       0.041353382|                       0.041431263|                       0.041509435|                          0.0415879|                         null|                         null|                         null|                         null|                         null|         false|               false|        false|          false|              false|              false|         null|
+|    29|03fd5f1f5a53eb916...|https://www.enews...|          enewsassam|assamese|assamese|         asm|                  803|                  110|           2169|  0.00747198|                 6|অসম আৰক্ষীৰ উপ-পৰ...|          7|16.571428571428573|              14.0|              12|              1|             40|               0|                0| 2169|        116|       803|                       0.028606964|                        0.02988792|                       0.029925186|                       0.031210987|                            0.03125|                   0.12878788|                   0.10687023|                   0.07692308|                  0.062015504|                     0.046875|         false|               false|        false|          false|              false|              false|         null|
+|   474|478fb3fb2319b9a0f...|https://assam.new...|        assam_news18|assamese|assamese|         asm|                 2235|                  350|           5893| 0.017449664|                39|হিন্দু ধৰ্মত প্ৰা...|         30|12.466666666666667|              13.0|              13|              4|             24|               0|                0| 5805|        374|      2201|                       0.018876404|                       0.019784173|                       0.019793073|                       0.020252025|                        0.020261144|                  0.019002376|                  0.004761905|                         null|                         null|                         null|         false|               false|        false|          false|              false|              false|         null|
+|   964|92707e9f4ebc01446...|https://assamese....|assamese_sentinel...|assamese|assamese|         asm|                  668|                   99|           1644| 0.029940119|                20|Begin typing your...|          8|            10.625|              10.5|               7|              1|             22|               0|                0| 1247|         85|       509|                       0.037181996|                       0.039215688|                        0.03929273|                        0.03937008|                        0.039447732|                  0.110091746|                  0.055555556|                  0.028037382|                         null|                         null|         false|               false|        false|          false|              false|              false|          964|
+|  1677|0146280c43c0ee3df...|https://pratibimb...|      pratibimbalive|assamese|assamese|         asm|                  875|                  129|           2349| 0.009142857|                 8|ডিজিটেল ডেস্ক: জল...|          7|19.285714285714285|              19.0|              19|              1|             44|               0|                0| 2349|        135|       875|                        0.03196347|                             0.032|                       0.032036614|                        0.03207331|                         0.03211009|                         null|                         null|                         null|                         null|                         null|         false|               false|        false|          false|              false|              false|         null|
++------+--------------------+--------------------+--------------------+--------+--------+------------+---------------------+---------------------+---------------+------------+------------------+--------------------+-----------+------------------+------------------+----------------+---------------+---------------+----------------+-----------------+-----+-----------+----------+----------------------------------+----------------------------------+----------------------------------+----------------------------------+-----------------------------------+-----------------------------+-----------------------------+-----------------------------+-----------------------------+-----------------------------+--------------+--------------------+-------------+---------------+-------------------+-------------------+-------------+
+only showing top 5 rows
+
+CC converged:                           True
+CC iterations:                          4
+Number of rows before:                  319536
+Number of duplicate rows:               120288
+Number of duplicate clusters:           20068
+Number of rows after:                   199248
+Percentage of rows kept:                62.36%
+------------------------------------------------------------------------------------------------------------------------
+Output:                                 /data/priyam/sangraha/dedup/minhash/assamese
+Time:                                   89.12s
+------------------------------------------------------------------------------------------------------------------------
+Using B=25, R=10
+args.input='/data/priyam/sangraha/spark_out/assamese/*/filtered_docs/filtered_docs/*/*.parquet'
+args.output='/data/priyam/sangraha/dedup/minhash/assamese'
+args.threshold=0.7
+args.ngram_size=5
+args.min_length=5
+args.num_perm=256
+args.column='text'
+WRITE_ROWS=1000000
+DATA_SIZE=319536
+doc_id                                                          : string
+url                                                             : string
+source                                                          : string
+language                                                        : string
+doc_lang                                                        : string
+doc_lang_iso                                                    : string
+uncleaned_chars_count                                           : int
+uncleaned_words_count                                           : int
+uncleaned_bytes                                                 : int
+symbol_ratio                                                    : float
+invalid_char_count                                              : int
+text                                                            : string
+lines_count                                                     : bigint
+mean_line_length                                                : double
+median_line_length                                              : double
+mode_line_length                                                : int
+min_line_length                                                 : int
+max_line_length                                                 : int
+nsfw_words_count                                                : bigint
+non_li_char_count                                               : bigint
+bytes                                                           : bigint
+words_count                                                     : bigint
+char_count                                                      : bigint
+6_gram_characters_repetition_score                              : float
+7_gram_characters_repetition_score                              : float
+8_gram_characters_repetition_score                              : float
+9_gram_characters_repetition_score                              : float
+10_gram_characters_repetition_score                             : float
+5_gram_words_repetition_score                                   : float
+6_gram_words_repetition_score                                   : float
+7_gram_words_repetition_score                                   : float
+8_gram_words_repetition_score                                   : float
+9_gram_words_repetition_score                                   : float
+has_less_lines                                                  : boolean
+is_short_lines_heavy                                            : boolean
+is_nsfw_heavy                                                   : boolean
+is_non_li_heavy                                                 : boolean
+has_char_repetition                                             : boolean
+has_word_repetition                                             : boolean
++------+--------------------+--------------------+--------------------+--------+--------+------------+---------------------+---------------------+---------------+------------+------------------+--------------------+-----------+------------------+------------------+----------------+---------------+---------------+----------------+-----------------+-----+-----------+----------+----------------------------------+----------------------------------+----------------------------------+----------------------------------+-----------------------------------+-----------------------------+-----------------------------+-----------------------------+-----------------------------+-----------------------------+--------------+--------------------+-------------+---------------+-------------------+-------------------+-------------+
+|__id__|              doc_id|                 url|              source|language|doc_lang|doc_lang_iso|uncleaned_chars_count|uncleaned_words_count|uncleaned_bytes|symbol_ratio|invalid_char_count|                text|lines_count|  mean_line_length|median_line_length|mode_line_length|min_line_length|max_line_length|nsfw_words_count|non_li_char_count|bytes|words_count|char_count|6_gram_characters_repetition_score|7_gram_characters_repetition_score|8_gram_characters_repetition_score|9_gram_characters_repetition_score|10_gram_characters_repetition_score|5_gram_words_repetition_score|6_gram_words_repetition_score|7_gram_words_repetition_score|8_gram_words_repetition_score|9_gram_words_repetition_score|has_less_lines|is_short_lines_heavy|is_nsfw_heavy|is_non_li_heavy|has_char_repetition|has_word_repetition|__component__|
++------+--------------------+--------------------+--------------------+--------+--------+------------+---------------------+---------------------+---------------+------------+------------------+--------------------+-----------+------------------+------------------+----------------+---------------+---------------+----------------+-----------------+-----+-----------+----------+----------------------------------+----------------------------------+----------------------------------+----------------------------------+-----------------------------------+-----------------------------+-----------------------------+-----------------------------+-----------------------------+-----------------------------+--------------+--------------------+-------------+---------------+-------------------+-------------------+-------------+
+|    26|03745c54716ed0162...|https://pratibimb...|      pratibimbalive|assamese|assamese|         asm|                  555|                   82|           1453| 0.014414415|                 8|যোৰাবাট: ক্ষেত্ৰী...|          6|14.166666666666666|              10.5|              13|              1|             35|               0|                0| 1431|         85|       533|                       0.041275796|                       0.041353382|                       0.041431263|                       0.041509435|                          0.0415879|                         null|                         null|                         null|                         null|                         null|         false|               false|        false|          false|              false|              false|         null|
+|    29|03fd5f1f5a53eb916...|https://www.enews...|          enewsassam|assamese|assamese|         asm|                  803|                  110|           2169|  0.00747198|                 6|অসম আৰক্ষীৰ উপ-পৰ...|          7|16.571428571428573|              14.0|              12|              1|             40|               0|                0| 2169|        116|       803|                       0.028606964|                        0.02988792|                       0.029925186|                       0.031210987|                            0.03125|                   0.12878788|                   0.10687023|                   0.07692308|                  0.062015504|                     0.046875|         false|               false|        false|          false|              false|              false|         null|
+|   474|478fb3fb2319b9a0f...|https://assam.new...|        assam_news18|assamese|assamese|         asm|                 2235|                  350|           5893| 0.017449664|                39|হিন্দু ধৰ্মত প্ৰা...|         30|12.466666666666667|              13.0|              13|              4|             24|               0|                0| 5805|        374|      2201|                       0.018876404|                       0.019784173|                       0.019793073|                       0.020252025|                        0.020261144|                  0.019002376|                  0.004761905|                         null|                         null|                         null|         false|               false|        false|          false|              false|              false|         null|
+|   964|92707e9f4ebc01446...|https://assamese....|assamese_sentinel...|assamese|assamese|         asm|                  668|                   99|           1644| 0.029940119|                20|Begin typing your...|          8|            10.625|              10.5|               7|              1|             22|               0|                0| 1247|         85|       509|                       0.037181996|                       0.039215688|                        0.03929273|                        0.03937008|                        0.039447732|                  0.110091746|                  0.055555556|                  0.028037382|                         null|                         null|         false|               false|        false|          false|              false|              false|          964|
+|  1677|0146280c43c0ee3df...|https://pratibimb...|      pratibimbalive|assamese|assamese|         asm|                  875|                  129|           2349| 0.009142857|                 8|ডিজিটেল ডেস্ক: জল...|          7|19.285714285714285|              19.0|              19|              1|             44|               0|                0| 2349|        135|       875|                        0.03196347|                             0.032|                       0.032036614|                        0.03207331|                         0.03211009|                         null|                         null|                         null|                         null|                         null|         false|               false|        false|          false|              false|              false|         null|
++------+--------------------+--------------------+--------------------+--------+--------+------------+---------------------+---------------------+---------------+------------+------------------+--------------------+-----------+------------------+------------------+----------------+---------------+---------------+----------------+-----------------+-----+-----------+----------+----------------------------------+----------------------------------+----------------------------------+----------------------------------+-----------------------------------+-----------------------------+-----------------------------+-----------------------------+-----------------------------+-----------------------------+--------------+--------------------+-------------+---------------+-------------------+-------------------+-------------+
+only showing top 5 rows
+
+Traceback (most recent call last):
+  File "/data/priyam/setu/text-dedup/text_dedup/minhash_spark.py", line 542, in <module>
+    ).parquet(os.path.join(args.output, "cluster"), mode="append")
+NameError: name 'os' is not defined
+Using B=25, R=10
+args.input='/data/priyam/sangraha/spark_out/assamese/*/filtered_docs/filtered_docs/*/*.parquet'
+args.output='/data/priyam/sangraha/dedup/minhash/assamese'
+args.threshold=0.7
+args.ngram_size=5
+args.min_length=5
+args.num_perm=256
+args.column='text'
+WRITE_ROWS=1000000
+DATA_SIZE=319536
+doc_id                                                          : string
+url                                                             : string
+source                                                          : string
+language                                                        : string
+doc_lang                                                        : string
+doc_lang_iso                                                    : string
+uncleaned_chars_count                                           : int
+uncleaned_words_count                                           : int
+uncleaned_bytes                                                 : int
+symbol_ratio                                                    : float
+invalid_char_count                                              : int
+text                                                            : string
+lines_count                                                     : bigint
+mean_line_length                                                : double
+median_line_length                                              : double
+mode_line_length                                                : int
+min_line_length                                                 : int
+max_line_length                                                 : int
+nsfw_words_count                                                : bigint
+non_li_char_count                                               : bigint
+bytes                                                           : bigint
+words_count                                                     : bigint
+char_count                                                      : bigint
+6_gram_characters_repetition_score                              : float
+7_gram_characters_repetition_score                              : float
+8_gram_characters_repetition_score                              : float
+9_gram_characters_repetition_score                              : float
+10_gram_characters_repetition_score                             : float
+5_gram_words_repetition_score                                   : float
+6_gram_words_repetition_score                                   : float
+7_gram_words_repetition_score                                   : float
+8_gram_words_repetition_score                                   : float
+9_gram_words_repetition_score                                   : float
+has_less_lines                                                  : boolean
+is_short_lines_heavy                                            : boolean
+is_nsfw_heavy                                                   : boolean
+is_non_li_heavy                                                 : boolean
+has_char_repetition                                             : boolean
+has_word_repetition                                             : boolean
++------+--------------------+--------------------+--------------------+--------+--------+------------+---------------------+---------------------+---------------+------------+------------------+--------------------+-----------+------------------+------------------+----------------+---------------+---------------+----------------+-----------------+-----+-----------+----------+----------------------------------+----------------------------------+----------------------------------+----------------------------------+-----------------------------------+-----------------------------+-----------------------------+-----------------------------+-----------------------------+-----------------------------+--------------+--------------------+-------------+---------------+-------------------+-------------------+-------------+
+|__id__|              doc_id|                 url|              source|language|doc_lang|doc_lang_iso|uncleaned_chars_count|uncleaned_words_count|uncleaned_bytes|symbol_ratio|invalid_char_count|                text|lines_count|  mean_line_length|median_line_length|mode_line_length|min_line_length|max_line_length|nsfw_words_count|non_li_char_count|bytes|words_count|char_count|6_gram_characters_repetition_score|7_gram_characters_repetition_score|8_gram_characters_repetition_score|9_gram_characters_repetition_score|10_gram_characters_repetition_score|5_gram_words_repetition_score|6_gram_words_repetition_score|7_gram_words_repetition_score|8_gram_words_repetition_score|9_gram_words_repetition_score|has_less_lines|is_short_lines_heavy|is_nsfw_heavy|is_non_li_heavy|has_char_repetition|has_word_repetition|__component__|
++------+--------------------+--------------------+--------------------+--------+--------+------------+---------------------+---------------------+---------------+------------+------------------+--------------------+-----------+------------------+------------------+----------------+---------------+---------------+----------------+-----------------+-----+-----------+----------+----------------------------------+----------------------------------+----------------------------------+----------------------------------+-----------------------------------+-----------------------------+-----------------------------+-----------------------------+-----------------------------+-----------------------------+--------------+--------------------+-------------+---------------+-------------------+-------------------+-------------+
+|    26|03745c54716ed0162...|https://pratibimb...|      pratibimbalive|assamese|assamese|         asm|                  555|                   82|           1453| 0.014414415|                 8|যোৰাবাট: ক্ষেত্ৰী...|          6|14.166666666666666|              10.5|              13|              1|             35|               0|                0| 1431|         85|       533|                       0.041275796|                       0.041353382|                       0.041431263|                       0.041509435|                          0.0415879|                         null|                         null|                         null|                         null|                         null|         false|               false|        false|          false|              false|              false|         null|
+|    29|03fd5f1f5a53eb916...|https://www.enews...|          enewsassam|assamese|assamese|         asm|                  803|                  110|           2169|  0.00747198|                 6|অসম আৰক্ষীৰ উপ-পৰ...|          7|16.571428571428573|              14.0|              12|              1|             40|               0|                0| 2169|        116|       803|                       0.028606964|                        0.02988792|                       0.029925186|                       0.031210987|                            0.03125|                   0.12878788|                   0.10687023|                   0.07692308|                  0.062015504|                     0.046875|         false|               false|        false|          false|              false|              false|         null|
+|   474|478fb3fb2319b9a0f...|https://assam.new...|        assam_news18|assamese|assamese|         asm|                 2235|                  350|           5893| 0.017449664|                39|হিন্দু ধৰ্মত প্ৰা...|         30|12.466666666666667|              13.0|              13|              4|             24|               0|                0| 5805|        374|      2201|                       0.018876404|                       0.019784173|                       0.019793073|                       0.020252025|                        0.020261144|                  0.019002376|                  0.004761905|                         null|                         null|                         null|         false|               false|        false|          false|              false|              false|         null|
+|   964|92707e9f4ebc01446...|https://assamese....|assamese_sentinel...|assamese|assamese|         asm|                  668|                   99|           1644| 0.029940119|                20|Begin typing your...|          8|            10.625|              10.5|               7|              1|             22|               0|                0| 1247|         85|       509|                       0.037181996|                       0.039215688|                        0.03929273|                        0.03937008|                        0.039447732|                  0.110091746|                  0.055555556|                  0.028037382|                         null|                         null|         false|               false|        false|          false|              false|              false|          964|
+|  1677|0146280c43c0ee3df...|https://pratibimb...|      pratibimbalive|assamese|assamese|         asm|                  875|                  129|           2349| 0.009142857|                 8|ডিজিটেল ডেস্ক: জল...|          7|19.285714285714285|              19.0|              19|              1|             44|               0|                0| 2349|        135|       875|                        0.03196347|                             0.032|                       0.032036614|                        0.03207331|                         0.03211009|                         null|                         null|                         null|                         null|                         null|         false|               false|        false|          false|              false|              false|         null|
++------+--------------------+--------------------+--------------------+--------+--------+------------+---------------------+---------------------+---------------+------------+------------------+--------------------+-----------+------------------+------------------+----------------+---------------+---------------+----------------+-----------------+-----+-----------+----------+----------------------------------+----------------------------------+----------------------------------+----------------------------------+-----------------------------------+-----------------------------+-----------------------------+-----------------------------+-----------------------------+-----------------------------+--------------+--------------------+-------------+---------------+-------------------+-------------------+-------------+
+only showing top 5 rows
+
+Traceback (most recent call last):
+  File "/data/priyam/setu/text-dedup/text_dedup/minhash_spark.py", line 545, in <module>
+    append
+NameError: name 'append' is not defined
+Using B=25, R=10
+args.input='/data/priyam/sangraha/spark_out/assamese/*/filtered_docs/filtered_docs/*/*.parquet'
+args.output='/data/priyam/sangraha/dedup/minhash/assamese'
+args.threshold=0.7
+args.ngram_size=5
+args.min_length=5
+args.num_perm=256
+args.column='text'
+WRITE_ROWS=1000000
+DATA_SIZE=319536
+doc_id                                                          : string
+url                                                             : string
+source                                                          : string
+language                                                        : string
+doc_lang                                                        : string
+doc_lang_iso                                                    : string
+uncleaned_chars_count                                           : int
+uncleaned_words_count                                           : int
+uncleaned_bytes                                                 : int
+symbol_ratio                                                    : float
+invalid_char_count                                              : int
+text                                                            : string
+lines_count                                                     : bigint
+mean_line_length                                                : double
+median_line_length                                              : double
+mode_line_length                                                : int
+min_line_length                                                 : int
+max_line_length                                                 : int
+nsfw_words_count                                                : bigint
+non_li_char_count                                               : bigint
+bytes                                                           : bigint
+words_count                                                     : bigint
+char_count                                                      : bigint
+6_gram_characters_repetition_score                              : float
+7_gram_characters_repetition_score                              : float
+8_gram_characters_repetition_score                              : float
+9_gram_characters_repetition_score                              : float
+10_gram_characters_repetition_score                             : float
+5_gram_words_repetition_score                                   : float
+6_gram_words_repetition_score                                   : float
+7_gram_words_repetition_score                                   : float
+8_gram_words_repetition_score                                   : float
+9_gram_words_repetition_score                                   : float
+has_less_lines                                                  : boolean
+is_short_lines_heavy                                            : boolean
+is_nsfw_heavy                                                   : boolean
+is_non_li_heavy                                                 : boolean
+has_char_repetition                                             : boolean
+has_word_repetition                                             : boolean
++------+--------------------+--------------------+--------------------+--------+--------+------------+---------------------+---------------------+---------------+------------+------------------+--------------------+-----------+------------------+------------------+----------------+---------------+---------------+----------------+-----------------+-----+-----------+----------+----------------------------------+----------------------------------+----------------------------------+----------------------------------+-----------------------------------+-----------------------------+-----------------------------+-----------------------------+-----------------------------+-----------------------------+--------------+--------------------+-------------+---------------+-------------------+-------------------+-------------+
+|__id__|              doc_id|                 url|              source|language|doc_lang|doc_lang_iso|uncleaned_chars_count|uncleaned_words_count|uncleaned_bytes|symbol_ratio|invalid_char_count|                text|lines_count|  mean_line_length|median_line_length|mode_line_length|min_line_length|max_line_length|nsfw_words_count|non_li_char_count|bytes|words_count|char_count|6_gram_characters_repetition_score|7_gram_characters_repetition_score|8_gram_characters_repetition_score|9_gram_characters_repetition_score|10_gram_characters_repetition_score|5_gram_words_repetition_score|6_gram_words_repetition_score|7_gram_words_repetition_score|8_gram_words_repetition_score|9_gram_words_repetition_score|has_less_lines|is_short_lines_heavy|is_nsfw_heavy|is_non_li_heavy|has_char_repetition|has_word_repetition|__component__|
++------+--------------------+--------------------+--------------------+--------+--------+------------+---------------------+---------------------+---------------+------------+------------------+--------------------+-----------+------------------+------------------+----------------+---------------+---------------+----------------+-----------------+-----+-----------+----------+----------------------------------+----------------------------------+----------------------------------+----------------------------------+-----------------------------------+-----------------------------+-----------------------------+-----------------------------+-----------------------------+-----------------------------+--------------+--------------------+-------------+---------------+-------------------+-------------------+-------------+
+|    26|03745c54716ed0162...|https://pratibimb...|      pratibimbalive|assamese|assamese|         asm|                  555|                   82|           1453| 0.014414415|                 8|যোৰাবাট: ক্ষেত্ৰী...|          6|14.166666666666666|              10.5|              13|              1|             35|               0|                0| 1431|         85|       533|                       0.041275796|                       0.041353382|                       0.041431263|                       0.041509435|                          0.0415879|                         null|                         null|                         null|                         null|                         null|         false|               false|        false|          false|              false|              false|         null|
+|    29|03fd5f1f5a53eb916...|https://www.enews...|          enewsassam|assamese|assamese|         asm|                  803|                  110|           2169|  0.00747198|                 6|অসম আৰক্ষীৰ উপ-পৰ...|          7|16.571428571428573|              14.0|              12|              1|             40|               0|                0| 2169|        116|       803|                       0.028606964|                        0.02988792|                       0.029925186|                       0.031210987|                            0.03125|                   0.12878788|                   0.10687023|                   0.07692308|                  0.062015504|                     0.046875|         false|               false|        false|          false|              false|              false|         null|
+|   474|478fb3fb2319b9a0f...|https://assam.new...|        assam_news18|assamese|assamese|         asm|                 2235|                  350|           5893| 0.017449664|                39|হিন্দু ধৰ্মত প্ৰা...|         30|12.466666666666667|              13.0|              13|              4|             24|               0|                0| 5805|        374|      2201|                       0.018876404|                       0.019784173|                       0.019793073|                       0.020252025|                        0.020261144|                  0.019002376|                  0.004761905|                         null|                         null|                         null|         false|               false|        false|          false|              false|              false|         null|
+|   964|92707e9f4ebc01446...|https://assamese....|assamese_sentinel...|assamese|assamese|         asm|                  668|                   99|           1644| 0.029940119|                20|Begin typing your...|          8|            10.625|              10.5|               7|              1|             22|               0|                0| 1247|         85|       509|                       0.037181996|                       0.039215688|                        0.03929273|                        0.03937008|                        0.039447732|                  0.110091746|                  0.055555556|                  0.028037382|                         null|                         null|         false|               false|        false|          false|              false|              false|          964|
+|  1677|0146280c43c0ee3df...|https://pratibimb...|      pratibimbalive|assamese|assamese|         asm|                  875|                  129|           2349| 0.009142857|                 8|ডিজিটেল ডেস্ক: জল...|          7|19.285714285714285|              19.0|              19|              1|             44|               0|                0| 2349|        135|       875|                        0.03196347|                             0.032|                       0.032036614|                        0.03207331|                         0.03211009|                         null|                         null|                         null|                         null|                         null|         false|               false|        false|          false|              false|              false|         null|
++------+--------------------+--------------------+--------------------+--------+--------+------------+---------------------+---------------------+---------------+------------+------------------+--------------------+-----------+------------------+------------------+----------------+---------------+---------------+----------------+-----------------+-----+-----------+----------+----------------------------------+----------------------------------+----------------------------------+----------------------------------+-----------------------------------+-----------------------------+-----------------------------+-----------------------------+-----------------------------+-----------------------------+--------------+--------------------+-------------+---------------+-------------------+-------------------+-------------+
+only showing top 5 rows
+
+CC converged:                           True
+CC iterations:                          4
+Number of rows before:                  319536
+Number of duplicate rows:               120288
+Number of duplicate clusters:           20068
+Number of rows after:                   199248
+Percentage of rows kept:                62.36%
+------------------------------------------------------------------------------------------------------------------------
+Output:                                 /data/priyam/sangraha/dedup/minhash/assamese
+Time:                                   97.81s
+------------------------------------------------------------------------------------------------------------------------
+done: true
+driverControlFilesUri: gs://dataproc-staging-asia-south1-690617486206-30otkfwr/google-cloud-dataproc-metainfo/6cea98bd-6d98-409a-ba21-40106d911a59/jobs/c77a832d7eb14d8ea42c13de22a4cb99/
+driverOutputResourceUri: gs://dataproc-staging-asia-south1-690617486206-30otkfwr/google-cloud-dataproc-metainfo/6cea98bd-6d98-409a-ba21-40106d911a59/jobs/c77a832d7eb14d8ea42c13de22a4cb99/driveroutput
+jobUuid: 9ae164e6-cca8-3629-9381-0304ed94dc27
+placement:
+  clusterName: setu-minhash-dedup-small
+  clusterUuid: 6cea98bd-6d98-409a-ba21-40106d911a59
+pysparkJob:
+  args:
+  - --column
+  - text
+  - --threshold
+  - '0.7'
+  - --ngram_size
+  - '5'
+  - --min_length
+  - '5'
+  - --num_perm
+  - '256'
+  - --input
+  - gs://sangraha/spark_out/dogri/dataset/filtered_docs/filtered_docs/*/*.parquet
+  - --output
+  - gs://sangraha/dedup/minhash/dogri
+  - --debug
+  jarFileUris:
+  - gs://spark-lib/bigquery/spark-3.3-bigquery-0.32.2.jar
+  loggingConfig:
+    driverLogLevels:
+      __main__: DEBUG
+      root: FATAL
+  mainPythonFileUri: gs://dataproc-staging-asia-south1-690617486206-30otkfwr/google-cloud-dataproc-metainfo/6cea98bd-6d98-409a-ba21-40106d911a59/jobs/c77a832d7eb14d8ea42c13de22a4cb99/staging/minhash_spark.py
+  properties:
+    spark.driver.memory: 8g
+    spark.executor.cores: '14'
+    spark.executor.memory: 50g
+reference:
+  jobId: c77a832d7eb14d8ea42c13de22a4cb99
+  projectId: sangraha-396106
+status:
+  state: DONE
+  stateStartTime: '2023-09-12T20:49:35.240991Z'
+statusHistory:
+- state: PENDING
+  stateStartTime: '2023-09-12T20:48:23.017785Z'
+- state: SETUP_DONE
+  stateStartTime: '2023-09-12T20:48:23.044667Z'
+- details: Agent reported job success
+  state: RUNNING
+  stateStartTime: '2023-09-12T20:48:23.288291Z'
+yarnApplications:
+- name: MinHashLSH
+  progress: 1.0
+  state: FINISHED
+  trackingUrl: http://setu-minhash-dedup-small-m.asia-south1-a.c.sangraha-396106.internal.:8088/proxy/application_1694551506638_0002/

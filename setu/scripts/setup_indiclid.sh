@@ -1,4 +1,4 @@
-git clone https://github.com/AI4Bharat/IndicLID.git
+# git clone https://github.com/AI4Bharat/IndicLID.git
 
 mkdir -p models
 
