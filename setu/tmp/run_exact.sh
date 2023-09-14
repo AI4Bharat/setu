@@ -1,6 +1,7 @@
 #!/bin/usr/env bash
 
-for lang in "bengali" "english" "marathi" "nepali" "oriya" "punjabi" "sanskrit" "santhali" "sindhi" "tamil" "telugu" "urdu";
+# for lang in "bengali" "english" "marathi" "nepali" "oriya" "punjabi" "sanskrit" "santhali" "sindhi" "tamil" "telugu" "urdu";
+for lang in "assamese";
 do
     echo "Running Exact Dedup for $lang" >> "exact_dedup_logs.txt"
     # spark_out_part="dataset"
@@ -13,6 +14,11 @@ do
 
     cd /data/priyam/setu/text-dedup
 
+    k=""
+    read -r k</data/priyam/setu/setu/data/exact_dedup_thresholds/$lang.txt
+
+    echo "Setting byte threshold = $k for language = $lang ...."
+
     python -m text_dedup.suffix_array \
         --path "arrow" \
         --name "sangraha-$lang" \
@@ -21,6 +27,8 @@ do
         --cache_dir "/data/priyam/cache" \
         --output "/data/priyam/sangraha/dedup/exact/$lang" \
         --column "text" \
+        --strategy "overlapping" \
+        --k $k \
         --google_repo_path "/data/priyam/setu/text-dedup/deduplicate-text-datasets"
 
 

@@ -375,3 +375,14 @@ SETU_TMP_DIR=/data/priyam/tmp/ spark-submit \
     -g "/data/priyam/sangraha/parquets/sanskrit/*.parquet" \
     -s "/data/priyam/sangraha/parquets/sanskrit_new" \
     -p 50
+
+
+python text-dedup/deduplicate-text-datasets/scripts/load_dataset \
+        --path "arrow" \
+        --name "sangraha-$lang" \
+        --split "train" \
+        --data_files "/data/priyam/sangraha/dedup/minhash/$lang/*.arrow" \
+        --cache_dir "/data/priyam/cache" \
+        --output "/data/priyam/sangraha/dedup/exact/$lang" \
+        --column "text" \
+        --google_repo_path "/data/priyam/setu/text-dedup/deduplicate-text-datasets"

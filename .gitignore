@@ -166,3 +166,4 @@ dashboard/parquet
 pdfs
 
 sangraha
+*__pycache__
