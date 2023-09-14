@@ -1,0 +1,63 @@
+placement:
+  managedCluster:
+    clusterName: 'to-be-determined'
+    config:
+      gceClusterConfig:
+        zoneUri: asia-south1-a
+        
+jobs:
+- pysparkJob:
+    fileUris:
+    mainPythonFileUri: your_pyspark_script.py
+    properties:
+      spark.executorEnv.MY_VAR1: 'default_value'
+      spark.executorEnv.MY_VAR2: 'default_value'
+  stepId: MINHASH
+
+parameters:
+- description: The managed cluster name prefix
+  fields:
+  - placement.managedCluster.clusterName
+  name: CLUSTER
+  validation:
+    values:
+      values:
+      - 'setu-minhash-small-2'
+      - 'setu-minhash-medium-6'
+      - 'setu-minhash-large-10'
+
+- description: The number of rows to generate
+  fields:
+  - jobs['teragen'].hadoopJob.args[1]
+  name: NUM_ROWS
+  validation:
+    values:
+      values:
+      - '1000'
+      - '10000'
+      - '100000'
+- description: Output directory for teragen
+  fields:
+  - jobs['teragen'].hadoopJob.args[2]
+  - jobs['terasort'].hadoopJob.args[1]
+  name: GEN_OUT
+  validation:
+    regex:
+      regexes:
+      - hdfs:///.*
+- description: Output directory for terasort
+  fields:
+  - jobs['terasort'].hadoopJob.args[2]
+  name: SORT_OUT
+  validation:
+    regex:
+      regexes:
+      - hdfs:///.*
+
+parameters:
+  - name: MY_VAR1
+    fields:
+      - jobs[STEP_NAME'].pysparkJob.properties['spark.executorEnv.MY_VAR1']
+  - name: MY_VAR2
+    fields:
+      - jobs[STEP_NAME'].pysparkJob.properties['spark.executorEnv.MY_VAR2']

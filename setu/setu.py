@@ -93,8 +93,6 @@ get_symbol_ratio_udf = udf(
         StructField("invalid_char_count", IntegerType(), True),
     ])
 )
-# get_symbol_ratio_udf = udf(partial(get_symbol_ratio, for_spark=True), FloatType())
-# find_code_spans_udf = udf(find_code_spans_spark, ArrayType(ArrayType(IntegerType())))
 is_terminal_valid_udf = udf(is_terminal_valid, BooleanType()) # Doc level
 split_with_delimiter_udf = udf(split_with_delimiter, ArrayType(StringType()))
 get_nsfw_word_dist_udf = udf(get_nsfw_word_dist, MapType(StringType(), IntegerType()))
@@ -182,7 +180,6 @@ class Setu():
         
         df = df.select("*", find_code_spans_udf(doc_id_col, text_col).alias("code_span_results")) \
                 .select(*curr_cols, "code_span_results.*")
-        # df = df.select("*", find_code_spans_udf(doc_id_col, text_col).alias("code_spans"))
         
         if verbose:
             df.explain(mode="formatted")
@@ -638,11 +635,8 @@ class Setu():
         print("Starting SETU LID Segregation Spark Pipeline...........")
 
         df = df.select(doc_id_col, text_col)
-
         df = self.set_split_count_and_salt(df, docs_per_partition)
-
         df = self.lid_stage(spark, df, doc_id_col, text_col)
-
         df = self.salting(df, self.n_splits)
 
         # Duplicate the doc_lang column as doc_lang_partition
