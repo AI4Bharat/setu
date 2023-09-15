@@ -3,6 +3,3 @@
 	path = text-dedup
 	url = git@github.com:AI4Bharat/text-dedup.git
 	branch = main
-[submodule "setu/dataproc/compute_image/dataproc-custom-images"]
-	path = setu/dataproc/compute_image/dataproc-custom-images
-	url = git@github.com:AI4Bharat/dataproc-custom-images.git
