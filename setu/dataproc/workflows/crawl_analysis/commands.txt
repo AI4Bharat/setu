@@ -1,0 +1,15 @@
+gcloud dataproc workflow-templates import crawl_analysis_low_resource_template \
+    --region=asia-south1 \
+    --source=crawl_analysis/low_resource.yaml
+
+gcloud dataproc workflow-templates import crawl_analysis_medium_resource_template \
+    --region=asia-south1 \
+    --source=crawl_analysis/medium_resource.yaml
+
+gcloud dataproc workflow-templates import crawl_analysis_high_resource_template \
+    --region=asia-south1 \
+    --source=crawl_analysis/high_resource.yaml
+
+gcloud dataproc workflow-templates import crawl_analysis_cluster_selector_template \
+    --region=asia-south1 \
+    --source=crawl_analysis/cluster_selector.yaml

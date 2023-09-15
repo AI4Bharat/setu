@@ -1,0 +1,6 @@
+python generate_custom_image.py \
+    --image-name 'setu-env-dataproc' \
+    --dataproc-version '2.1.21-ubuntu20' \
+    --customization-script '../customize_conda.sh' \
+    --zone 'asia-south1-a' \
+    --gcs-bucket 'sangraha/custom_image_logs'

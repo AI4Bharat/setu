@@ -1,0 +1,58 @@
+Running Exact Dedup for assamese
+Downloaded MinHash Dedup for assamese from GCP
+Setting byte threshold = 822 for language = assamese ....
+Uploaded Exact Dedup for assamese to GCP
+Completed Exact Dedup for assamese
+Running Exact Dedup for bengali
+Downloaded MinHash Dedup for bengali from GCP
+Setting byte threshold = 802 for language = bengali ....
+Uploaded Exact Dedup for bengali to GCP
+Completed Exact Dedup for bengali
+Running Exact Dedup for bodo
+Downloaded MinHash Dedup for bodo from GCP
+Setting byte threshold = 853 for language = bodo ....
+Uploaded Exact Dedup for bodo to GCP
+Completed Exact Dedup for bodo
+Running Exact Dedup for dogri
+Downloaded MinHash Dedup for dogri from GCP
+Setting byte threshold = 624 for language = dogri ....
+Uploaded Exact Dedup for dogri to GCP
+Completed Exact Dedup for dogri
+Running Exact Dedup for english
+Downloaded MinHash Dedup for english from GCP
+Setting byte threshold = 291 for language = english ....
+Uploaded Exact Dedup for english to GCP
+Completed Exact Dedup for english
+Running Exact Dedup for gujarati
+Downloaded MinHash Dedup for gujarati from GCP
+Setting byte threshold = 732 for language = gujarati ....
+Uploaded Exact Dedup for gujarati to GCP
+Completed Exact Dedup for gujarati
+Running Exact Dedup for hindi
+Downloaded MinHash Dedup for hindi from GCP
+Setting byte threshold = 618 for language = hindi ....
+Uploaded Exact Dedup for hindi to GCP
+Completed Exact Dedup for hindi
+Running Exact Dedup for kannada
+Downloaded MinHash Dedup for kannada from GCP
+Setting byte threshold = 1007 for language = kannada ....
+Uploaded Exact Dedup for kannada to GCP
+Completed Exact Dedup for kannada
+Running Exact Dedup for kashmiri
+Downloaded MinHash Dedup for kashmiri from GCP
+Setting byte threshold = 457 for language = kashmiri ....
+Uploaded Exact Dedup for kashmiri to GCP
+Completed Exact Dedup for kashmiri
+Running Exact Dedup for konkani
+Downloaded MinHash Dedup for konkani from GCP
+Setting byte threshold = 806 for language = konkani ....
+Uploaded Exact Dedup for konkani to GCP
+Completed Exact Dedup for konkani
+Running Exact Dedup for maithili
+Downloaded MinHash Dedup for maithili from GCP
+Setting byte threshold = 646 for language = maithili ....
+Uploaded Exact Dedup for maithili to GCP
+Completed Exact Dedup for maithili
+Running Exact Dedup for malayalam
+Downloaded MinHash Dedup for malayalam from GCP
+Setting byte threshold = 1242 for language = malayalam ....

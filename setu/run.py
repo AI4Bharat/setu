@@ -1,3 +1,4 @@
+import sys
 import argparse
 from setu import Setu
 from pyspark.sql import SparkSession
@@ -6,6 +7,9 @@ import traceback
 from parse_args import parse_args
 
 if __name__ == "__main__":
+
+    command = ' '.join(sys.argv)
+    print("Command used to run this script: ", command)
 
     args = parse_args()
 
@@ -97,14 +101,8 @@ if __name__ == "__main__":
 
             setu.run_analysis_spark_pipeline(
                 analysis_df,
-                # cols_to_use=[
-                #     "doc_id", "url", "source", "text", 
-                #     "language", "doc_lang", "doc_lang_iso",
-                #     "uncleaned_chars_count", "uncleaned_words_count", 
-                #     "uncleaned_bytes", "symbol_ratio", "invalid_char_count"
-                # ],
                 cols_to_use=[
-                    "doc_id", "text", "doc_lang", "doc_lang_iso"
+                    "doc_id", "url", "source", "text", "doc_lang", "doc_lang_iso"
                 ],
                 doc_id_col="doc_id",
                 text_col="text",
