@@ -6,3 +6,4 @@
 [submodule "setu/dataproc/compute_image/custom-images"]
 	path = setu/dataproc/compute_image/custom-images
 	url = git@github.com:AI4Bharat/dataproc-custom-images.git
+	branch = master
