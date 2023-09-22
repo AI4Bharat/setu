@@ -4,6 +4,8 @@ Start Master
 Start a worker
 ~/spark-hadoop3/sbin/start-worker.sh spark://SPK-DGX-O1:7077  -c 128 -m 512G
 
+~/spark-hadoop3/sbin/start-worker.sh spark://SPK-DGX-O2:7077  -c 128 -m 512G
+
 Run SETU bash
 
 FOR Doc Clean

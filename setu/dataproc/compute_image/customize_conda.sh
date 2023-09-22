@@ -14,15 +14,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -e -x
+set -euxo pipefail
 
 apt-get install -y libprotobuf-dev protobuf-compiler
 
-git clone https://github.com/anoopkunchukuttan/indic_nlp_library.git /tmp/indic_nlp_library
+git clone https://github.com/anoopkunchukuttan/indic_nlp_library.git /opt/indic_nlp_library
 
-export PYTHONPATH=$PYTHONPATH:/tmp/indic_nlp_library
-
-set -euxo pipefail
+export PYTHONPATH=$PYTHONPATH:/opt/indic_nlp_library
 
 # This customization-script can be used to customize the conda environment.
 # It expects the following metadata:
@@ -131,9 +129,10 @@ function customize_with_config_file() {
   gsutil cp "${conda_env_config_uri}" "${temp_config_file}"
   conda_env_name="$(grep 'name: ' "${temp_config_file}" | awk '{print $2}')"
   if [[ -z "${conda_env_name}" ]]; then
-    conda_env_name="custom"
+    conda_env_name="custom" 
   fi
   create_and_activate_environment "${conda_bin_dir}" "${conda_env_name}" "${temp_config_file}"
+  # create_and_activate_environment "${conda_bin_dir}" "${temp_config_file}"
 }
 
 function create_and_activate_environment() {
@@ -147,6 +146,8 @@ function create_and_activate_environment() {
   # component to activate the right environment.
   local -r conda_properties_path=/etc/google-dataproc/conda.properties
   echo "conda.env=$conda_env_name" >> "${conda_properties_path}"
+
+  # "${conda_bin_dir}/conda" env update --quiet --name="base" --file="${conda_env_config}"
 }
 
 function customize_with_package_list() {

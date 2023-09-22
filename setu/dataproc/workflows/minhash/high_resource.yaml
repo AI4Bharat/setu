@@ -2,6 +2,7 @@
 
 jobs:
 - pysparkJob:
+    jarFileUris: gs://spark-lib/bigquery/spark-3.3-bigquery-0.32.2.jar
     mainPythonFileUri: 'path-to-minhash-spark-file-in-gcp'
     args:
     - '--column'
@@ -19,6 +20,15 @@ jobs:
     - '--output'
     - 'output path of parquets'
     - '--debug'
+    properties:
+      spark.executor.memory: 50g
+      spark.driver.memory: 8g
+      spark.executor.cores: '14'
+      spark.submit.deployMode: cluster
+    loggingConfig:
+      driverLogLevels:
+        root: FATAL
+        __main__: DEBUG
   stepId: MINHASH
         
 # Cluster configuration
@@ -30,16 +40,17 @@ placement:
         zoneUri: asia-south1-a
       masterConfig:
         numInstances: 1
-        machineTypeUri: c2d-standard-16
+        machineTypeUri: c2d-highmem-16
         diskConfig:
           bootDiskSizeGb: 500
       workerConfig:
-        numInstances: 10
-        machineTypeUri: c2d-standard-16
+        numInstances: 25
+        machineTypeUri: c2d-highmem-16
         diskConfig:
           bootDiskSizeGb: 500
       softwareConfig:
         imageVersion: 2.1-debian11
+        
 
 # Define template parameters
 parameters:

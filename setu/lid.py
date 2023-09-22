@@ -94,7 +94,7 @@ class IndicLID():
         self.IndicLID_FTR = fasttext.load_model(self.indiclid_ftr_path)
         self.IndicLID_BERT = torch.load(self.indiclid_bert_path, map_location = self.device)
         self.IndicLID_BERT.eval()
-        self.IndicLID_BERT_tokenizer = AutoTokenizer.from_pretrained("ai4bharat/IndicBERTv2-MLM-only")
+        self.IndicLID_BERT_tokenizer = AutoTokenizer.from_pretrained("ai4bharat/IndicBERTv2-MLM-only", cache_dir=".hf_cache/tokenizer")
             
         self.input_threshold = input_threshold
         self.model_threshold = roman_lid_threshold

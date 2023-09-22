@@ -1,6 +1,6 @@
 #!/bin/usr/env bash
 
-for lang in "assamese" "bengali" "bodo" "dogri" "english" "gujarati" "hindi" "kannada" "kashmiri" "konkani" "maithili" "malayalam" "manipuri" "marathi" "nepali" "oriya" "punjabi" "sanskrit" "santhali" "sindhi" "tamil" "telugu" "urdu";
+for lang in "dogri" "marathi" "nepali" "oriya" "punjabi" "tamil" "telugu" "urdu";
 do
     
     # gsutil -m rm -r gs://sangraha/dedup/exact/$lang

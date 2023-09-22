@@ -2,8 +2,15 @@
 
 jobs:
 - pysparkJob:
-    archiveUris:
-    pythonFileUris:
+    archiveUris: gs://sangraha/setu.zip
+    pythonFileUris: 
+    - gs://sangraha/setu/constants.py
+    - gs://sangraha/setu/document_filters.py
+    - gs://sangraha/setu/lid.py
+    - gs://sangraha/setu/line_filters.py
+    - gs://sangraha/setu/parse_args.py
+    - gs://sangraha/setu/setu.py
+    - gs://sangraha/setu/utils.py
     mainPythonFileUri: 'path-to-minhash-spark-file-in-gcp'
     args:
     - '--config'
@@ -77,8 +84,15 @@ jobs:
       spark.speculation: 'true'
   stepId: FLAGGING_AND_FILTERING
 - pysparkJob:
-    archiveUris:
-    pythonFileUris:
+    archiveUris: gs://sangraha/setu.zip
+    pythonFileUris: 
+    - gs://sangraha/setu/constants.py
+    - gs://sangraha/setu/document_filters.py
+    - gs://sangraha/setu/lid.py
+    - gs://sangraha/setu/line_filters.py
+    - gs://sangraha/setu/parse_args.py
+    - gs://sangraha/setu/setu.py
+    - gs://sangraha/setu/utils.py
     mainPythonFileUri: 'path-to-minhash-spark-file-in-gcp'
     args:
     - '--config'
@@ -172,7 +186,12 @@ placement:
         diskConfig:
           bootDiskSizeGb: 500
       softwareConfig:
-        imageVersion: setu-env
+        imageVersion: 2.1.21-ubuntu20
+        properties:
+          dataproc:conda.env.config.uri: gs://sangraha/setu/dataproc/compute_image/environment.yaml
+      initializationActions:
+      - executableFile: gs://sangraha/setu/dataproc/compute_image/install_additional_deps.sh
+      
 
 # Define template parameters
 parameters:

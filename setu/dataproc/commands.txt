@@ -1,0 +1,43 @@
+gcloud dataproc clusters create test-456 \
+    --enable-component-gateway \
+    --region asia-south1 \
+    --zone asia-south1-a \
+    --master-machine-type c2-standard-16 \
+    --master-boot-disk-size 500 \
+    --num-workers 0 \
+    --image 'https://www.googleapis.com/compute/v1/projects/sangraha-396106/global/images/setu-conda-env-dataproc' \
+    --metadata conda-default-env=setu_dataproc,startup-script-url=gs://sangraha/setu/dataproc/compute_image/setup_environment.sh
+
+gcloud dataproc clusters create setu-debugging \
+    --enable-component-gateway \
+    --region asia-south1 \
+    --zone asia-south1-a \
+    --master-machine-type c2d-standard-16 \
+    --master-boot-disk-size 500 \
+    --num-workers 0 \
+    --worker-machine-type c2d-standard-16 \
+    --worker-boot-disk-size 500 \
+    --image-version '2.1.21-ubuntu20' \
+    --properties='dataproc:conda.env.config.uri=gs://sangraha/setu/dataproc/compute_image/environment.yaml' \
+    --initialization-actions='gs://sangraha/setu/dataproc/compute_image/install_additional_deps.sh'
+
+gcloud dataproc clusters create setu-debugging \
+    --enable-component-gateway \
+    --region asia-south1 \
+    --zone asia-south1-a \
+    --master-machine-type c2-standard-16 \
+    --master-boot-disk-size 500 \
+    --num-workers 0 \
+    --image-version '2.1.21-ubuntu20' \
+    --properties='dataproc:conda.env.config.uri=gs://sangraha/setu/dataproc/compute_image/environment.yaml' \
+    --initialization-actions='gs://sangraha/setu/dataproc/compute_image/install_additional_deps.sh'
+
+gcloud dataproc clusters create ubuntu-567 \
+    --enable-component-gateway \
+    --region asia-south1 \
+    --zone asia-south1-a \
+    --master-machine-type c2-standard-16 \
+    --master-boot-disk-size 500 \
+    --num-workers 0 \
+    --image-version '2.1.21-ubuntu20' \
+    --properties=^#^dataproc:conda.packages='pytorch==1.7.1,coverage==5.5'#dataproc:pip.packages='tokenizers==0.10.1,datasets==1.5.0'

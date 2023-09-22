@@ -56,3 +56,100 @@ Completed Exact Dedup for maithili
 Running Exact Dedup for malayalam
 Downloaded MinHash Dedup for malayalam from GCP
 Setting byte threshold = 1242 for language = malayalam ....
+Uploaded Exact Dedup for malayalam to GCP
+Completed Exact Dedup for malayalam
+Running Exact Dedup for manipuri
+Downloaded MinHash Dedup for manipuri from GCP
+Setting byte threshold = 736 for language = manipuri ....
+Uploaded Exact Dedup for manipuri to GCP
+Completed Exact Dedup for manipuri
+Running Exact Dedup for marathi
+Downloaded MinHash Dedup for marathi from GCP
+Setting byte threshold = 851 for language = marathi ....
+Uploaded Exact Dedup for marathi to GCP
+Completed Exact Dedup for marathi
+Running Exact Dedup for nepali
+Downloaded MinHash Dedup for nepali from GCP
+Setting byte threshold = 825 for language = nepali ....
+Uploaded Exact Dedup for nepali to GCP
+Completed Exact Dedup for nepali
+Running Exact Dedup for oriya
+Downloaded MinHash Dedup for oriya from GCP
+Setting byte threshold = 826 for language = oriya ....
+Uploaded Exact Dedup for oriya to GCP
+Completed Exact Dedup for oriya
+Running Exact Dedup for punjabi
+Downloaded MinHash Dedup for punjabi from GCP
+Setting byte threshold = 610 for language = punjabi ....
+Uploaded Exact Dedup for punjabi to GCP
+Completed Exact Dedup for punjabi
+Running Exact Dedup for sanskrit
+Downloaded MinHash Dedup for sanskrit from GCP
+Setting byte threshold = 992 for language = sanskrit ....
+Uploaded Exact Dedup for sanskrit to GCP
+Completed Exact Dedup for sanskrit
+Running Exact Dedup for santhali
+Downloaded MinHash Dedup for santhali from GCP
+Setting byte threshold = 689 for language = santhali ....
+Uploaded Exact Dedup for santhali to GCP
+Completed Exact Dedup for santhali
+Running Exact Dedup for sindhi
+Downloaded MinHash Dedup for sindhi from GCP
+Setting byte threshold = 396 for language = sindhi ....
+Uploaded Exact Dedup for sindhi to GCP
+Completed Exact Dedup for sindhi
+Running Exact Dedup for tamil
+Downloaded MinHash Dedup for tamil from GCP
+Setting byte threshold = 1123 for language = tamil ....
+Uploaded Exact Dedup for tamil to GCP
+Completed Exact Dedup for tamil
+Running Exact Dedup for telugu
+Downloaded MinHash Dedup for telugu from GCP
+Setting byte threshold = 965 for language = telugu ....
+Uploaded Exact Dedup for telugu to GCP
+Completed Exact Dedup for telugu
+Running Exact Dedup for urdu
+Downloaded MinHash Dedup for urdu from GCP
+Setting byte threshold = 412 for language = urdu ....
+Uploaded Exact Dedup for urdu to GCP
+Completed Exact Dedup for urdu
+Running Exact Dedup for dogri
+Downloaded MinHash Dedup for dogri from GCP
+Setting byte threshold = 624 for language = dogri ....
+Uploaded Exact Dedup for dogri to GCP
+Completed Exact Dedup for dogri
+Running Exact Dedup for marathi
+Downloaded MinHash Dedup for marathi from GCP
+Setting byte threshold = 851 for language = marathi ....
+Uploaded Exact Dedup for marathi to GCP
+Completed Exact Dedup for marathi
+Running Exact Dedup for nepali
+Downloaded MinHash Dedup for nepali from GCP
+Setting byte threshold = 825 for language = nepali ....
+Uploaded Exact Dedup for nepali to GCP
+Completed Exact Dedup for nepali
+Running Exact Dedup for oriya
+Downloaded MinHash Dedup for oriya from GCP
+Setting byte threshold = 826 for language = oriya ....
+Uploaded Exact Dedup for oriya to GCP
+Completed Exact Dedup for oriya
+Running Exact Dedup for punjabi
+Downloaded MinHash Dedup for punjabi from GCP
+Setting byte threshold = 610 for language = punjabi ....
+Uploaded Exact Dedup for punjabi to GCP
+Completed Exact Dedup for punjabi
+Running Exact Dedup for tamil
+Downloaded MinHash Dedup for tamil from GCP
+Setting byte threshold = 1123 for language = tamil ....
+Uploaded Exact Dedup for tamil to GCP
+Completed Exact Dedup for tamil
+Running Exact Dedup for telugu
+Downloaded MinHash Dedup for telugu from GCP
+Setting byte threshold = 965 for language = telugu ....
+Uploaded Exact Dedup for telugu to GCP
+Completed Exact Dedup for telugu
+Running Exact Dedup for urdu
+Downloaded MinHash Dedup for urdu from GCP
+Setting byte threshold = 412 for language = urdu ....
+Uploaded Exact Dedup for urdu to GCP
+Completed Exact Dedup for urdu

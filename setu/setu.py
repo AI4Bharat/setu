@@ -64,7 +64,7 @@ from lid import (
     run_lid_on_each_partition_with_idx,
     run_lid_spark_pipeline,
 )
-from utils import (
+from utilities import (
     ChunkHandler, 
     SparkOptimizedHandlers, 
     rename_partitioned_directories
@@ -77,7 +77,8 @@ import os
 from math import ceil
 import time
 import pandas as pd
-import matplotlib.pyplot as plt
+import subprocess
+# import matplotlib.pyplot as plt
 
 find_code_spans_udf = udf(
     find_code_spans_spark, 
@@ -117,8 +118,15 @@ class Setu():
             self.kw_processors = KW_PROCESSORS
     
     def load_config(self, config_file):
-        with open(config_file, "r") as config_file:
-            config_= json.load(config_file)
+
+        tmp_location = config_file
+        
+        if config_file.startswith("gs://"):
+            tmp_location = "/tmp/" + os.path.split(config_file)[1]
+            subprocess.run(["gsutil", "cp", config_file, tmp_location])
+
+        with open(tmp_location, "r") as config_f:
+            config_= json.load(config_f)
         return Namespace(**config_)
 
     def wrap_funcs_to_udf(self):
@@ -212,7 +220,7 @@ class Setu():
                         .write.mode("overwrite") \
                         .parquet(symbol_filter_output_path)
 
-                    rename_partitioned_directories(symbol_filter_output_path, "doc_lang_partition")
+                    # rename_partitioned_directories(symbol_filter_output_path, "doc_lang_partition")
 
                     print(f"Completed `symbol heavy df` parquet write.... to: {symbol_filter_output_path}")
 
@@ -265,10 +273,10 @@ class Setu():
 
         return df
 
-    def lid_stage(self, spark, df, doc_id_col, text_col):
+    def lid_stage(self, spark, df, id_cols, text_col):
         df = self.salting(df, self.n_splits)
         df.cache()
-        df = run_lid_spark_pipeline(spark, self.config, df, [doc_id_col], text_col, "doc_lang", "doc_lang_iso")
+        df = run_lid_spark_pipeline(spark, self.config, df, id_cols, text_col, "doc_lang", "doc_lang_iso")
         df.cache()
         df.localCheckpoint()
         df.show(n=5)
@@ -628,15 +636,16 @@ class Setu():
         df,
         doc_id_col,
         text_col,   
+        additional_cols_to_use,
         docs_per_partition,
         doc_lid_output_path,
         verbose: bool = True,
     ):
         print("Starting SETU LID Segregation Spark Pipeline...........")
 
-        df = df.select(doc_id_col, text_col)
+        df = df.select(doc_id_col, text_col, *additional_cols_to_use)
         df = self.set_split_count_and_salt(df, docs_per_partition)
-        df = self.lid_stage(spark, df, doc_id_col, text_col)
+        df = self.lid_stage(spark, df, [doc_id_col] + additional_cols_to_use, text_col)
         df = self.salting(df, self.n_splits)
 
         # Duplicate the doc_lang column as doc_lang_partition
@@ -645,7 +654,7 @@ class Setu():
         df.write.partitionBy("doc_lang_partition").mode("overwrite") \
             .parquet(doc_lid_output_path)
 
-        rename_partitioned_directories(doc_lid_output_path, "doc_lang_partition")
+        # rename_partitioned_directories(doc_lid_output_path, "doc_lang_partition")
 
         print(f"Completed `doc_lang` level `df` parquet write.... to: {doc_lid_output_path}")
 
@@ -681,7 +690,7 @@ class Setu():
                     .mode("overwrite") \
                     .parquet(doc_stats_output_path)
 
-        rename_partitioned_directories(doc_stats_output_path, "doc_lang_partition")
+        # rename_partitioned_directories(doc_stats_output_path, "doc_lang_partition")
 
         if verbose:
             doc_stats_df.show(n=5)
@@ -692,7 +701,7 @@ class Setu():
             .write.partitionBy("doc_lang_partition").mode("overwrite") \
             .parquet(analysis_output_path)
 
-        rename_partitioned_directories(analysis_output_path, "doc_lang_partition")
+        # rename_partitioned_directories(analysis_output_path, "doc_lang_partition")
 
         print(f"Completed analysis `df` parquet write.... to: {analysis_output_path}")
 
@@ -708,15 +717,13 @@ class Setu():
         analysis_output_path,
         verbose:bool = True,
     ):
-        task_context: TaskContext = TaskContext.get()  # type: ignore
-        partition_id = task_context.partitionId()
-        
-        line_stats_output_file = os.path.join(line_stats_output_path, f"{partition_id}.parquet")
-        doc_stats_output_file = os.path.join(doc_stats_output_path, f"{partition_id}.parquet")
-        analysis_output_file = os.path.join(analysis_output_path, f"{partition_id}.parquet")
+        # TODO: If REQURIED, code this up. 
+        # Currently, analysis module is working fine after 
+        # implementing data-parallelism mode for cleaning stage.
+        # Hypothesising that data skews generated during
+        # Trafilatura Extraction are handled at cleaning stage.
 
-        for data in data_iter:
-            pass
+        pass
 
 
     def run_plotting(
@@ -724,7 +731,8 @@ class Setu():
         save_plot_directory,
         verbose: bool = True,
     ):
-        # TODO: If possible, code this up. Currently left as proper plots are needing manual inspection
+        # TODO: If POSSIBLE, code this up. 
+        # Currently left as proper plots are needing manual inspection
 
         pass
 

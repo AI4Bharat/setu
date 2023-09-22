@@ -40,6 +40,17 @@ gcloud dataproc jobs submit pyspark --cluster ${CLUSTER_NAME}\
     --output $OUTPUT_GCS_PATH \
     --debug
 
+gcloud dataproc clusters create minhash-very-large \
+    --enable-component-gateway \
+    --region "asia-south1" \
+    --zone "asia-south1-a" \
+    --master-machine-type c2d-standard-16 \
+    --master-boot-disk-size 500 \
+    --num-workers 25 \
+    --worker-machine-type c2d-standard-16 \
+    --worker-boot-disk-size 500 \
+    --image-version "2.1-debian11"
+
 # PYTHON_SCRIPT="/data/priyam/setu/text-dedup/text_dedup/minhash_spark.py"
 
 # spark-submit \

@@ -10,7 +10,7 @@ jobs:
     - gs://sangraha/setu/line_filters.py
     - gs://sangraha/setu/parse_args.py
     - gs://sangraha/setu/setu.py
-    - gs://sangraha/setu/utils.py
+    - gs://sangraha/setu/utilities.py
     mainPythonFileUri: 'path-to-minhash-spark-file-in-gcp'
     args:
     - '--config'
@@ -78,13 +78,21 @@ jobs:
     properties:
       spark.default.parallelism: 'default_value'
       spark.sql.shuffle.partitions: 'default_value'
-      spark.sql.execution.arrow.pyspark.enabled: 'default_value'
-      spark.sql.adaptive.enabled: 'default_value'
-      spark.serializer: 'default_value'
-      spark.speculation: 'default_value'
+      spark.sql.execution.arrow.pyspark.enabled: 'true'
+      spark.sql.adaptive.enabled: 'true'
+      spark.serializer: 'org.apache.spark.serializer.KryoSerializer'
+      spark.speculation: 'true'
   stepId: FLAGGING_AND_FILTERING
 - pysparkJob:
     archiveUris: gs://sangraha/setu.zip
+    pythonFileUris: 
+    - gs://sangraha/setu/constants.py
+    - gs://sangraha/setu/document_filters.py
+    - gs://sangraha/setu/lid.py
+    - gs://sangraha/setu/line_filters.py
+    - gs://sangraha/setu/parse_args.py
+    - gs://sangraha/setu/setu.py
+    - gs://sangraha/setu/utilities.py
     mainPythonFileUri: 'path-to-minhash-spark-file-in-gcp'
     args:
     - '--config'

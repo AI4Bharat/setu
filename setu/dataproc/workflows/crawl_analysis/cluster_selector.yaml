@@ -2,8 +2,15 @@
 
 jobs:
 - pysparkJob:
-    archiveUris:
-    pythonFileUris:
+    archiveUris: gs://sangraha/data.zip
+    pythonFileUris: 
+    - gs://sangraha/setu/constants.py
+    - gs://sangraha/setu/document_filters.py
+    - gs://sangraha/setu/lid.py
+    - gs://sangraha/setu/line_filters.py
+    - gs://sangraha/setu/parse_args.py
+    - gs://sangraha/setu/setu.py
+    - gs://sangraha/setu/utilities.py
     mainPythonFileUri: 'path-to-minhash-spark-file-in-gcp'
     args:
     - '--config'
@@ -71,14 +78,25 @@ jobs:
     properties:
       spark.default.parallelism: 'default_value'
       spark.sql.shuffle.partitions: 'default_value'
-      spark.sql.execution.arrow.pyspark.enabled: 'default_value'
-      spark.sql.adaptive.enabled: 'default_value'
-      spark.serializer: 'default_value'
-      spark.speculation: 'default_value'
+      spark.sql.execution.arrow.pyspark.enabled: 'true'
+      spark.sql.adaptive.enabled: 'true'
+      spark.serializer: 'org.apache.spark.serializer.KryoSerializer'
+      spark.speculation: 'true'
+      spark.executor.memory: 50g
+      spark.driver.memory: 8g
+      spark.executor.cores: '14'
+      spark.submit.deployMode: client
   stepId: DOCUMENT_CLEANING
 - pysparkJob:
-    archiveUris:
-    pythonFileUris:
+    archiveUris: gs://sangraha/data.zip
+    pythonFileUris: 
+    - gs://sangraha/setu/constants.py
+    - gs://sangraha/setu/document_filters.py
+    - gs://sangraha/setu/lid.py
+    - gs://sangraha/setu/line_filters.py
+    - gs://sangraha/setu/parse_args.py
+    - gs://sangraha/setu/setu.py
+    - gs://sangraha/setu/utilities.py
     mainPythonFileUri: 'path-to-minhash-spark-file-in-gcp'
     args:
     - '--config'
@@ -146,16 +164,27 @@ jobs:
     properties:
       spark.default.parallelism: 'default_value'
       spark.sql.shuffle.partitions: 'default_value'
-      spark.sql.execution.arrow.pyspark.enabled: 'default_value'
-      spark.sql.adaptive.enabled: 'default_value'
-      spark.serializer: 'default_value'
-      spark.speculation: 'default_value'
+      spark.sql.execution.arrow.pyspark.enabled: 'true'
+      spark.sql.adaptive.enabled: 'true'
+      spark.serializer: 'org.apache.spark.serializer.KryoSerializer'
+      spark.speculation: 'true'
+      spark.executor.memory: 50g
+      spark.driver.memory: 8g
+      spark.executor.cores: '14'
+      spark.submit.deployMode: client
   stepId: LID_SEGREGATION
   prerequisiteStepIds:
   - DOCUMENT_CLEANING
 - pysparkJob:
-    archiveUris:
-    pythonFileUris:
+    archiveUris: gs://sangraha/data.zip
+    pythonFileUris: 
+    - gs://sangraha/setu/constants.py
+    - gs://sangraha/setu/document_filters.py
+    - gs://sangraha/setu/lid.py
+    - gs://sangraha/setu/line_filters.py
+    - gs://sangraha/setu/parse_args.py
+    - gs://sangraha/setu/setu.py
+    - gs://sangraha/setu/utilities.py
     mainPythonFileUri: 'path-to-minhash-spark-file-in-gcp'
     args:
     - '--config'
@@ -227,6 +256,10 @@ jobs:
       spark.sql.adaptive.enabled: 'true'
       spark.serializer: 'org.apache.spark.serializer.KryoSerializer'
       spark.speculation: 'true'
+      spark.executor.memory: 50g
+      spark.driver.memory: 8g
+      spark.executor.cores: '14'
+      spark.submit.deployMode: client
   stepId: ANALYSIS
   prerequisiteStepIds:
   - DOCUMENT_CLEANING
@@ -357,29 +390,41 @@ parameters:
   - name: SPARK_PARALLELISM
     description: No.of default partitions to use for partition, join etc operations.
     fields:
+    - jobs['DOCUMENT_CLEANING'].pysparkJob.properties['spark.default.parallelism']
+    - jobs['LID_SEGREGATION'].pysparkJob.properties['spark.default.parallelism']
     - jobs['ANALYSIS'].pysparkJob.properties['spark.default.parallelism']
   
   - name: SPARK_SHUFFLE_PARTITION_COUNT
     description: No.of default partitions to use for shuffle operation.
     fields:
+    - jobs['DOCUMENT_CLEANING'].pysparkJob.properties['spark.sql.shuffle.partitions']
+    - jobs['LID_SEGREGATION'].pysparkJob.properties['spark.sql.shuffle.partitions']
     - jobs['ANALYSIS'].pysparkJob.properties['spark.sql.shuffle.partitions']
     
   - name: ENBLE_ARROW_EXECUTION
     description: whether to enable arrow support for pyspark or not.
     fields:
+    - jobs['DOCUMENT_CLEANING'].pysparkJob.properties['spark.sql.execution.arrow.pyspark.enabled']
+    - jobs['LID_SEGREGATION'].pysparkJob.properties['spark.sql.execution.arrow.pyspark.enabled']
     - jobs['ANALYSIS'].pysparkJob.properties['spark.sql.execution.arrow.pyspark.enabled']
     
   - name: ENABLE_ADAPTIVE_SQL
     description: whether to enable adaptive sql query support for pyspark or not
     fields:
+    - jobs['DOCUMENT_CLEANING'].pysparkJob.properties['spark.sql.adaptive.enabled']
+    - jobs['LID_SEGREGATION'].pysparkJob.properties['spark.sql.adaptive.enabled']
     - jobs['ANALYSIS'].pysparkJob.properties['spark.sql.adaptive.enabled']
     
   - name: SPARK_SERIALIZER
     description: what serializer to use.
     fields:
+    - jobs['DOCUMENT_CLEANING'].pysparkJob.properties['spark.serializer']
+    - jobs['LID_SEGREGATION'].pysparkJob.properties['spark.serializer']
     - jobs['ANALYSIS'].pysparkJob.properties['spark.serializer']
     
   - name: ENABLE_SPECULATION
     description: whether to enable speculation in pyspark or not.
     fields:
+    - jobs['DOCUMENT_CLEANING'].pysparkJob.properties['spark.speculation']
+    - jobs['LID_SEGREGATION'].pysparkJob.properties['spark.speculation']
     - jobs['ANALYSIS'].pysparkJob.properties['spark.speculation']

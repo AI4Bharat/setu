@@ -1,10 +1,12 @@
 import sys
 import argparse
-from setu import Setu
 from pyspark.sql import SparkSession
 import threading
 import traceback
 from parse_args import parse_args
+from setu import Setu
+import subprocess
+import os
 
 if __name__ == "__main__":
 
@@ -20,14 +22,15 @@ if __name__ == "__main__":
     spark = SparkSession \
                 .builder \
                 .appName(setu.config.appname) \
-                .config("spark.sql.execution.arrow.pyspark.enabled", "true") \
-                .config("spark.sql.broadcastTimeout", "36000") \
-                .config("spark.driver.maxResultSize", "0") \
-                .config('spark.sql.autoBroadcastJoinThreshold', '-1') \
-                .config('spark.sql.adaptive.enabled', 'true') \
-                .config('spark.serializer', 'org.apache.spark.serializer.KryoSerializer') \
-                .config('spark.speculation', 'true') \
                 .getOrCreate()
+
+                # .config("spark.sql.execution.arrow.pyspark.enabled", "true") \
+                # .config("spark.sql.broadcastTimeout", "36000") \
+                # .config("spark.driver.maxResultSize", "0") \a
+                # .config('spark.sql.autoBroadcastJoinThreshold', '-1') \
+                # .config('spark.sql.adaptive.enabled', 'true') \
+                # .config('spark.serializer', 'org.apache.spark.serializer.KryoSerializer') \
+                # .config('spark.speculation', 'true') \
 
     spark_context = spark.sparkContext
 
@@ -82,6 +85,7 @@ if __name__ == "__main__":
                 lid_df,
                 doc_id_col="doc_id",
                 text_col="text",
+                additional_cols_to_use=["url", "source"],
                 docs_per_partition=args.samples_per_partition,
                 doc_lid_output_path=args.doc_lid_output_path,
                 verbose=args.verbose,
