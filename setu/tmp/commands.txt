@@ -4,6 +4,8 @@ Start Master
 Start a worker
 ~/spark-hadoop3/sbin/start-worker.sh spark://SPK-DGX-O1:7077  -c 128 -m 512G
 
+~/spark-hadoop3/sbin/start-worker.sh spark://SPK-DGX-O2:7077  -c 128 -m 512G
+
 Run SETU bash
 
 FOR Doc Clean
@@ -375,3 +377,43 @@ SETU_TMP_DIR=/data/priyam/tmp/ spark-submit \
     -g "/data/priyam/sangraha/parquets/sanskrit/*.parquet" \
     -s "/data/priyam/sangraha/parquets/sanskrit_new" \
     -p 50
+
+
+python text-dedup/deduplicate-text-datasets/scripts/load_dataset \
+        --path "arrow" \
+        --name "sangraha-$lang" \
+        --split "train" \
+        --data_files "/data/priyam/sangraha/dedup/minhash/$lang/*.arrow" \
+        --cache_dir "/data/priyam/cache" \
+        --output "/data/priyam/sangraha/dedup/exact/$lang" \
+        --column "text" \
+        --google_repo_path "/data/priyam/setu/text-dedup/deduplicate-text-datasets"
+
+
+SETU_DIR=/data/priyam/setu SETU_TMP_DIR=/data/priyam/tmp/ FILTER_DATA_ROOT=/data/priyam/setu/setu/data \
+    spark-submit \
+    --master spark://SPK-DGX-O2:7077 \
+    --deploy-mode client \
+    --driver-java-options -Djava.io.tmpdir=/data/priyam/tmp/ \
+    --conf "spark.driver.extraJavaOptions=-Djava.io.tmpdir=/data/priyam/tmp/" \
+    --conf "spark.executor.extraJavaOptions=-Djava.io.tmpdir=/data/priyam/tmp/" \
+    --conf spark.worker.dir="/data/priyam/tmp/" \
+    --conf spark.local.dir="/data/priyam/tmp/" \
+    --num-executors 16 \
+    --executor-cores 8 \
+    --executor-memory 4G \
+    --driver-memory 10G \
+    --archives "/data/priyam/setu/dataproc/envs/setu.zip" \
+    --conf 'spark.executorEnv.PYTHONPATH=setu.zip' \
+    --conf 'spark.executorEnv.FILTER_DATA_ROOT=setu.zip/data' \
+    run.py \
+    --config /data/priyam/setu/configs/spark_dogri_config.json \
+    --mode crawl \
+    --run_local True \
+    JSON2ParquetStage \
+    --json_glob_path "/data/priyam/sangraha/pdf_texts/1/Assamese/*.json" \
+    --language assamese \
+    --j2p_samples_per_partition 1500 \
+    --j2p_verbose False \
+    --j2p_run_mode data \
+    --j2p_parquet_output_path /data/priyam/sangraha/new_setu_test/assamese/1

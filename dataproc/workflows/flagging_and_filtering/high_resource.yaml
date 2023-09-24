@@ -1,0 +1,302 @@
+# Filename: flagging_and_filtering.yaml
+
+jobs:
+- pysparkJob:
+    archiveUris: gs://sangraha/setu.zip
+    pythonFileUris: 
+    - gs://sangraha/setu/constants.py
+    - gs://sangraha/setu/document_filters.py
+    - gs://sangraha/setu/lid.py
+    - gs://sangraha/setu/line_filters.py
+    - gs://sangraha/setu/parse_args.py
+    - gs://sangraha/setu/setu.py
+    - gs://sangraha/setu/utils.py
+    mainPythonFileUri: 'path-to-minhash-spark-file-in-gcp'
+    args:
+    - '--config'
+    - 'config json for the language which is going to be processed'
+    - '--samples_per_partition'
+    - 'no. of samples for each partition to hold so that we dont have OOMs on executors'
+    - '--verbose'
+    - 'False'
+    - '--checkpoint_dir'
+    - 'None'
+    - '--run_data_parallel_mode'
+    - 'False'
+    - '--run_doc_clean'
+    - 'False'
+    - '--doc_df_parquets_path'
+    - 'None' 
+    - '--is_doc_df_path_batched'
+    - 'False'
+    - '--use_symbol_filter'
+    - 'False' 
+    - '--save_symbol_heavy_docs'
+    - 'False' 
+    - '--symbol_filter_output_path'
+    - 'None' 
+    - '--cleaned_doc_output_path'
+    - 'None' 
+    - '--run_lid_segregation'
+    - 'False'
+    - '--lid_df_parquets_path'
+    - 'None'
+    - '--is_lid_df_path_batched'
+    - 'False'
+    - '--doc_lid_output_path'
+    - 'None'
+    - '--run_analysis'
+    - 'False'
+    - '--analysis_df_parquets_path'
+    - 'parquets glob path or a batch file containing paths to parquets to be processed for analysis stage or document removal stage'
+    - '--is_analysis_df_path_batched'
+    - 'False'
+    - '--line_stats_output_path'
+    - 'None'
+    - '--doc_stats_output_path'
+    - 'None'
+    - '--analysis_output_path'
+    - 'None'
+    - '--run_flag_and_filter'
+    - 'True'
+    - '--doc_stats_parquets_path'
+    - 'parquets glob path or a batch file containing paths to parquets to be processed for flagging and filtering stage'
+    - '--is_doc_stats_path_batched'
+    - 'whether the input path is a batch file or a glob path (for flagging & filtering stage)'
+    - '--save_nsfw_data'
+    - 'path where nfsw data will be stored'
+    - '--nsfw_output_path'
+    - 'path where nfsw data will be stored'
+    - '--filtered_doc_stats_output_path'
+    - 'path where filtered documents stats will stored'
+    - '--run_document_removal'
+    - 'False'
+    - '--doc_stats_path_for_removal'
+    - 'None'
+    - '--filtered_docs_path'
+    - 'None'
+    properties:
+      spark.default.parallelism: 'default_value'
+      spark.sql.shuffle.partitions: 'default_value'
+      spark.sql.execution.arrow.pyspark.enabled: 'true'
+      spark.sql.adaptive.enabled: 'true'
+      spark.serializer: 'org.apache.spark.serializer.KryoSerializer'
+      spark.speculation: 'true'
+  stepId: FLAGGING_AND_FILTERING
+- pysparkJob:
+    archiveUris: gs://sangraha/setu.zip
+    pythonFileUris: 
+    - gs://sangraha/setu/constants.py
+    - gs://sangraha/setu/document_filters.py
+    - gs://sangraha/setu/lid.py
+    - gs://sangraha/setu/line_filters.py
+    - gs://sangraha/setu/parse_args.py
+    - gs://sangraha/setu/setu.py
+    - gs://sangraha/setu/utils.py
+    mainPythonFileUri: 'path-to-minhash-spark-file-in-gcp'
+    args:
+    - '--config'
+    - 'config json for the language which is going to be processed'
+    - '--samples_per_partition'
+    - 'no. of samples for each partition to hold so that we dont have OOMs on executors'
+    - '--verbose'
+    - 'False'
+    - '--checkpoint_dir'
+    - 'None'
+    - '--run_data_parallel_mode'
+    - 'False'
+    - '--run_doc_clean'
+    - 'False'
+    - '--doc_df_parquets_path'
+    - 'None' 
+    - '--is_doc_df_path_batched'
+    - 'False'
+    - '--use_symbol_filter'
+    - 'False' 
+    - '--save_symbol_heavy_docs'
+    - 'False' 
+    - '--symbol_filter_output_path'
+    - 'None' 
+    - '--cleaned_doc_output_path'
+    - 'None' 
+    - '--run_lid_segregation'
+    - 'False'
+    - '--lid_df_parquets_path'
+    - 'None'
+    - '--is_lid_df_path_batched'
+    - 'False'
+    - '--doc_lid_output_path'
+    - 'None'
+    - '--run_analysis'
+    - 'False'
+    - '--analysis_df_parquets_path'
+    - 'None'
+    - '--is_analysis_df_path_batched'
+    - 'False'
+    - '--line_stats_output_path'
+    - 'None'
+    - '--doc_stats_output_path'
+    - 'None'
+    - '--analysis_output_path'
+    - 'None'
+    - '--run_flag_and_filter'
+    - 'False'
+    - '--doc_stats_parquets_path'
+    - 'None'
+    - '--is_doc_stats_path_batched'
+    - 'False'
+    - '--save_nsfw_data'
+    - 'False'
+    - '--nsfw_output_path'
+    - 'None'
+    - '--filtered_doc_stats_output_path'
+    - 'None'
+    - '--run_document_removal'
+    - 'True'
+    - '--doc_stats_path_for_removal'
+    - 'parquets glob path or a batch file containing paths to parquets to be processed for document removal stage'
+    - '--filtered_docs_path'
+    - 'path where filtered documents stats will stored'
+    properties:
+      spark.default.parallelism: 'default_value'
+      spark.sql.shuffle.partitions: 'default_value'
+      spark.sql.execution.arrow.pyspark.enabled: 'true'
+      spark.sql.adaptive.enabled: 'true'
+      spark.serializer: 'org.apache.spark.serializer.KryoSerializer'
+      spark.speculation: 'true'
+  stepId: DOCUMENT_REMOVAL
+  prerequisiteStepIds:
+  - FLAGGING_AND_FILTERING
+
+# Cluster configuration
+placement:
+  managedCluster:
+    clusterName: 'to-be-determined'
+    config:
+      gceClusterConfig:
+        zoneUri: asia-south1-a
+      masterConfig:
+        numInstances: 1
+        machineTypeUri: c2d-standard-16
+        diskConfig:
+          bootDiskSizeGb: 500
+      workerConfig:
+        numInstances: 10
+        machineTypeUri: c2d-standard-16
+        diskConfig:
+          bootDiskSizeGb: 500
+      softwareConfig:
+        imageVersion: 2.1.21-ubuntu20
+        properties:
+          dataproc:conda.env.config.uri: gs://sangraha/setu/dataproc/compute_image/environment.yaml
+      initializationActions:
+      - executableFile: gs://sangraha/setu/dataproc/compute_image/install_additional_deps.sh
+      
+
+# Define template parameters
+parameters:
+
+  - name: MAIN_PYTHON_FILE
+    description: The main python file which runs Minhash Spark on GCP
+    fields:
+    - jobs['FLAGGING_AND_FILTERING'].pysparkJob.mainPythonFileUri
+    - jobs['DOCUMENT_REMOVAL'].pysparkJob.mainPythonFileUri
+
+  - name: CLUSTER_NAME
+    description: Name of the cluster that is spinned up
+    fields:
+    - placement.managedCluster.clusterName
+
+  - name: CONFIG
+    description: config json for the language which is going to be processed
+    fields:
+    - jobs['FLAGGING_AND_FILTERING'].pysparkJob.args[1]
+    - jobs['DOCUMENT_REMOVAL'].pysparkJob.args[1]
+
+  - name: SAMPLES_PER_PARTITION
+    description: no. of samples for each partition to hold so that we don't have OOMs on executors
+    fields:
+    - jobs['FLAGGING_AND_FILTERING'].pysparkJob.args[3]
+    - jobs['DOCUMENT_REMOVAL'].pysparkJob.args[3] 
+
+  - name: VERBOSE
+    description: whether to be verbose or not. Only enable this option in local mode
+    fields:
+    - jobs['FLAGGING_AND_FILTERING'].pysparkJob.args[5]
+    - jobs['DOCUMENT_REMOVAL'].pysparkJob.args[5] 
+
+  - name: ANALYSIS_DF_PARQUETS_PATH
+    description: parquets glob path or a batch file containing paths to parquets to be processed for analysis stage or document removal stage
+    fields:
+    - jobs['DOCUMENT_REMOVAL'].pysparkJob.args[35]  
+
+  - name: DOC_STATS_PARQUETS_PATH
+    description: parquets glob path or a batch file containing paths to parquets to be processed for flagging and filtering stage
+    fields:
+    - jobs['FLAGGING_AND_FILTERING'].pysparkJob.args[47]
+
+  - name: IS_DOC_STATS_PATH_BATCHED
+    description: whether the input path is a batch file or a glob path (for flagging & filtering stage)
+    fields:
+    - jobs['FLAGGING_AND_FILTERING'].pysparkJob.args[49]
+
+  - name: SAVE_NSFW_DATA
+    description: whether to sotre nsfw data or not
+    fields:
+    - jobs['FLAGGING_AND_FILTERING'].pysparkJob.args[51]
+
+  - name: NSFW_OUTPUT_PATH
+    description: path where nfsw data will be stored
+    fields:
+    - jobs['FLAGGING_AND_FILTERING'].pysparkJob.args[53]
+
+  - name: FILTERED_DOC_STATS_OUTPUT_PATH
+    description: path where filtered documents stats will stored
+    fields:
+    - jobs['FLAGGING_AND_FILTERING'].pysparkJob.args[55]
+
+  - name: DOC_STATS_PATH_FOR_REMOVAL
+    description: parquets glob path or a batch file containing paths to parquets to be processed for document removal stage
+    fields:
+    - jobs['DOCUMENT_REMOVAL'].pysparkJob.args[59] 
+
+  - name: FILTERED_DOCS_PATH
+    description: path where filtered documents stats will stored
+    fields:
+    - jobs['DOCUMENT_REMOVAL'].pysparkJob.args[61] 
+
+  - name: SPARK_PARALLELISM
+    description: No.of default partitions to use for partition, join etc operations.
+    fields:
+    - jobs['FLAGGING_AND_FILTERING'].pysparkJob.properties['spark.default.parallelism']
+    - jobs['DOCUMENT_REMOVAL'].pysparkJob.properties['spark.default.parallelism']
+  
+  - name: SPARK_SHUFFLE_PARTITION_COUNT
+    description: No.of default partitions to use for shuffle operation.
+    fields:
+    - jobs['FLAGGING_AND_FILTERING'].pysparkJob.properties['spark.sql.shuffle.partitions']
+    - jobs['DOCUMENT_REMOVAL'].pysparkJob.properties['spark.sql.shuffle.partitions']
+    
+  - name: ENBLE_ARROW_EXECUTION
+    description: whether to enable arrow support for pyspark or not.
+    fields:
+    - jobs['FLAGGING_AND_FILTERING'].pysparkJob.properties['spark.sql.execution.arrow.pyspark.enabled']
+    - jobs['DOCUMENT_REMOVAL'].pysparkJob.properties['spark.sql.execution.arrow.pyspark.enabled']
+    
+  - name: ENABLE_ADAPTIVE_SQL
+    description: whether to enable adaptive sql query support for pyspark or not
+    fields:
+    - jobs['FLAGGING_AND_FILTERING'].pysparkJob.properties['spark.sql.adaptive.enabled']
+    - jobs['DOCUMENT_REMOVAL'].pysparkJob.properties['spark.sql.adaptive.enabled']
+    
+  - name: SPARK_SERIALIZER
+    description: what serializer to use.
+    fields:
+    - jobs['FLAGGING_AND_FILTERING'].pysparkJob.properties['spark.serializer']
+    - jobs['DOCUMENT_REMOVAL'].pysparkJob.properties['spark.serializer']
+    
+  - name: ENABLE_SPECULATION
+    description: whether to enable speculation in pyspark or not.
+    fields:
+    - jobs['FLAGGING_AND_FILTERING'].pysparkJob.properties['spark.speculation']
+    - jobs['DOCUMENT_REMOVAL'].pysparkJob.properties['spark.speculation']

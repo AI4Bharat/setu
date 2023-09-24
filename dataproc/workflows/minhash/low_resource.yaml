@@ -1,0 +1,102 @@
+# Filename: minhash.yaml
+
+jobs:
+- pysparkJob:
+    mainPythonFileUri: 'path-to-minhash-spark-file-in-gcp'
+    args:
+    - '--column'
+    - 'column to dedup'
+    - '--threshold'
+    - 'similarity threshold to use for computing optimal b & r'
+    - '--ngram_size'
+    - 'ngram size to use'
+    - '--min_length'
+    - 'min length of document to consider for minhash'
+    - '--num_perm'
+    - 'permutations to perform for computing document hash'
+    - '--input'
+    - 'input path of parquets'
+    - '--output'
+    - 'output path of parquets'
+    - '--debug'
+    properties:
+      spark.executor.memory: 50g
+      spark.driver.memory: 8g
+      spark.executor.cores: '14'
+  stepId: MINHASH
+        
+# Cluster configuration
+placement:
+  managedCluster:
+    clusterName: 'to-be-determined'
+    config:
+      gceClusterConfig:
+        zoneUri: asia-south1-a
+      masterConfig:
+        numInstances: 1
+        machineTypeUri: c2d-standard-16
+        diskConfig:
+          bootDiskSizeGb: 500
+      workerConfig:
+        numInstances: 3
+        machineTypeUri: c2d-standard-16
+        diskConfig:
+          bootDiskSizeGb: 500
+      softwareConfig:
+        imageVersion: 2.1-debian11
+
+# Define template parameters
+parameters:
+
+  - name: MAIN_PYTHON_FILE
+    description: The main python file which runs Minhash Spark on GCP
+    fields:
+    - jobs['MINHASH'].pysparkJob.mainPythonFileUri
+
+  - name: COLUMN
+    description: Column to deduplicate
+    fields:
+    - jobs['MINHASH'].pysparkJob.args[1]
+  
+  - name: THRESHOLD
+    description: Similarity threshold
+    fields:
+    - jobs['MINHASH'].pysparkJob.args[3]
+      
+  - name: NGRAM_SIZE
+    description: Ngram size to use in MinHash.
+    fields:
+    - jobs['MINHASH'].pysparkJob.args[5]
+    
+  - name: MIN_LENGTH
+    description: Minimum length of document to be considered
+    fields:
+    - jobs['MINHASH'].pysparkJob.args[7]
+  
+  - name: NUM_PERM
+    description: Number of permutations
+    fields:
+    - jobs['MINHASH'].pysparkJob.args[9]
+
+  - name: INPUT
+    description: GCS path to input directory of parquet files
+    fields:
+    - jobs['MINHASH'].pysparkJob.args[11]
+    validation:
+      regex:
+        regexes:
+        - gs://.*
+  
+  - name: OUTPUT
+    description: GCS Output directory of parquet files
+    fields:
+    - jobs['MINHASH'].pysparkJob.args[13]
+    validation:
+      regex:
+        regexes:
+        - gs://.*
+
+  - name: CLUSTER_NAME
+    description: Name of the cluster that is spinned up
+    fields:
+    - placement.managedCluster.clusterName

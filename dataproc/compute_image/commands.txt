@@ -1,0 +1,39 @@
+python generate_custom_image.py \
+    --image-name 'setu-conda-base-env-dataproc' \
+    --dataproc-version '2.1.21-ubuntu20' \
+    --customization-script '../customize_conda_base.sh' \
+    --zone 'asia-south1-a' \
+    --gcs-bucket 'sangraha/custom_image_logs' \
+    --metadata 'conda-component=MINICONDA3,conda-env-config-uri=gs://sangraha/setu/dataproc/compute_image/environment_base.yaml' \
+    --disk-size 150 \
+    --machine-type n1-standard-16
+
+python generate_custom_image.py \
+    --image-name 'setu-conda-env-dataproc' \
+    --dataproc-version '2.1.21-ubuntu20' \
+    --customization-script '../customize_conda.sh' \
+    --zone 'asia-south1-a' \
+    --gcs-bucket 'sangraha/custom_image_logs' \
+    --metadata 'conda-component=MINICONDA3,conda-env-config-uri=gs://sangraha/setu/dataproc/compute_image/environment.yaml' \
+    --disk-size 150 \
+    --machine-type n1-standard-16
+
+python generate_custom_image.py \
+    --image-name 'setu-pipenv-dataproc' \
+    --dataproc-version '2.1.21-ubuntu20' \
+    --customization-script '../customize_pip.sh' \
+    --zone 'asia-south1-a' \
+    --gcs-bucket 'sangraha/custom_image_logs' \
+    --metadata 'pip-requirements-uri=gs://sangraha/setu/dataproc/compute_image/requirements.txt' \
+    --disk-size 150 \
+    --machine-type n1-standard-16
+
+python generate_custom_image.py \
+    --image-name 'setu-base-dataproc' \
+    --dataproc-version '2.1.21-ubuntu20' \
+    --customization-script '../add_protobuf_and_indic_nlp.sh' \
+    --zone 'asia-south1-a' \
+    --gcs-bucket 'sangraha/custom_image_logs' \
+    --disk-size 150 \
+    --machine-type c2-standard-16 \
+    --no-smoke-test

@@ -1,0 +1,242 @@
+
+FILTER_DATA_ROOT=/data/priyam/setu/setu/data python run.py --help
+
+FILTER_DATA_ROOT=/data/priyam/setu/setu/data python run.py DocCleanStage --help
+
+# JSON2ParquetStage
+
+SETU_DIR=/data/priyam/setu SETU_TMP_DIR=/data/priyam/tmp/ FILTER_DATA_ROOT=/data/priyam/setu/setu/data \
+    spark-submit \
+    --master spark://SPK-DGX-O2:7077 \
+    --deploy-mode client \
+    --driver-java-options -Djava.io.tmpdir=/data/priyam/tmp/ \
+    --conf "spark.driver.extraJavaOptions=-Djava.io.tmpdir=/data/priyam/tmp/" \
+    --conf "spark.executor.extraJavaOptions=-Djava.io.tmpdir=/data/priyam/tmp/" \
+    --conf spark.worker.dir="/data/priyam/tmp/" \
+    --conf spark.local.dir="/data/priyam/tmp/" \
+    --num-executors 16 \
+    --executor-cores 8 \
+    --executor-memory 4G \
+    --driver-memory 10G \
+    --archives "/data/priyam/setu/dataproc/envs/setu.zip" \
+    --conf 'spark.executorEnv.PYTHONPATH=setu.zip' \
+    --conf 'spark.executorEnv.FILTER_DATA_ROOT=setu.zip/data' \
+    run.py \
+    --config /data/priyam/setu/configs/spark_dogri_config.json \
+    --mode crawl \
+    --run_local True \
+    JSON2ParquetStage \
+    --json_glob_path "/data/priyam/sangraha/pdf_texts/1/Assamese/*.json" \
+    --language assamese \
+    --j2p_samples_per_partition 1500 \
+    --j2p_verbose False \
+    --j2p_run_mode data \
+    --j2p_parquet_output_path /data/priyam/sangraha/new_setu_test/assamese/1/json2parquets
+
+
+
+# DocCleanStage
+
+SETU_DIR=/data/priyam/setu SETU_TMP_DIR=/data/priyam/tmp/ FILTER_DATA_ROOT=/data/priyam/setu/setu/data \
+    spark-submit \
+    --master spark://SPK-DGX-O2:7077 \
+    --deploy-mode client \
+    --driver-java-options -Djava.io.tmpdir=/data/priyam/tmp/ \
+    --conf "spark.driver.extraJavaOptions=-Djava.io.tmpdir=/data/priyam/tmp/" \
+    --conf "spark.executor.extraJavaOptions=-Djava.io.tmpdir=/data/priyam/tmp/" \
+    --conf spark.worker.dir="/data/priyam/tmp/" \
+    --conf spark.local.dir="/data/priyam/tmp/" \
+    --conf spark.sql.execution.arrow.pyspark.enabled=true \
+    --conf spark.sql.broadcastTimeout=36000 \
+    --conf spark.driver.maxResultSize=0 \
+    --conf spark.sql.autoBroadcastJoinThreshold=-1 \
+    --conf spark.sql.adaptive.enabled=true \
+    --conf spark.serializer='org.apache.spark.serializer.KryoSerializer' \
+    --conf spark.speculation=true \
+    --conf "spark.default.parallelism=128" \
+    --conf "spark.sql.shuffle.partitions=512" \
+    --num-executors 16 \
+    --executor-cores 8 \
+    --executor-memory 32G \
+    --driver-memory 50G \
+    --archives "/data/priyam/setu/dataproc/envs/setu.zip" \
+    --conf 'spark.executorEnv.PYTHONPATH=setu.zip' \
+    --conf 'spark.executorEnv.FILTER_DATA_ROOT=setu.zip/data' \
+    run.py \
+    --config /data/priyam/setu/configs/spark_dogri_config.json \
+    --mode crawl \
+    --run_local True \
+    DocCleanStage \
+    --doc_df_parquets_path "/data/priyam/sangraha/pdf_parquets/*/1/*.parquet" \
+    --is_doc_df_path_batched False \
+    --doc_clean_cols_to_use "doc_id,url,source,text,language" \
+    --use_symbol_filter True \
+    --doc_clean_samples_per_partition 101 \
+    --doc_clean_verbose False \
+    --doc_clean_run_mode data \
+    --save_symbol_heavy_docs True \
+    --symbol_filter_output_path /data/priyam/sangraha/new_setu_test/pdfs/1/doc_clean/symbol_heavy \
+    --cleaned_doc_output_path /data/priyam/sangraha/new_setu_test/pdfs/1/doc_clean/cleaned_doc
+
+
+# LIDStage
+
+SETU_DIR=/data/priyam/setu SETU_TMP_DIR=/data/priyam/tmp/ FILTER_DATA_ROOT=/data/priyam/setu/setu/data \
+    spark-submit \
+    --master spark://SPK-DGX-O2:7077 \
+    --deploy-mode client \
+    --driver-java-options -Djava.io.tmpdir=/data/priyam/tmp/ \
+    --conf "spark.driver.extraJavaOptions=-Djava.io.tmpdir=/data/priyam/tmp/" \
+    --conf "spark.executor.extraJavaOptions=-Djava.io.tmpdir=/data/priyam/tmp/" \
+    --conf spark.worker.dir="/data/priyam/tmp/" \
+    --conf spark.local.dir="/data/priyam/tmp/" \
+    --conf spark.sql.execution.arrow.pyspark.enabled=true \
+    --conf spark.sql.broadcastTimeout=36000 \
+    --conf spark.driver.maxResultSize=0 \
+    --conf spark.sql.autoBroadcastJoinThreshold=-1 \
+    --conf spark.sql.adaptive.enabled=true \
+    --conf spark.serializer='org.apache.spark.serializer.KryoSerializer' \
+    --conf spark.speculation=true \
+    --conf "spark.default.parallelism=128" \
+    --conf "spark.sql.shuffle.partitions=512" \
+    --num-executors 16 \
+    --executor-cores 8 \
+    --executor-memory 32G \
+    --driver-memory 50G \
+    --archives "/data/priyam/setu/dataproc/envs/setu.zip" \
+    --conf 'spark.executorEnv.PYTHONPATH=setu.zip' \
+    --conf 'spark.executorEnv.FILTER_DATA_ROOT=setu.zip/data' \
+    run.py \
+    --config /data/priyam/setu/configs/spark_dogri_config.json \
+    --mode crawl \
+    --run_local True \
+    LIDStage \
+    --lid_df_parquets_path "/data/priyam/sangraha/new_setu_test/dogri/1/doc_clean/cleaned_doc/*.parquet" \
+    --is_lid_df_path_batched False \
+    --lid_samples_per_partition 99 \
+    --lid_verbose True \
+    --lid_run_mode data \
+    --doc_lid_output_path "/data/priyam/sangraha/new_setu_test/dogri/1/lid/lid"
+
+
+# AnalysisStage
+
+SETU_DIR=/data/priyam/setu SETU_TMP_DIR=/data/priyam/tmp/ FILTER_DATA_ROOT=/data/priyam/setu/setu/data \
+    spark-submit \
+    --master spark://SPK-DGX-O2:7077 \
+    --deploy-mode client \
+    --driver-java-options -Djava.io.tmpdir=/data/priyam/tmp/ \
+    --conf "spark.driver.extraJavaOptions=-Djava.io.tmpdir=/data/priyam/tmp/" \
+    --conf "spark.executor.extraJavaOptions=-Djava.io.tmpdir=/data/priyam/tmp/" \
+    --conf spark.worker.dir="/data/priyam/tmp/" \
+    --conf spark.local.dir="/data/priyam/tmp/" \
+    --conf spark.sql.execution.arrow.pyspark.enabled=true \
+    --conf spark.sql.broadcastTimeout=36000 \
+    --conf spark.driver.maxResultSize=0 \
+    --conf spark.sql.autoBroadcastJoinThreshold=-1 \
+    --conf spark.sql.adaptive.enabled=true \
+    --conf spark.serializer='org.apache.spark.serializer.KryoSerializer' \
+    --conf spark.speculation=true \
+    --conf "spark.default.parallelism=128" \
+    --conf "spark.sql.shuffle.partitions=512" \
+    --num-executors 16 \
+    --executor-cores 8 \
+    --executor-memory 32G \
+    --driver-memory 50G \
+    --archives "/data/priyam/setu/dataproc/envs/setu.zip" \
+    --conf 'spark.executorEnv.PYTHONPATH=setu.zip' \
+    --conf 'spark.executorEnv.FILTER_DATA_ROOT=setu.zip/data' \
+    run.py \
+    --config /data/priyam/setu/configs/spark_dogri_config.json \
+    --mode crawl \
+    --run_local True \
+    AnalysisStage \
+    --analysis_df_parquets_path "/data/priyam/sangraha/new_setu_test/dogri/1/lid/lid/*/*.parquet" \
+    --is_analysis_df_path_batched False \
+    --analysis_samples_per_partition 99 \
+    --analysis_verbose False \
+    --analysis_run_mode stage \
+    --line_stats_output_path "/data/priyam/sangraha/new_setu_test/dogri/1/analysis/line_out/" \
+    --doc_stats_output_path "/data/priyam/sangraha/new_setu_test/dogri/1/analysis/doc_stats_out/" \
+    --analysis_output_path "/data/priyam/sangraha/new_setu_test/dogri/1/analysis/analysis/"
+
+FlaggingAndFilteringStage
+
+SETU_DIR=/data/priyam/setu SETU_TMP_DIR=/data/priyam/tmp/ FILTER_DATA_ROOT=/data/priyam/setu/setu/data \
+    spark-submit \
+    --master spark://SPK-DGX-O2:7077 \
+    --deploy-mode client \
+    --driver-java-options -Djava.io.tmpdir=/data/priyam/tmp/ \
+    --conf "spark.driver.extraJavaOptions=-Djava.io.tmpdir=/data/priyam/tmp/" \
+    --conf "spark.executor.extraJavaOptions=-Djava.io.tmpdir=/data/priyam/tmp/" \
+    --conf spark.worker.dir="/data/priyam/tmp/" \
+    --conf spark.local.dir="/data/priyam/tmp/" \
+    --conf spark.sql.execution.arrow.pyspark.enabled=true \
+    --conf spark.sql.broadcastTimeout=36000 \
+    --conf spark.driver.maxResultSize=0 \
+    --conf spark.sql.autoBroadcastJoinThreshold=-1 \
+    --conf spark.sql.adaptive.enabled=true \
+    --conf spark.serializer='org.apache.spark.serializer.KryoSerializer' \
+    --conf spark.speculation=true \
+    --conf "spark.default.parallelism=128" \
+    --conf "spark.sql.shuffle.partitions=512" \
+    --num-executors 16 \
+    --executor-cores 8 \
+    --executor-memory 32G \
+    --driver-memory 50G \
+    --archives "/data/priyam/setu/dataproc/envs/setu.zip" \
+    --conf 'spark.executorEnv.PYTHONPATH=setu.zip' \
+    --conf 'spark.executorEnv.FILTER_DATA_ROOT=setu.zip/data' \
+    run.py \
+    --config /data/priyam/setu/configs/spark_dogri_config.json \
+    --mode crawl \
+    --run_local True \
+    FlaggingAndFilteringStage \
+    --doc_stats_parquets_path "/data/priyam/sangraha/new_setu_test/dogri/1/analysis/doc_stats_out/doc_lang_partition=dogri/*.parquet" \
+    --is_doc_stats_path_batched False \
+    --fnf_samples_per_partition 99 \
+    --fnf_verbose False \
+    --fnf_run_mode stage \
+    --save_nsfw_data True \
+    --nsfw_output_path /data/priyam/sangraha/new_setu_test/dogri/1/filtering/nsfw_doc_stats_out \
+    --filtered_doc_stats_output_path /data/priyam/sangraha/new_setu_test/dogri/1/filtering/filtered_doc_stats
+
+DocumentRemovalStage
+
+SETU_DIR=/data/priyam/setu SETU_TMP_DIR=/data/priyam/tmp/ FILTER_DATA_ROOT=/data/priyam/setu/setu/data \
+    spark-submit \
+    --master spark://SPK-DGX-O2:7077 \
+    --deploy-mode client \
+    --driver-java-options -Djava.io.tmpdir=/data/priyam/tmp/ \
+    --conf "spark.driver.extraJavaOptions=-Djava.io.tmpdir=/data/priyam/tmp/" \
+    --conf "spark.executor.extraJavaOptions=-Djava.io.tmpdir=/data/priyam/tmp/" \
+    --conf spark.worker.dir="/data/priyam/tmp/" \
+    --conf spark.local.dir="/data/priyam/tmp/" \
+    --conf spark.sql.execution.arrow.pyspark.enabled=true \
+    --conf spark.sql.broadcastTimeout=36000 \
+    --conf spark.driver.maxResultSize=0 \
+    --conf spark.sql.autoBroadcastJoinThreshold=-1 \
+    --conf spark.sql.adaptive.enabled=true \
+    --conf spark.serializer='org.apache.spark.serializer.KryoSerializer' \
+    --conf spark.speculation=true \
+    --conf "spark.default.parallelism=128" \
+    --conf "spark.sql.shuffle.partitions=512" \
+    --num-executors 16 \
+    --executor-cores 8 \
+    --executor-memory 32G \
+    --driver-memory 50G \
+    --archives "/data/priyam/setu/dataproc/envs/setu.zip" \
+    --conf 'spark.executorEnv.PYTHONPATH=setu.zip' \
+    --conf 'spark.executorEnv.FILTER_DATA_ROOT=setu.zip/data' \
+    run.py \
+    --config /data/priyam/setu/configs/spark_dogri_config.json \
+    --mode crawl \
+    --run_local True \
+    DocumentRemovalStage \
+    --analysis_out_path "/data/priyam/sangraha/new_setu_test/dogri/1/analysis/analysis/doc_lang_partition=dogri/*.parquet" \
+    --doc_stats_path "/data/priyam/sangraha/new_setu_test/dogri/1/filtering/filtered_doc_stats/*.parquet" \
+    --doc_removal_samples_per_partition 99 \
+    --doc_removal_verbose False \
+    --doc_removal_run_mode stage \
+    --filtered_docs_path /data/priyam/sangraha/new_setu_test/dogri/1/document_removal/filtered_docs
+                        

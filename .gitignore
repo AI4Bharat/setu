@@ -166,3 +166,8 @@ dashboard/parquet
 pdfs
 
 sangraha
+*__pycache__
+nutch/apache-*
+nutch/tmp
+*.tar.gz
+*.zip

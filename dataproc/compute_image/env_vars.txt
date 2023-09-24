@@ -1,0 +1,4 @@
+CONDA_PREFIX=/opt/conda/miniconda3/envs/setu_dataproc
+CONDA_PROMPT_MODIFIER=
+CONDA_DEFAULT_ENV=setu_dataproc
+PATH=/opt/conda/miniconda3/envs/setu_dataproc/bin:/opt/conda/default/bin:/opt/conda/miniconda3/condabin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/snap/bin

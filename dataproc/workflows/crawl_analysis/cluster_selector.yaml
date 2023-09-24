@@ -1,0 +1,430 @@
+# Filename: crawl_analysis.yaml
+
+jobs:
+- pysparkJob:
+    archiveUris: gs://sangraha/data.zip
+    pythonFileUris: 
+    - gs://sangraha/setu/constants.py
+    - gs://sangraha/setu/document_filters.py
+    - gs://sangraha/setu/lid.py
+    - gs://sangraha/setu/line_filters.py
+    - gs://sangraha/setu/parse_args.py
+    - gs://sangraha/setu/setu.py
+    - gs://sangraha/setu/utilities.py
+    mainPythonFileUri: 'path-to-minhash-spark-file-in-gcp'
+    args:
+    - '--config'
+    - 'config json for the language which is going to be processed'
+    - '--samples_per_partition'
+    - 'no. of samples for each partition to hold so that we dont have OOMs on executors'
+    - '--verbose'
+    - 'False'
+    - '--checkpoint_dir'
+    - 'None'
+    - '--run_data_parallel_mode'
+    - 'whether to run data parallel mode for document cleaning stage or not'
+    - '--run_doc_clean'
+    - 'True'
+    - '--doc_df_parquets_path'
+    - 'parquets glob path or a batch file containing paths to parquets to be processed for document cleaning stage' 
+    - '--is_doc_df_path_batched'
+    - 'whether the input path is a batch file or a glob path'
+    - '--use_symbol_filter'
+    - 'whether to use symbol filter' 
+    - '--save_symbol_heavy_docs'
+    - 'whether to save symbol heavy documents in a separate folder' 
+    - '--symbol_filter_output_path'
+    - 'path where symbol heavy documents will be stored' 
+    - '--cleaned_doc_output_path'
+    - 'path where cleaned documents will be stored' 
+    - '--run_lid_segregation'
+    - 'False'
+    - '--lid_df_parquets_path'
+    - 'None'
+    - '--is_lid_df_path_batched'
+    - 'False'
+    - '--doc_lid_output_path'
+    - 'None'
+    - '--run_analysis'
+    - 'False'
+    - '--analysis_df_parquets_path'
+    - 'None'
+    - '--is_analysis_df_path_batched'
+    - 'False'
+    - '--line_stats_output_path'
+    - 'None'
+    - '--doc_stats_output_path'
+    - 'None'
+    - '--analysis_output_path'
+    - 'None'
+    - '--run_flag_and_filter'
+    - 'False'
+    - '--doc_stats_parquets_path'
+    - 'None'
+    - '--is_doc_stats_path_batched'
+    - 'False'
+    - '--save_nsfw_data'
+    - 'False'
+    - '--nsfw_output_path'
+    - 'None'
+    - '--filtered_doc_stats_output_path'
+    - 'None'
+    - '--run_document_removal'
+    - 'False'
+    - '--doc_stats_path_for_removal'
+    - 'None'
+    - '--filtered_docs_path'
+    - 'None'
+    properties:
+      spark.default.parallelism: 'default_value'
+      spark.sql.shuffle.partitions: 'default_value'
+      spark.sql.execution.arrow.pyspark.enabled: 'true'
+      spark.sql.adaptive.enabled: 'true'
+      spark.serializer: 'org.apache.spark.serializer.KryoSerializer'
+      spark.speculation: 'true'
+      spark.executor.memory: 50g
+      spark.driver.memory: 8g
+      spark.executor.cores: '14'
+      spark.submit.deployMode: client
+  stepId: DOCUMENT_CLEANING
+- pysparkJob:
+    archiveUris: gs://sangraha/data.zip
+    pythonFileUris: 
+    - gs://sangraha/setu/constants.py
+    - gs://sangraha/setu/document_filters.py
+    - gs://sangraha/setu/lid.py
+    - gs://sangraha/setu/line_filters.py
+    - gs://sangraha/setu/parse_args.py
+    - gs://sangraha/setu/setu.py
+    - gs://sangraha/setu/utilities.py
+    mainPythonFileUri: 'path-to-minhash-spark-file-in-gcp'
+    args:
+    - '--config'
+    - 'config json for the language which is going to be processed'
+    - '--samples_per_partition'
+    - 'no. of samples for each partition to hold so that we dont have OOMs on executors'
+    - '--verbose'
+    - 'False'
+    - '--checkpoint_dir'
+    - 'directory to use for checkpointing and truncating the spark DAG'
+    - '--run_data_parallel_mode'
+    - 'False'
+    - '--run_doc_clean'
+    - 'False'
+    - '--doc_df_parquets_path'
+    - 'None' 
+    - '--is_doc_df_path_batched'
+    - 'False'
+    - '--use_symbol_filter'
+    - 'False' 
+    - '--save_symbol_heavy_docs'
+    - 'False' 
+    - '--symbol_filter_output_path'
+    - 'None' 
+    - '--cleaned_doc_output_path'
+    - 'None' 
+    - '--run_lid_segregation'
+    - 'True'
+    - '--lid_df_parquets_path'
+    - 'parquets glob path or a batch file containing paths to parquets to be processed for lid segregation stage'
+    - '--is_lid_df_path_batched'
+    - 'whether the input path is a batch file or a glob path (for lid segregation stage)'
+    - '--doc_lid_output_path'
+    - 'path where lid segregated output will be stored'
+    - '--run_analysis'
+    - 'False'
+    - '--analysis_df_parquets_path'
+    - 'None'
+    - '--is_analysis_df_path_batched'
+    - 'False'
+    - '--line_stats_output_path'
+    - 'None'
+    - '--doc_stats_output_path'
+    - 'None'
+    - '--analysis_output_path'
+    - 'None'
+    - '--run_flag_and_filter'
+    - 'False'
+    - '--doc_stats_parquets_path'
+    - 'None'
+    - '--is_doc_stats_path_batched'
+    - 'False'
+    - '--save_nsfw_data'
+    - 'False'
+    - '--nsfw_output_path'
+    - 'None'
+    - '--filtered_doc_stats_output_path'
+    - 'None'
+    - '--run_document_removal'
+    - 'False'
+    - '--doc_stats_path_for_removal'
+    - 'None'
+    - '--filtered_docs_path'
+    - 'None'
+    properties:
+      spark.default.parallelism: 'default_value'
+      spark.sql.shuffle.partitions: 'default_value'
+      spark.sql.execution.arrow.pyspark.enabled: 'true'
+      spark.sql.adaptive.enabled: 'true'
+      spark.serializer: 'org.apache.spark.serializer.KryoSerializer'
+      spark.speculation: 'true'
+      spark.executor.memory: 50g
+      spark.driver.memory: 8g
+      spark.executor.cores: '14'
+      spark.submit.deployMode: client
+  stepId: LID_SEGREGATION
+  prerequisiteStepIds:
+  - DOCUMENT_CLEANING
+- pysparkJob:
+    archiveUris: gs://sangraha/data.zip
+    pythonFileUris: 
+    - gs://sangraha/setu/constants.py
+    - gs://sangraha/setu/document_filters.py
+    - gs://sangraha/setu/lid.py
+    - gs://sangraha/setu/line_filters.py
+    - gs://sangraha/setu/parse_args.py
+    - gs://sangraha/setu/setu.py
+    - gs://sangraha/setu/utilities.py
+    mainPythonFileUri: 'path-to-minhash-spark-file-in-gcp'
+    args:
+    - '--config'
+    - 'config json for the language which is going to be processed'
+    - '--samples_per_partition'
+    - 'no. of samples for each partition to hold so that we dont have OOMs on executors'
+    - '--verbose'
+    - 'False'
+    - '--checkpoint_dir'
+    - 'None'
+    - '--run_data_parallel_mode'
+    - 'False'
+    - '--run_doc_clean'
+    - 'False'
+    - '--doc_df_parquets_path'
+    - 'None' 
+    - '--is_doc_df_path_batched'
+    - 'False'
+    - '--use_symbol_filter'
+    - 'False' 
+    - '--save_symbol_heavy_docs'
+    - 'False' 
+    - '--symbol_filter_output_path'
+    - 'None' 
+    - '--cleaned_doc_output_path'
+    - 'None' 
+    - '--run_lid_segregation'
+    - 'False'
+    - '--lid_df_parquets_path'
+    - 'None'
+    - '--is_lid_df_path_batched'
+    - 'False'
+    - '--doc_lid_output_path'
+    - 'None'
+    - '--run_analysis'
+    - 'True'
+    - '--analysis_df_parquets_path'
+    - 'parquets glob path or a batch file containing paths to parquets to be processed for analysis stage or document removal stage'
+    - '--is_analysis_df_path_batched'
+    - 'whether the input path is a batch file or a glob path (for analysis stage)'
+    - '--line_stats_output_path'
+    - 'path where line stats output will be stored'
+    - '--doc_stats_output_path'
+    - 'path where doc stats output will be stored'
+    - '--analysis_output_path'
+    - 'path where analysed documents output will be stored'
+    - '--run_flag_and_filter'
+    - 'False'
+    - '--doc_stats_parquets_path'
+    - 'None'
+    - '--is_doc_stats_path_batched'
+    - 'False'
+    - '--save_nsfw_data'
+    - 'False'
+    - '--nsfw_output_path'
+    - 'None'
+    - '--filtered_doc_stats_output_path'
+    - 'None'
+    - '--run_document_removal'
+    - 'False'
+    - '--doc_stats_path_for_removal'
+    - 'None'
+    - '--filtered_docs_path'
+    - 'None'
+    properties:
+      spark.default.parallelism: 'default_value'
+      spark.sql.shuffle.partitions: 'default_value'
+      spark.sql.execution.arrow.pyspark.enabled: 'true'
+      spark.sql.adaptive.enabled: 'true'
+      spark.serializer: 'org.apache.spark.serializer.KryoSerializer'
+      spark.speculation: 'true'
+      spark.executor.memory: 50g
+      spark.driver.memory: 8g
+      spark.executor.cores: '14'
+      spark.submit.deployMode: client
+  stepId: ANALYSIS
+  prerequisiteStepIds:
+  - DOCUMENT_CLEANING
+  - LID_SEGREGATION
+
+# Cluster configuration
+placement:
+  clusterSelector:
+    clusterLabels:
+      goog-dataproc-cluster-name: 'to-be-determined'
+
+# Define template parameters
+parameters:
+
+  - name: MAIN_PYTHON_FILE
+    description: The main python file which runs Minhash Spark on GCP
+    fields:
+    - jobs['DOCUMENT_CLEANING'].pysparkJob.mainPythonFileUri
+    - jobs['LID_SEGREGATION'].pysparkJob.mainPythonFileUri
+    - jobs['ANALYSIS'].pysparkJob.mainPythonFileUri
+
+  - name: CLUSTER_NAME
+    description: Name of the cluster that is to be selected
+    fields:
+    - placement.clusterSelector.clusterLabels['goog-dataproc-cluster-name']
+
+  - name: CONFIG
+    description: config json for the language which is going to be processed
+    fields:
+    - jobs['DOCUMENT_CLEANING'].pysparkJob.args[1]
+    - jobs['LID_SEGREGATION'].pysparkJob.args[1]
+    - jobs['ANALYSIS'].pysparkJob.args[1]
+
+  - name: SAMPLES_PER_PARTITION
+    description: no. of samples for each partition to hold so that we don't have OOMs on executors
+    fields:
+    - jobs['DOCUMENT_CLEANING'].pysparkJob.args[3]
+    - jobs['LID_SEGREGATION'].pysparkJob.args[3]
+    - jobs['ANALYSIS'].pysparkJob.args[3] 
+
+  - name: VERBOSE
+    description: whether to be verbose or not. Only enable this option in local mode
+    fields:
+    - jobs['DOCUMENT_CLEANING'].pysparkJob.args[5]
+    - jobs['LID_SEGREGATION'].pysparkJob.args[5]
+    - jobs['ANALYSIS'].pysparkJob.args[5] 
+
+  - name: CHECKPOINT_DIR
+    description: directory to use for checkpointing and truncating the spark DAG
+    fields:
+    - jobs['LID_SEGREGATION'].pysparkJob.args[7]
+
+  - name: RUN_DATA_PARALLEL_MODE
+    description: whether to run data parallel mode for document cleaning stage or not
+    fields:
+    - jobs['DOCUMENT_CLEANING'].pysparkJob.args[9]
+
+  - name: DOC_DF_PARQUETS_PATH
+    description: parquets glob path or a batch file containing paths to parquets to be processed for document cleaning stage
+    fields:
+    - jobs['DOCUMENT_CLEANING'].pysparkJob.args[13] 
+
+  - name: IS_DOC_DF_PATH_BATCHED
+    description: whether the input path is a batch file or a glob path
+    fields:
+    - jobs['DOCUMENT_CLEANING'].pysparkJob.args[15] 
+
+  - name: USE_SYMBOL_FILTER
+    description: whether to use symbol filter
+    fields:
+    - jobs['DOCUMENT_CLEANING'].pysparkJob.args[17]
+
+  - name: SAVE_SYMBOL_HEAVY_DOCS
+    description: whether to save symbol heavy documents in a separate folder
+    fields:
+    - jobs['DOCUMENT_CLEANING'].pysparkJob.args[19] 
+
+  - name: SYMBOL_FILTER_OUTPUT_PATH
+    description: path where symbol heavy documents will be stored
+    fields:
+    - jobs['DOCUMENT_CLEANING'].pysparkJob.args[21] 
+
+  - name: CLEANED_DOC_OUTPUT_PATH
+    description: path where cleaned documents will be stored
+    fields:
+    - jobs['DOCUMENT_CLEANING'].pysparkJob.args[23] 
+
+  - name: LID_DF_PARQUETS_PATH
+    description: parquets glob path or a batch file containing paths to parquets to be processed for lid segregation stage
+    fields:
+    - jobs['LID_SEGREGATION'].pysparkJob.args[27] 
+
+  - name: IS_LID_DF_PATH_BATCHED
+    description: whether the input path is a batch file or a glob path (for lid segregation stage)
+    fields:
+    - jobs['LID_SEGREGATION'].pysparkJob.args[29] 
+
+  - name: DOC_LID_OUTPUT_PATH
+    description: path where lid segregated output will be stored
+    fields:
+    - jobs['LID_SEGREGATION'].pysparkJob.args[31] 
+
+  - name: ANALYSIS_DF_PARQUETS_PATH
+    description: parquets glob path or a batch file containing paths to parquets to be processed for analysis stage or document removal stage
+    fields:
+    - jobs['ANALYSIS'].pysparkJob.args[35]  
+
+  - name: IS_ANALYSIS_DF_PATH_BATCHED
+    description: whether the input path is a batch file or a glob path (for analysis stage)
+    fields:
+    - jobs['ANALYSIS'].pysparkJob.args[37]  
+
+  - name: LINE_STATS_OUTPUT_PATH
+    description: path where line stats output will be stored
+    fields:
+    - jobs['ANALYSIS'].pysparkJob.args[39]  
+
+  - name: DOC_STATS_OUTPUT_PATH
+    description: path where doc stats output will be stored
+    fields:
+    - jobs['ANALYSIS'].pysparkJob.args[41]  
+
+  - name: ANALYSIS_OUTPUT_PATH
+    description: path where analysed documents output will be stored
+    fields:
+    - jobs['ANALYSIS'].pysparkJob.args[43]
+
+  - name: SPARK_PARALLELISM
+    description: No.of default partitions to use for partition, join etc operations.
+    fields:
+    - jobs['DOCUMENT_CLEANING'].pysparkJob.properties['spark.default.parallelism']
+    - jobs['LID_SEGREGATION'].pysparkJob.properties['spark.default.parallelism']
+    - jobs['ANALYSIS'].pysparkJob.properties['spark.default.parallelism']
+  
+  - name: SPARK_SHUFFLE_PARTITION_COUNT
+    description: No.of default partitions to use for shuffle operation.
+    fields:
+    - jobs['DOCUMENT_CLEANING'].pysparkJob.properties['spark.sql.shuffle.partitions']
+    - jobs['LID_SEGREGATION'].pysparkJob.properties['spark.sql.shuffle.partitions']
+    - jobs['ANALYSIS'].pysparkJob.properties['spark.sql.shuffle.partitions']
+    
+  - name: ENBLE_ARROW_EXECUTION
+    description: whether to enable arrow support for pyspark or not.
+    fields:
+    - jobs['DOCUMENT_CLEANING'].pysparkJob.properties['spark.sql.execution.arrow.pyspark.enabled']
+    - jobs['LID_SEGREGATION'].pysparkJob.properties['spark.sql.execution.arrow.pyspark.enabled']
+    - jobs['ANALYSIS'].pysparkJob.properties['spark.sql.execution.arrow.pyspark.enabled']
+    
+  - name: ENABLE_ADAPTIVE_SQL
+    description: whether to enable adaptive sql query support for pyspark or not
+    fields:
+    - jobs['DOCUMENT_CLEANING'].pysparkJob.properties['spark.sql.adaptive.enabled']
+    - jobs['LID_SEGREGATION'].pysparkJob.properties['spark.sql.adaptive.enabled']
+    - jobs['ANALYSIS'].pysparkJob.properties['spark.sql.adaptive.enabled']
+    
+  - name: SPARK_SERIALIZER
+    description: what serializer to use.
+    fields:
+    - jobs['DOCUMENT_CLEANING'].pysparkJob.properties['spark.serializer']
+    - jobs['LID_SEGREGATION'].pysparkJob.properties['spark.serializer']
+    - jobs['ANALYSIS'].pysparkJob.properties['spark.serializer']
+    
+  - name: ENABLE_SPECULATION
+    description: whether to enable speculation in pyspark or not.
+    fields:
+    - jobs['DOCUMENT_CLEANING'].pysparkJob.properties['spark.speculation']
+    - jobs['LID_SEGREGATION'].pysparkJob.properties['spark.speculation']
+    - jobs['ANALYSIS'].pysparkJob.properties['spark.speculation']

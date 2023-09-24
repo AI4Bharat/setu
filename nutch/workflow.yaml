@@ -1,0 +1,20 @@
+# Filename: crawl.yaml
+
+jobs:
+- hadoopJob:
+    jarFileUris: 
+    - gs://sangraha/setu/nutch/deploy/apache-nutch-1.19.job
+    mainClass: org.apache.nutch.crawl.Crawl
+    args:
+    - "gs://urls" 
+    - "-dir" 
+    - "crawl" 
+    - "-depth"
+    - "1"
+  stepId: CRAWL
+        
+# Cluster configuration
+placement:
+  clusterSelector:
+    clusterLabels:
+      goog-dataproc-cluster-name: 'nutch'
