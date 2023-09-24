@@ -170,3 +170,4 @@ sangraha
 nutch/apache-*
 nutch/tmp
 *.tar.gz
+*.zip
