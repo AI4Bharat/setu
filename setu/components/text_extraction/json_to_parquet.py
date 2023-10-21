@@ -1,5 +1,5 @@
 import argparse
-from core import SetuStage, str2bool
+from core import SetuStage, str2bool, list_of_strings
 import subprocess
 from pyspark.sql.types import (
     StringType, 
@@ -10,6 +10,8 @@ from pyspark.sql.functions import lit, rand
 import glob
 import json
 from functools import partial
+from google.cloud import storage
+import os
 
 class JSON2ParquetStage(SetuStage):
 
@@ -29,6 +31,12 @@ class JSON2ParquetStage(SetuStage):
             type=str,
             required=True,
             help="Glob expression to resolve for getting JSON file list that needs to be converted to parquet"
+        )
+
+        parser.add_argument(
+            "--j2p_cols",
+            type=list_of_strings,
+            help="`,` separated Columns to use as identifiers",
         )
 
         parser.add_argument(
@@ -69,12 +77,31 @@ class JSON2ParquetStage(SetuStage):
             help="directory where parquets will be stored",
         )
 
+        parser.add_argument(
+            "--j2p_bucket",
+            type=str,
+            default=None,
+            required=False,
+            help="gcp bucket containing json",
+        )
+
+        parser.add_argument(
+            "--j2p_bucket_prefix",
+            type=str,
+            default=None,
+            required=False,
+            help="gcp bucket prefix pointing to jsons",
+        )
+
         return parser
 
     def run_stage_parallelized(
         self,
-        json_list,
+        spark,
+        json_glob,
+        cols,
         docs_per_partition,
+        doc_id_col,
         output_path,
         lang,
     ):
@@ -82,23 +109,94 @@ class JSON2ParquetStage(SetuStage):
         # Currently, written assuming the json structure
         # will be same across all sources: `crawl`, `ocr` & `asr`.
         
-        json_schema = StructType([
-            StructField("doc_id", StringType(), True),
-            StructField("url", StringType(), True),
-            StructField("source", StringType(), True),
-            StructField("text", StringType(), True),
-        ])
-        json_df = spark.read.json(json_list, schema=json_schema)
-        json_df = json_df.select("doc_id", "url", "source", lit(lang).alias("language"), "text")
+        json_df = spark.read.format("json").schema(self.schema_creator(cols)).load(json_glob)
+        if self.mode == "crawl":
+            json_df = json_df.select("doc_id", "url", "source", lit(lang).alias("language"), "text")
+        elif self.mode == "ocr":
+            json_df = json_df.select("*", lit(lang).alias("language"))
+        
+        self.df_total_rows = json_df.count()
+        print(f"Initial Count: {self.df_total_rows}")
         json_df = self.set_split_count_and_salt(json_df, docs_per_partition)
         json_df = json_df.dropDuplicates([doc_id_col])
+        print(f"Count after removing duplicates: {json_df.count()}")
         json_df.write.mode("overwrite") \
             .parquet(output_path)
+
+    def schema_creator(self, cols):
+        schema = []
+        for col in cols:
+            schema += [StructField(col, StringType(), True)]
+        schema = StructType(schema)
+        return schema
 
     def convert_crawl_output(
         self,
         spark,
         json_list,
+        j2p_bucket,
+        docs_per_partition,
+        output_path,
+        lang,
+        run_local
+    ):
+
+        # def read_files_from_list(idx, partition, lang, run_local=True):
+
+        #     print(f"Starting processing of partition - {idx}")
+
+        #     if not run_local:
+        #         tmp_list = [f"{i}\n" for i in json_list]
+        #         with open(f"/tmp/json_data_{self.mode}_{idx}.txt", "w") as tmp_f:
+        #             tmp_f.writelines(tmp_list)
+        #         subprocess.run([
+        #             f"cat",
+        #             f"/tmp/json_data_{self.mode}_{idx}.txt",
+        #             "|",
+        #             "gsutil", 
+        #             "-m",
+        #             "cp",
+        #             "-I", 
+        #             f"/tmp/json_data_{self.mode}_{idx}"
+        #         ])
+        #         json_list = glob.glob(f"/tmp/json_data_{self.mode}_{idx}/*.json")
+
+        #     for row in partition:
+        #         json_path = row["value"]
+        #         print(f"Performing extraction on: {json_path}")
+        #         with open(json_path, "r") as jf:
+        #             content = json.load(jf)
+        #         out = [content["doc_id"], content["url"], content["source"], lang, content["text"]]
+        #         yield out
+
+        # save_parquets = partial(
+        #     read_files_from_list, lang=lang, run_local=run_local
+        # )
+
+        # jsons_path_df = spark.createDataFrame(json_list, StringType())
+        # # curr_cols = list(jsons_path_df.schema.names)
+        # json_path_df = self.set_split_count_and_salt(jsons_path_df, docs_per_partition)
+        # parquet_rdd = json_path_df.rdd.mapPartitionsWithIndex(save_parquets)
+
+        # result_schema = StructType([
+        #     StructField("doc_id", StringType(), True),
+        #     StructField("url", StringType(), True),
+        #     StructField("source", StringType(), True),
+        #     StructField("language", StringType(), True),
+        #     StructField("text", StringType(), True),
+        # ])
+        # df = spark.createDataFrame(parquet_rdd, schema=result_schema)
+        # df = self.salting(df, self.n_splits)
+        # df.write.mode("overwrite") \
+        #     .parquet(output_path)
+
+        pass
+
+    def convert_ocr_output(
+        self,
+        spark,
+        json_list,
+        j2p_bucket,
         docs_per_partition,
         output_path,
         lang,
@@ -109,71 +207,62 @@ class JSON2ParquetStage(SetuStage):
 
             print(f"Starting processing of partition - {idx}")
 
-            if not run_local:
-                tmp_list = [f"{i}\n" for i in json_list]
-                with open(f"/tmp/json_data_{self.mode}_{idx}.txt", "w") as tmp_f:
-                    tmp_f.writelines(tmp_list)
-                subprocess.run([
-                    f"cat /tmp/json_data_{self.mode}_{idx}.txt",
-                    "|",
-                    "gsutil", 
-                    "-m",
-                    "cp", 
-                    "-I", 
-                    f"/tmp/json_data_{self.mode}_{idx}"
-                ])
-                json_list = glob.glob(f"/tmp/json_data_{self.mode}/*.json")
-
-            for row in partition:
-                json_path = row["value"]
-                print(f"Performing extraction on: {json_path}")
-                with open(json_path, "r") as jf:
-                    content = json.load(jf)
-                out = [content["doc_id"], content["url"], content["source"], lang, content["text"]]
-                yield out
+            if run_local:
+                for row in partition:
+                    json_path = row["value"]
+                    print(f"Performing extraction on: {json_path}")
+                    with open(json_path, "r") as jf:
+                        content = json.load(jf)
+                    out = [
+                        content["doc_id"],
+                        content["url"],
+                        content["source"],
+                        lang, 
+                        str(content["page_no"]),
+                        content["identifier"],
+                        content["pdf_name"],
+                        content["text"]
+                    ]
+                    yield out
+            else:
+                client = storage.Client()
+                bucket = client.get_bucket(j2p_bucket)
+                tmp_dir = f"/tmp/json_data_{self.mode}_{idx}"
+                os.makedirs(tmp_dir, exist_ok=True)
+                for i, row in enumerate(partition):
+                    json_path = row["value"]
+                    tmp_path = os.path.join(tmp_dir, f"{i}.json")
+                    blob = bucket.blob(json_path)
+                    blob.download_to_filename(tmp_path)
+                    print(f"Performing extraction on: {json_path} which is downloaded at {tmp_path}")
+                    with open(tmp_path, "r") as jf:
+                        content = json.load(jf)
+                    out = [
+                        content["doc_id"], 
+                        content["url"], 
+                        content["source"], 
+                        lang,
+                        str(content["page_no"]), 
+                        content["identifier"], 
+                        content["pdf_name"],
+                        content["text"]
+                    ]
+                    yield out
 
         save_parquets = partial(
             read_files_from_list, lang=lang, run_local=run_local
         )
 
         jsons_path_df = spark.createDataFrame(json_list, StringType())
-        # curr_cols = list(jsons_path_df.schema.names)
         json_path_df = self.set_split_count_and_salt(jsons_path_df, docs_per_partition)
         parquet_rdd = json_path_df.rdd.mapPartitionsWithIndex(save_parquets)
 
-        result_schema = StructType([
-            StructField("doc_id", StringType(), True),
-            StructField("url", StringType(), True),
-            StructField("source", StringType(), True),
-            StructField("language", StringType(), True),
-            StructField("text", StringType(), True),
-        ])
+        result_schema = self.schema_creator(["doc_id","url","source","language","page_no","identifier","pdf_name","text"])
         df = spark.createDataFrame(parquet_rdd, schema=result_schema)
+        df.show(5)
         df = self.salting(df, self.n_splits)
         df.write.mode("overwrite") \
             .parquet(output_path)
-
-    def convert_ocr_output(
-        self,
-        spark,
-        json_list,
-        docs_per_partition,
-        output_path,
-        lang,
-        run_local
-    ):
-        # Currently, code for `convert_crawl_output` and `convert_ocr_output` is same.
-        # But, keeping 2 separate function just in case I need to revisit it in future,
-        # separate the 2.
-
-        return self.convert_crawl_output(
-            spark=spark,
-            json_list=json_list,
-            docs_per_partition=docs_per_partition,
-            output_path=output_path,
-            lang=lang,
-            run_local=run_local,
-        )
 
     def convert_asr_output(self, **kwargs):
         raise NotImplementedError("`convert_asr_output` function has not been implemented for class `JSON2Parquet`")
@@ -190,29 +279,52 @@ class JSON2ParquetStage(SetuStage):
         self,
         spark,
         json_glob_path,
+        j2p_cols,
         language,
         j2p_samples_per_partition,
         j2p_verbose,
         j2p_run_mode,
         j2p_parquet_output_path,
         run_local,
+        j2p_bucket,
+        j2p_bucket_prefix
     ):
-        json_list = glob.glob(json_glob_path)
+        
         if j2p_run_mode == "stage":
             return self.run_stage_parallelized(
-                json_list=json_list,
+                spark=spark,
+                json_glob=json_glob_path,
+                cols=j2p_cols,
                 docs_per_partition=j2p_samples_per_partition,
+                doc_id_col="doc_id",
                 output_path=j2p_parquet_output_path,
                 lang=language,
             )
-        elif j2p_run_mode == "data":
+
+        json_list = []
+        if run_local and j2p_run_mode == "data":
+            json_list = glob.glob(json_glob_path)
+        elif not run_local and j2p_run_mode == "data":
+            storage_client = storage.Client()
+            # Get the bucket
+            bucket = storage_client.bucket(j2p_bucket)
+            # List all the blobs in the bucket
+            blobs = bucket.list_blobs(prefix=j2p_bucket_prefix)
+            for blob in blobs:
+                # print(blob.name)
+                json_list += [blob.name]
+
+        print("TOTAL PAGE COUNT to Process: ", len(json_list))
+
+        if j2p_run_mode == "data":
             return self.run_data_parallelized(
                 spark=spark,
                 json_list=json_list,
+                j2p_bucket=j2p_bucket,
                 docs_per_partition=j2p_samples_per_partition,
                 output_path=j2p_parquet_output_path,
                 lang=language,
-                run_local=run_local, 
+                run_local=run_local,
             )
         else:
             raise Exception("Incorrect input for `j2p_run_mode`. `j2p_run_mode` only supports 2 types: `stage` & `data`.")
@@ -227,12 +339,15 @@ class JSON2ParquetStage(SetuStage):
     def run_normal(
         self, 
         json_glob_path,
+        j2p_cols,
         language,
         j2p_samples_per_partition,
         j2p_verbose,
         j2p_run_mode,
         j2p_parquet_output_path,
         run_local,
+        j2p_bucket,
+        j2p_bucket_prefix
     ):
         raise NotImplementedError("`run_normal` function has not been implemented for class `JSON2Parquet`")
  

@@ -1,11 +1,30 @@
 import sys
+command = ' '.join(sys.argv)
+print("Command used to run this script: ", command)
+
+import os
+import subprocess
+subprocess.run(["whoami"])
+
+print("------------------------------------------------ Setting Environment Variables --------------------------------------------------")
+# os.environ["FILTER_DATA_ROOT"] = f"{os.environ['PWD']}/setu.zip/data"
+print("------------------------------------------------ END --------------------------------------------------")
+
+print("------------------------------------------------ Environment Variables --------------------------------------------------")
+for name, value in os.environ.items():
+    print("{0}: {1}".format(name, value))
+print("------------------------------------------------ END --------------------------------------------------")
+
+print("------------------------------------------------ Directory Structure --------------------------------------------------")
+subprocess.run(["ls", "."])
+subprocess.run(["ls", "setu.zip"])
+print("------------------------------------------------ End --------------------------------------------------")
+
 import argparse
 from pyspark.sql import SparkSession
 import threading
 import traceback
 from setu import Setu
-import subprocess
-import os
 
 if __name__ == "__main__":
 

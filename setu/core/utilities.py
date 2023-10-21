@@ -50,6 +50,10 @@ def rename_partitioned_directories(base_dir, partition_column_name):
             new_path = os.path.join(base_dir, new_name)
             shutil.move(old_path, new_path)
 
+# Define a custom argument type for a list of strings
+def list_of_strings(arg):
+    return arg.split(',')
+
 class ChunkHandler():
 
     def doc2lines(self, df, text_column, split_symbol):
@@ -62,7 +66,7 @@ class ChunkHandler():
 
     def lines2doc(self, df, text_column, identifier_column, sort_column, join_symbol):
 
-        join_lines = udf(lambda x: join_symbol.join([line.text for line in x if line]), StringType())
+        join_lines = udf(lambda x: join_symbol.join([line[text_column] for line in x if line]), StringType())
 
         df = df.withColumn(text_column, struct([sort_column, text_column])).select(identifier_column, text_column) \
                 .groupBy(identifier_column) \
@@ -134,35 +138,38 @@ class SparkOptimizedHandlers():
         self,
         line_df,
         doc_id_col,
-        text_col,
         line_nsfw_count_col_,
         line_non_li_count_col_,
         line_bytes_col_,
         line_words_count_col_,
         line_char_count_col_,
+        only_base_stats=False,
     ):
         
         grouped_line_df = line_df.groupBy(doc_id_col)
-
-        num_lines_df = self.get_num_lines(grouped_line_df)
-        nsfw_words_count_df = self.get_nsfw_words_count(grouped_line_df, line_nsfw_count_col_)
-        non_li_words_count_df = self.get_non_li_words_count(grouped_line_df, line_non_li_count_col_)
         bytes_df = self.get_bytes(grouped_line_df, line_bytes_col_)
         words_count_df = self.get_words_count(grouped_line_df, line_words_count_col_)
         char_count_df = self.get_char_count(grouped_line_df, line_char_count_col_)
-        mean_line_len_df = self.get_mean_line_length(grouped_line_df, "words_count")
-        min_line_len_df = self.get_min_line_length(grouped_line_df, "words_count")
-        max_line_len_df = self.get_max_line_length(grouped_line_df, "words_count")
 
-        doc_df = num_lines_df \
-                .join(mean_line_len_df, [doc_id_col]) \
-                .join(min_line_len_df, [doc_id_col]) \
-                .join(max_line_len_df, [doc_id_col]) \
-                .join(nsfw_words_count_df, [doc_id_col]) \
-                .join(non_li_words_count_df, [doc_id_col]) \
-                .join(bytes_df, [doc_id_col]) \
-                .join(words_count_df, [doc_id_col]) \
-                .join(char_count_df, [doc_id_col])
+        doc_df = bytes_df \
+                    .join(words_count_df, [doc_id_col]) \
+                    .join(char_count_df, [doc_id_col])
+
+        if not only_base_stats:
+            num_lines_df = self.get_num_lines(grouped_line_df)
+            nsfw_words_count_df = self.get_nsfw_words_count(grouped_line_df, line_nsfw_count_col_)
+            non_li_words_count_df = self.get_non_li_words_count(grouped_line_df, line_non_li_count_col_)
+            mean_line_len_df = self.get_mean_line_length(grouped_line_df, "words_count")
+            min_line_len_df = self.get_min_line_length(grouped_line_df, "words_count")
+            max_line_len_df = self.get_max_line_length(grouped_line_df, "words_count")
+
+            doc_df = doc_df \
+                        .join(num_lines_df, [doc_id_col]) \
+                        .join(mean_line_len_df, [doc_id_col]) \
+                        .join(min_line_len_df, [doc_id_col]) \
+                        .join(max_line_len_df, [doc_id_col]) \
+                        .join(nsfw_words_count_df, [doc_id_col]) \
+                        .join(non_li_words_count_df, [doc_id_col])
         
         return doc_df
 

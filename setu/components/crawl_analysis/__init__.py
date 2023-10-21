@@ -6,6 +6,7 @@ from .document_filters import (
     find_code_spans,
     find_code_spans_spark,
     get_symbol_ratio,
+    is_num_or_punc_only,
     has_code,
     remove_code,
     is_terminal_valid,
@@ -13,6 +14,7 @@ from .document_filters import (
     terminal_punc_filter,
     split_at_terminal_punc,
     has_repetition,
+    normalize_text,
 )
 from .lid_core import (
     LIDPipeline,

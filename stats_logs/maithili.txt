@@ -1,0 +1,283 @@
+done: true
+driverControlFilesUri: gs://dataproc-staging-asia-south1-690617486206-30otkfwr/google-cloud-dataproc-metainfo/1a2e69ec-be5e-4e99-994b-2a0587fa8d91/jobs/d8af187d420c4086be648c7b667cfcee/
+driverOutputResourceUri: gs://dataproc-staging-asia-south1-690617486206-30otkfwr/google-cloud-dataproc-metainfo/1a2e69ec-be5e-4e99-994b-2a0587fa8d91/jobs/d8af187d420c4086be648c7b667cfcee/driveroutput
+jobUuid: ce1e6793-80b4-3568-9bf7-09cef7a5cb4e
+placement:
+  clusterName: setu-debugging-15
+  clusterUuid: 1a2e69ec-be5e-4e99-994b-2a0587fa8d91
+pysparkJob:
+  args:
+  - --config
+  - gs://sangraha/setu/dataproc/configs/spark_maithili_config.json
+  - --mode
+  - ocr
+  - --run_local
+  - 'False'
+  - VisualizeDocCleanStage
+  - --symbol_heavy_parquets
+  - gs://sangraha/spark_out/maithili/*/lid_segregation/symbol_heavy/*/*.parquet
+  - --doc_clean_viz_output
+  - gs://sangraha/spark_out/maithili/visualization/dataset/doc_clean
+  - --dc_viz_gcp_bucket
+  - sangraha
+  - --viz_dc_stage_run_mode
+  - stage
+  loggingConfig:
+    driverLogLevels:
+      __main__: DEBUG
+      root: FATAL
+  mainPythonFileUri: gs://sangraha/setu/setu/run.py
+  properties:
+    spark.driver.memory: 30g
+    spark.executor.cores: '12'
+    spark.executor.memory: 50g
+    spark.submit.deployMode: client
+  pythonFileUris:
+  - gs://sangraha/setu/dataproc/envs/setu.zip
+reference:
+  jobId: d8af187d420c4086be648c7b667cfcee
+  projectId: sangraha-396106
+status:
+  state: DONE
+  stateStartTime: '2023-09-29T19:23:28.444116Z'
+statusHistory:
+- state: PENDING
+  stateStartTime: '2023-09-29T19:22:36.339948Z'
+- state: SETUP_DONE
+  stateStartTime: '2023-09-29T19:22:36.364719Z'
+- details: Agent reported job success
+  state: RUNNING
+  stateStartTime: '2023-09-29T19:22:36.619701Z'
+yarnApplications:
+- name: Sangraha Anaylsis
+  progress: 1.0
+  state: FINISHED
+  trackingUrl: http://setu-debugging-15-m.asia-south1-a.c.sangraha-396106.internal.:8088/proxy/application_1696011833167_0033/
+done: true
+driverControlFilesUri: gs://dataproc-staging-asia-south1-690617486206-30otkfwr/google-cloud-dataproc-metainfo/1a2e69ec-be5e-4e99-994b-2a0587fa8d91/jobs/f2d8e8fe8b4c4a5d89981b62d2f24d7c/
+driverOutputResourceUri: gs://dataproc-staging-asia-south1-690617486206-30otkfwr/google-cloud-dataproc-metainfo/1a2e69ec-be5e-4e99-994b-2a0587fa8d91/jobs/f2d8e8fe8b4c4a5d89981b62d2f24d7c/driveroutput
+jobUuid: 4254f4fe-2c13-319e-9cec-a8a6c15a4629
+placement:
+  clusterName: setu-debugging-15
+  clusterUuid: 1a2e69ec-be5e-4e99-994b-2a0587fa8d91
+pysparkJob:
+  args:
+  - --config
+  - gs://sangraha/setu/dataproc/configs/spark_maithili_config.json
+  - --mode
+  - ocr
+  - --run_local
+  - 'False'
+  - VisualizeLIDStage
+  - --lid_parquets
+  - gs://sangraha/spark_out/maithili/*/lid_segregation/doc_lid/*/*/*.parquet
+  - --cleaned_docs_parquets
+  - gs://sangraha/spark_out/maithili/*/lid_segregation/doc_lid/*/*.parquet
+  - --lid_viz_output
+  - gs://sangraha/spark_out/maithili/visualization/dataset/lid
+  - --lid_viz_gcp_bucket
+  - sangraha
+  - --viz_lid_stage_run_mode
+  - stage
+  - --viz_lid_perform_join
+  - 'False'
+  loggingConfig:
+    driverLogLevels:
+      __main__: DEBUG
+      root: FATAL
+  mainPythonFileUri: gs://sangraha/setu/setu/run.py
+  properties:
+    spark.driver.memory: 30g
+    spark.executor.cores: '12'
+    spark.executor.memory: 50g
+    spark.submit.deployMode: client
+  pythonFileUris:
+  - gs://sangraha/setu/dataproc/envs/setu.zip
+reference:
+  jobId: f2d8e8fe8b4c4a5d89981b62d2f24d7c
+  projectId: sangraha-396106
+status:
+  state: DONE
+  stateStartTime: '2023-09-29T19:24:38.489460Z'
+statusHistory:
+- state: PENDING
+  stateStartTime: '2023-09-29T19:23:30.953407Z'
+- state: SETUP_DONE
+  stateStartTime: '2023-09-29T19:23:30.981727Z'
+- details: Agent reported job success
+  state: RUNNING
+  stateStartTime: '2023-09-29T19:23:31.290828Z'
+yarnApplications:
+- name: Sangraha Anaylsis
+  progress: 1.0
+  state: FINISHED
+  trackingUrl: http://setu-debugging-15-m.asia-south1-a.c.sangraha-396106.internal.:8088/proxy/application_1696011833167_0034/
+done: true
+driverControlFilesUri: gs://dataproc-staging-asia-south1-690617486206-30otkfwr/google-cloud-dataproc-metainfo/1a2e69ec-be5e-4e99-994b-2a0587fa8d91/jobs/f3b43b36904e4d3b93014230c38a58f8/
+driverOutputResourceUri: gs://dataproc-staging-asia-south1-690617486206-30otkfwr/google-cloud-dataproc-metainfo/1a2e69ec-be5e-4e99-994b-2a0587fa8d91/jobs/f3b43b36904e4d3b93014230c38a58f8/driveroutput
+jobUuid: 7209cad2-9f34-3a22-ab92-0f295460f5fe
+placement:
+  clusterName: setu-debugging-15
+  clusterUuid: 1a2e69ec-be5e-4e99-994b-2a0587fa8d91
+pysparkJob:
+  args:
+  - --config
+  - gs://sangraha/setu/dataproc/configs/spark_maithili_config.json
+  - --mode
+  - ocr
+  - --run_local
+  - 'False'
+  - VisualizeAnalysisStage
+  - --analysis_doc_stats_parquets
+  - gs://sangraha/spark_out/maithili/*/analysis/doc_stats/*/*/*.parquet
+  - --analysis_viz_output
+  - gs://sangraha/spark_out/maithili/visualization/dataset/analysis
+  - --ana_viz_language
+  - maithili
+  - --ana_viz_gcp_bucket
+  - sangraha
+  - --viz_analysis_stage_run_mode
+  - stage
+  loggingConfig:
+    driverLogLevels:
+      __main__: DEBUG
+      root: FATAL
+  mainPythonFileUri: gs://sangraha/setu/setu/run.py
+  properties:
+    spark.driver.memory: 30g
+    spark.executor.cores: '12'
+    spark.executor.memory: 50g
+    spark.submit.deployMode: client
+  pythonFileUris:
+  - gs://sangraha/setu/dataproc/envs/setu.zip
+reference:
+  jobId: f3b43b36904e4d3b93014230c38a58f8
+  projectId: sangraha-396106
+status:
+  state: DONE
+  stateStartTime: '2023-09-29T19:26:23.568119Z'
+statusHistory:
+- state: PENDING
+  stateStartTime: '2023-09-29T19:24:42.109163Z'
+- state: SETUP_DONE
+  stateStartTime: '2023-09-29T19:24:42.133464Z'
+- details: Agent reported job success
+  state: RUNNING
+  stateStartTime: '2023-09-29T19:24:42.515281Z'
+yarnApplications:
+- name: Sangraha Anaylsis
+  progress: 1.0
+  state: FINISHED
+  trackingUrl: http://setu-debugging-15-m.asia-south1-a.c.sangraha-396106.internal.:8088/proxy/application_1696011833167_0035/
+done: true
+driverControlFilesUri: gs://dataproc-staging-asia-south1-690617486206-30otkfwr/google-cloud-dataproc-metainfo/1a2e69ec-be5e-4e99-994b-2a0587fa8d91/jobs/bc9a884af40544c0a660c93ba587d736/
+driverOutputResourceUri: gs://dataproc-staging-asia-south1-690617486206-30otkfwr/google-cloud-dataproc-metainfo/1a2e69ec-be5e-4e99-994b-2a0587fa8d91/jobs/bc9a884af40544c0a660c93ba587d736/driveroutput
+jobUuid: 5913ebf0-0fc2-338c-9aaf-1c9c6fc01cba
+placement:
+  clusterName: setu-debugging-15
+  clusterUuid: 1a2e69ec-be5e-4e99-994b-2a0587fa8d91
+pysparkJob:
+  args:
+  - --config
+  - gs://sangraha/setu/dataproc/configs/spark_maithili_config.json
+  - --mode
+  - ocr
+  - --run_local
+  - 'False'
+  - VisualizeFilterStage
+  - --filtered_docs_parquets
+  - gs://sangraha/spark_out/maithili/*/filtered_docs/filtered_docs/*/*.parquet
+  - --filter_viz_output
+  - gs://sangraha/spark_out/maithili/visualization/dataset/filter
+  - --fil_viz_gcp_bucket
+  - sangraha
+  - --viz_filter_stage_run_mode
+  - stage
+  loggingConfig:
+    driverLogLevels:
+      __main__: DEBUG
+      root: FATAL
+  mainPythonFileUri: gs://sangraha/setu/setu/run.py
+  properties:
+    spark.driver.memory: 30g
+    spark.executor.cores: '12'
+    spark.executor.memory: 50g
+    spark.submit.deployMode: client
+  pythonFileUris:
+  - gs://sangraha/setu/dataproc/envs/setu.zip
+reference:
+  jobId: bc9a884af40544c0a660c93ba587d736
+  projectId: sangraha-396106
+status:
+  state: DONE
+  stateStartTime: '2023-09-29T19:27:23.605402Z'
+statusHistory:
+- state: PENDING
+  stateStartTime: '2023-09-29T19:26:26.311027Z'
+- state: SETUP_DONE
+  stateStartTime: '2023-09-29T19:26:26.338142Z'
+- details: Agent reported job success
+  state: RUNNING
+  stateStartTime: '2023-09-29T19:26:26.660102Z'
+yarnApplications:
+- name: Sangraha Anaylsis
+  progress: 1.0
+  state: FINISHED
+  trackingUrl: http://setu-debugging-15-m.asia-south1-a.c.sangraha-396106.internal.:8088/proxy/application_1696011833167_0036/
+done: true
+driverControlFilesUri: gs://dataproc-staging-asia-south1-690617486206-30otkfwr/google-cloud-dataproc-metainfo/d83f9aa0-6d42-4443-bcca-a8e58f2246c0/jobs/c2c62f5ac9d34b83a6a80891947fb3b6/
+driverOutputResourceUri: gs://dataproc-staging-asia-south1-690617486206-30otkfwr/google-cloud-dataproc-metainfo/d83f9aa0-6d42-4443-bcca-a8e58f2246c0/jobs/c2c62f5ac9d34b83a6a80891947fb3b6/driveroutput
+jobUuid: 117a2000-0e09-3f5b-90bc-427004f99bd6
+placement:
+  clusterName: setu-debugging-50-highmem
+  clusterUuid: d83f9aa0-6d42-4443-bcca-a8e58f2246c0
+pysparkJob:
+  args:
+  - --config
+  - gs://sangraha/setu/dataproc/configs/spark_maithili_config.json
+  - --mode
+  - ocr
+  - --run_local
+  - 'False'
+  - VisualizeDocCleanStage
+  - --viz_cleaned_docs_parquets
+  - gs://sangraha/spark_out_test/maithili/*/cleaned_docs/cleaned_docs/*/*.parquet
+  - --viz_symbol_heavy_parquets
+  - gs://sangraha/spark_out_test/maithili/*/cleaned_docs/symbol_heavy/*/*.parquet
+  - --doc_clean_viz_output
+  - gs://sangraha/spark_out_test/maithili/visualization/dataset/doc_clean
+  - --dc_viz_gcp_bucket
+  - sangraha
+  - --viz_dc_stage_run_mode
+  - stage
+  loggingConfig:
+    driverLogLevels:
+      __main__: DEBUG
+      root: FATAL
+  mainPythonFileUri: gs://sangraha/setu/setu/run.py
+  properties:
+    spark.driver.memory: 30g
+    spark.executor.cores: '12'
+    spark.executor.memory: 50g
+    spark.submit.deployMode: client
+  pythonFileUris:
+  - gs://sangraha/setu/dataproc/envs/setu.zip
+reference:
+  jobId: c2c62f5ac9d34b83a6a80891947fb3b6
+  projectId: sangraha-396106
+status:
+  state: DONE
+  stateStartTime: '2023-10-02T09:15:56.646554Z'
+statusHistory:
+- state: PENDING
+  stateStartTime: '2023-10-02T09:14:51.835933Z'
+- state: SETUP_DONE
+  stateStartTime: '2023-10-02T09:14:51.861586Z'
+- details: Agent reported job success
+  state: RUNNING
+  stateStartTime: '2023-10-02T09:14:52.116430Z'
+yarnApplications:
+- name: Sangraha Anaylsis
+  progress: 1.0
+  state: FINISHED
+  trackingUrl: http://setu-debugging-50-highmem-m.asia-south1-a.c.sangraha-396106.internal.:8088/proxy/application_1696195790754_0037/

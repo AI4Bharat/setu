@@ -42,8 +42,8 @@ class Constants():
         ]
     ):
         
-        if not os.path.isdir(filter_data_root):
-            raise ValueError(f"`filter_data_root`={filter_data_root} which is either None or not a directory. Please properly set FILTER_DATA_ROOT environment variable.")
+        # if not os.path.isdir(filter_data_root):
+        #     raise ValueError(f"`filter_data_root`={filter_data_root} which is either None or not a directory. Please properly set FILTER_DATA_ROOT environment variable.")
 
         self.filter_data_root = filter_data_root
 
@@ -156,7 +156,7 @@ def init_kwprs(constants: Constants):
 
 try:
     CONSTANTS = Constants(
-        filter_data_root=os.getenv("FILTER_DATA_ROOT"),
+        filter_data_root= "/opt/setu/filter_data/filter_data" if not os.getenv("FILTER_DATA_ROOT") else os.getenv("FILTER_DATA_ROOT"),
     )
     KW_PROCESSORS = init_kwprs(CONSTANTS)
 except Exception as e:

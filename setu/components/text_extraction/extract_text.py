@@ -1,6 +1,7 @@
 import argparse
 from core import SetuStage, str2bool
 import subprocess
+from pyspark.sql.functions import col
 from pyspark.sql.types import (
     BooleanType,
     StringType, 
@@ -147,33 +148,41 @@ class ExtractTextStage(SetuStage):
 
             for row in partition:
                 out = []
-                for _, value in row.items():
-                    out += [value]
-                print(f"Performing extraction on: {j}")
-                res = trafilatura.bare_extraction(row["text"], include_images=False)
+                for col in ["doc_id", "url", "source", "timestamp", "language"]:
+                    out += [row[col]]
+                print(f"Performing extraction on: {row['url']}")
+                try:
+                    if row['html']:
+                        res = trafilatura.bare_extraction(row['html'], include_images=False)
+                    else:
+                        res = None
+                except Exception as e:
+                    print(f"Faced issues witb extracting for URL: {row['url']}. Encountered error: {e}")
+                    res = None
                 if res:
                     print("Extraction complete. Now, appending values.")
-                    out["successful_extraction"].append(True) 
+                    out += [True] 
                     for col in traf_cols:
                         out += [res[col]]
                 else:
-                    print(f"Trafilatura Output: `None`. Not able to extraction text from: {path}.")
-                    out["successful_extraction"].append(False)
+                    print(f"Trafilatura Output: `None`. Not able to extraction text from: {row['url']}.")
+                    out += [False]
                     for col in traf_cols:
                         out += [None]
 
                 yield out
 
         df = df.dropDuplicates(["doc_id"])
+        df = df.na.drop(subset=["html"])
         df = self.set_split_count_and_salt(df, docs_per_partition)
-        te_rdd = df.rdd.mapPartitionsWithIndex(save_parquets)
+        te_rdd = df.rdd.mapPartitionsWithIndex(extract_text_trafilatura)
 
         result_schema = StructType([
             StructField("doc_id", StringType(), True),
             StructField("url", StringType(), True),
             StructField("source", StringType(), True),
+            StructField("timestamp", StringType(), True),
             StructField("language", StringType(), True),
-            StructField("html", StringType(), True),
             StructField("successful_extraction", BooleanType(), False),
             StructField("title", StringType(), True),
             StructField("description", StringType(), True),
@@ -195,7 +204,7 @@ class ExtractTextStage(SetuStage):
             StructField("pagetype", StringType(), True),
         ])
         df = spark.createDataFrame(te_rdd, schema=result_schema)
-        df = self.salting(df, self.n_split)
+        df = self.salting(df, self.n_splits)
         df.write.mode("overwrite") \
             .parquet(output_path)
 

@@ -1,12 +1,13 @@
 import argparse
 import subprocess
-from core import SetuStage, str2bool
+from core import SetuStage, str2bool, list_of_strings
 from pyspark.sql.functions import col
 from .lid_core import (
     LIDPipeline,
     run_lid_on_each_partition_with_idx,
     run_lid_spark_pipeline,
 )
+import os
 
 class LIDStage(SetuStage):
 
@@ -28,6 +29,12 @@ class LIDStage(SetuStage):
             required=False,
             default=True,
             help="Is path a batch path or not?",
+        )
+
+        parser.add_argument(
+            "--lid_additional_cols",
+            type=list_of_strings,
+            help="`,` separated additional columns to select from parquets",
         )
 
         parser.add_argument(
@@ -88,10 +95,19 @@ class LIDStage(SetuStage):
     ):
         print("Starting SETU LID Segregation Spark Pipeline...........")
 
+        print(f"Input document count: {df.count()}")
+
+        df = df.na.drop(subset=[text_col])
+
+        self.df_total_rows = df.count()
+
+        print(f"Count after filtering for `None` values {text_col} col: {self.df_total_rows}")
+
         df = df.select(doc_id_col, text_col, *additional_cols_to_use)
         df = self.set_split_count_and_salt(df, docs_per_partition)
         df.cache()
-        df = run_lid_spark_pipeline(spark, self.config, df, [doc_id_col] + additional_cols_to_use, text_col, "doc_lang", "doc_lang_iso")
+
+        df = run_lid_spark_pipeline(spark, self.config, df, [doc_id_col] + additional_cols_to_use, text_col, "doc_lang", "doc_lang_iso", "/opt/setu/filter_data")
         
         if verbose:
             df.show(n=5)
@@ -114,6 +130,7 @@ class LIDStage(SetuStage):
         spark,
         lid_df_parquets_path,
         is_lid_df_path_batched,
+        lid_additional_cols,
         lid_samples_per_partition,
         lid_verbose,
         lid_run_mode,
@@ -140,7 +157,7 @@ class LIDStage(SetuStage):
                 df=doc_df,
                 doc_id_col="doc_id",
                 text_col="text",
-                additional_cols_to_use=["url", "source"],
+                additional_cols_to_use=lid_additional_cols,
                 docs_per_partition=lid_samples_per_partition,
                 doc_lid_output_path=doc_lid_output_path,
                 verbose=lid_verbose,
@@ -151,7 +168,7 @@ class LIDStage(SetuStage):
                 df=doc_df,
                 doc_id_col="doc_id",
                 text_col="text",
-                additional_cols_to_use=["url", "source"],
+                additional_cols_to_use=lid_additional_cols,
                 docs_per_partition=lid_samples_per_partition,
                 doc_lid_output_path=doc_lid_output_path,
                 verbose=lid_verbose,
@@ -169,6 +186,7 @@ class LIDStage(SetuStage):
         self,
         lid_df_parquets_path,
         is_lid_df_path_batched,
+        lid_additional_cols,
         lid_samples_per_partition,
         lid_verbose,
         lid_run_mode,

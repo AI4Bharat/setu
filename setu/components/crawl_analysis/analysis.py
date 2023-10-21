@@ -5,7 +5,8 @@ from core import (
     ChunkHandler, 
     SparkOptimizedHandlers, 
     rename_partitioned_directories,
-    str2bool
+    str2bool,
+    list_of_strings,
 )
 from pyspark.sql.functions import (
     udf,
@@ -29,6 +30,7 @@ from .document_filters import (
     get_word_ngram_repetition,
     has_repetition,
     extract_document_metadata,
+    normalize_text,
 )
 from .line_filters import (
     get_stop_word_dist,
@@ -50,6 +52,15 @@ get_char_count_udf = udf(get_char_count, IntegerType())
 get_bytes_udf = udf(get_bytes, IntegerType())
 get_nsfw_words_total_count_udf = udf(get_nsfw_words_total_count, IntegerType())
 is_numbers_udf = udf(is_numbers, BooleanType()) # Line Level
+normalize_text_udf = udf(
+    partial(normalize_text, 
+            remove_nuktas=False,
+            nasals_mode='do_nothing',
+            do_normalize_chandras=False,
+            do_normalize_vowel_ending=False
+    ), 
+    StringType()
+)
 
 class AnalysisStage(SetuStage):
 
@@ -94,6 +105,12 @@ class AnalysisStage(SetuStage):
             required=False,
             default=True,
             help="Is path a batch path or not?",
+        )
+
+        parser.add_argument(
+            "--analysis_additional_cols_to_use",
+            type=list_of_strings,
+            help="`,` separated additional columns to select from analysis parquets",
         )
 
         parser.add_argument(
@@ -162,6 +179,9 @@ class AnalysisStage(SetuStage):
         return line_df
 
     def line_stats_collection(self, line_df, text_col, line_stats_output_path, verbose):
+
+        line_df = line_df.withColumn(text_col, normalize_text_udf(text_col, "doc_lang"))
+
         line_df = line_df.select("*", is_numbers_udf(text_col, "doc_lang").alias("is_number"))
 
         if verbose:
@@ -226,7 +246,7 @@ class AnalysisStage(SetuStage):
         doc_stats_df = self.spark_optimized_handler.run_analysis(
             line_df=line_df,
             doc_id_col=doc_id_col,
-            text_col=text_col,
+            # text_col=text_col,
             line_nsfw_count_col_="nsfw_words_count",
             line_non_li_count_col_="non_li_char_count",
             line_bytes_col_="bytes",
@@ -246,7 +266,7 @@ class AnalysisStage(SetuStage):
         return doc_stats_df
 
     def convert_to_doc(self, df, line_df, text_col, doc_id_col, verbose):
-        doc_df = self.chunk_handler.lines2doc(line_df, text_col, doc_id_col, "pos", " ")
+        doc_df = self.chunk_handler.lines2doc(line_df, text_col, doc_id_col, "pos", "")
         doc_df = self.salting(doc_df, self.n_splits)
 
         doc_df.cache()
@@ -294,7 +314,7 @@ class AnalysisStage(SetuStage):
     def run_stage_parallelized(
         self,
         df,
-        cols_to_use,
+        additional_cols_to_use,
         doc_id_col,
         text_col,
         docs_per_partition,
@@ -306,7 +326,7 @@ class AnalysisStage(SetuStage):
 
         print("Starting SETU Analysis Spark Pipeline...........")
 
-        df = df.select(cols_to_use)
+        df = df.select(doc_id_col, text_col, *additional_cols_to_use)
 
         df = self.set_split_count_and_salt(df, docs_per_partition)
 
@@ -314,7 +334,9 @@ class AnalysisStage(SetuStage):
         line_df = self.line_stats_collection(line_df, text_col, line_stats_output_path, verbose)
         doc_stats_df = self.aggregate_to_doc_stats(line_df, doc_id_col, text_col, True,  verbose)
         df = self.convert_to_doc(df, line_df, text_col, doc_id_col, verbose)
-        doc_stats_df = self.collect_repetition_scores(df, doc_stats_df, doc_id_col, text_col, verbose)
+        
+        if self.config.calculate_repetition_scores:
+            doc_stats_df = self.collect_repetition_scores(df, doc_stats_df, doc_id_col, text_col, verbose)
 
         doc_stats_df.drop(text_col) \
                     .join(df.select(doc_id_col, "doc_lang"), [doc_id_col]) \
@@ -344,7 +366,7 @@ class AnalysisStage(SetuStage):
         self,
         spark,
         df,
-        cols_to_use,
+        additional_cols_to_use,
         doc_id_col,
         text_col,
         docs_per_partition,
@@ -360,6 +382,7 @@ class AnalysisStage(SetuStage):
         spark,
         analysis_df_parquets_path,
         is_analysis_df_path_batched,
+        analysis_additional_cols_to_use,
         analysis_samples_per_partition,
         analysis_verbose,
         analysis_run_mode,
@@ -386,10 +409,7 @@ class AnalysisStage(SetuStage):
         if analysis_run_mode == "stage":
             return self.run_stage_parallelized(
                 df=analysis_df,
-                cols_to_use=[
-                    "doc_id", "url", "source", "text",
-                    "doc_lang", "doc_lang_iso"
-                ],
+                additional_cols_to_use=analysis_additional_cols_to_use,
                 doc_id_col="doc_id",
                 text_col="text",
                 docs_per_partition=analysis_samples_per_partition,
@@ -402,10 +422,7 @@ class AnalysisStage(SetuStage):
             return self.run_data_parallelized(
                 spark=spark,
                 df=analysis_df,
-                cols_to_use=[
-                    "doc_id", "url", "source", "text",
-                    "doc_lang", "doc_lang_iso"
-                ],
+                additional_cols_to_use=analysis_additional_cols_to_use,
                 doc_id_col="doc_id",
                 text_col="text",
                 docs_per_partition=analysis_samples_per_partition,
@@ -428,6 +445,7 @@ class AnalysisStage(SetuStage):
         self,
         analysis_df_parquets_path,
         is_analysis_df_path_batched,
+        analysis_additional_cols_to_use,
         analysis_samples_per_partition,
         analysis_verbose,
         analysis_run_mode,

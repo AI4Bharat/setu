@@ -417,3 +417,17 @@ SETU_DIR=/data/priyam/setu SETU_TMP_DIR=/data/priyam/tmp/ FILTER_DATA_ROOT=/data
     --j2p_verbose False \
     --j2p_run_mode data \
     --j2p_parquet_output_path /data/priyam/sangraha/new_setu_test/assamese/1
+
+spark-submit \
+    --master spark://SPK-DGX-O2:7077 \
+    --deploy-mode client \
+    --driver-java-options -Djava.io.tmpdir=/data/priyam/tmp/ \
+    --conf "spark.driver.extraJavaOptions=-Djava.io.tmpdir=/data/priyam/tmp/" \
+    --conf "spark.executor.extraJavaOptions=-Djava.io.tmpdir=/data/priyam/tmp/" \
+    --conf spark.worker.dir="/data/priyam/tmp/" \
+    --conf spark.local.dir="/data/priyam/tmp/" \
+    --num-executors 16 \
+    --executor-cores 8 \
+    --executor-memory 32G \
+    --driver-memory 50G \
+    clean_parquets.py

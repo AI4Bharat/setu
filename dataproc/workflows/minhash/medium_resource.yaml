@@ -2,6 +2,7 @@
 
 jobs:
 - pysparkJob:
+    jarFileUris: gs://spark-lib/bigquery/spark-3.3-bigquery-0.32.2.jar
     mainPythonFileUri: 'path-to-minhash-spark-file-in-gcp'
     args:
     - '--column'

@@ -192,7 +192,7 @@ run_spark() {
             --run_data_parallel_mode "$run_data_parallel_mode" \
             --run_doc_clean "$run_doc_clean" \
             --doc_df_parquets_path "$BATCH" \
-            --is_doc_df_path_batched "$is_doc_df_path_batched" \
+            --is_doc_df_path_batched "$is_doc_df_   path_batched" \
             --use_symbol_filter "True" \
             --save_symbol_heavy_docs "True" \
             --symbol_filter_output_path "$base_save_dir/symbol_heavy/$batch_name" \

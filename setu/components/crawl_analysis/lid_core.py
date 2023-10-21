@@ -361,7 +361,7 @@ class LIDPipeline():
         indiclid_bert_path = 'data/models/indiclid-bert/basline_nn_simple.pt',
         input_threshold = 0.5,
         roman_lid_threshold = 0.6, 
-        nllb_model_path="data/models/lid218e.bin", 
+        nllb_model_path="data/models/lid218e.bin",
         mapping_json_path="data/language_mapping.json",
         iso_mapping_json_path="data/lang_iso_mapping.json",
         lid_probability_threshold=0.7,
@@ -580,20 +580,20 @@ def run_lid_on_each_partition_with_idx(
     torch.cuda.empty_cache()
 
 
-def run_lid_spark_pipeline(spark, config, df, identifier_cols, text_col, lang_col_name, iso_col_name):
+def run_lid_spark_pipeline(spark, config, df, identifier_cols, text_col, lang_col_name, iso_col_name, data_root):
 
     run_lid = partial(
         run_lid_on_each_partition_with_idx,
         identifier_cols=identifier_cols, 
         text_col=text_col,
-        indiclid_ftn_path=config.indiclid_ftn_path,
-        indiclid_ftr_path=config.indiclid_ftr_path,
-        indiclid_bert_path=config.indiclid_bert_path,
+        indiclid_ftn_path=os.path.join(data_root, config.indiclid_ftn_path),
+        indiclid_ftr_path=os.path.join(data_root, config.indiclid_ftr_path),
+        indiclid_bert_path=os.path.join(data_root, config.indiclid_bert_path),
         input_threshold=config.input_threshold,
         roman_lid_threshold=config.roman_lid_threshold,
-        nllb_model_path=config.nllb_model_path ,
-        mapping_json_path=config.mapping_json_path,
-        iso_mapping_json_path=config.iso_mapping_json_path,
+        nllb_model_path=os.path.join(data_root, config.nllb_model_path),
+        mapping_json_path=os.path.join(data_root, config.mapping_json_path),
+        iso_mapping_json_path=os.path.join(data_root, config.iso_mapping_json_path),
         lid_probability_threshold=config.lid_probability_threshold,
     )
 

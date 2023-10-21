@@ -138,9 +138,13 @@ class FlaggingAndFilteringStage(SetuStage):
             doc_stats_df.show(n=5)
             print("Completed `doc_flagging`....")
 
-        doc_stats_df = doc_stats_df.select("*", self.has_char_repetition_udf("char_ngram_repetition_score").alias("has_char_repetition")) \
-                                    .select("*", self.has_word_repetition_udf("word_ngram_repetition_score").alias("has_word_repetition")) \
-                                    .drop("char_ngram_repetition_score", "word_ngram_repetition_score")
+        if self.config.char_repetition_filter:
+            doc_stats_df = doc_stats_df.select("*", self.has_char_repetition_udf("char_ngram_repetition_score").alias("has_char_repetition")) \
+                                        .drop("char_ngram_repetition_score")
+
+        if self.config.word_repetition_filter:
+            doc_stats_df = doc_stats_df.select("*", self.has_word_repetition_udf("word_ngram_repetition_score").alias("has_word_repetition")) \
+                                        .drop("word_ngram_repetition_score")
 
         if verbose:
             doc_stats_df.show(n=5)
@@ -165,13 +169,11 @@ class FlaggingAndFilteringStage(SetuStage):
         if self.config.nsfw_filter:
 
             if self.config.save_nsfw_data:
-                doc_stats_df.filter(doc_stats_df.is_nsfw_heavy == True) \
-                            .write.mode("overwrite") \
-                            .parquet(nsfw_output_path if nsfw_output_path else self.config.nsfw_output_path)
-
-                if verbose:
-                    nsfw_df.show(n=5)
-                    print("Completed nsfw `df` parquet write....")
+                nsfw_stats_df = doc_stats_df.filter(doc_stats_df.is_nsfw_heavy == True)
+                nsfw_stats_df.write.mode("overwrite") \
+                                .parquet(nsfw_output_path if nsfw_output_path else self.config.nsfw_output_path)
+                nsfw_stats_df.show(5)
+                print("Completed nsfw `df` parquet write....")
 
             doc_stats_df = doc_stats_df.filter(doc_stats_df.is_nsfw_heavy == False)
             

@@ -31,6 +31,8 @@ class SetuStage(ABC):
             except ImportError as e:
                 print(f"PySpark not present. Falling back to normal execution for {self.__class__.__name__}")
                 self.spark_present = False
+        
+        self.df_total_rows = None # initialising it before hand for `if` condition below.
 
     @staticmethod
     @abstractmethod
@@ -58,7 +60,8 @@ class SetuStage(ABC):
         return df
 
     def set_split_count_and_salt(self, df, docs_per_partition):
-        self.df_total_rows = df.count()
+        if not self.df_total_rows:
+            self.df_total_rows = df.count()
         self.n_splits = ceil(self.df_total_rows/docs_per_partition)
         print(f"When required data will be repartitioned into - {self.n_splits} partitions")
         df = self.salting(df, self.n_splits)

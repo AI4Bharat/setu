@@ -23,6 +23,12 @@ class DocumentRemovalStage(SetuStage):
         )
 
         parser.add_argument(
+            "--doc_removal_join_col",
+            type=str,
+            help="Col to use for joining",
+        )
+
+        parser.add_argument(
             "--doc_removal_samples_per_partition",
             type=int,
             default=1500,
@@ -90,6 +96,7 @@ class DocumentRemovalStage(SetuStage):
         spark,
         analysis_out_path,
         doc_stats_path,
+        doc_removal_join_col,
         doc_removal_samples_per_partition,
         doc_removal_verbose,
         doc_removal_run_mode,
@@ -105,7 +112,7 @@ class DocumentRemovalStage(SetuStage):
                 df=df,
                 doc_stats_df=doc_stats_df,
                 docs_per_partition=doc_removal_samples_per_partition,
-                doc_id_col="doc_id",
+                doc_id_col=doc_removal_join_col,
                 filtered_docs_path=filtered_docs_path,
             )
         elif doc_removal_run_mode == "data":
@@ -114,7 +121,7 @@ class DocumentRemovalStage(SetuStage):
                 df=df,
                 doc_stats_df=doc_stats_df,
                 docs_per_partition=doc_removal_samples_per_partition,
-                doc_id_col="doc_id",
+                doc_id_col=doc_removal_join_col,
                 filtered_docs_path=filtered_docs_path,
             )
         else:
@@ -131,6 +138,7 @@ class DocumentRemovalStage(SetuStage):
         self, 
         analysis_out_path,
         doc_stats_path,
+        doc_removal_join_col,
         doc_removal_samples_per_partition,
         doc_removal_verbose,
         doc_removal_run_mode,

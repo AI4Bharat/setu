@@ -1,35 +1,35 @@
 #!/bin/usr/env bash
 
-lang="dogri"
+lang="hindi"
 spark_out_part="dataset"
 
-export CLUSTER_NAME=setu-minhash-dedup-small
+export CLUSTER_NAME=minhash-30
 export PROJECT_ID="sangraha-396106"
 export REGION=asia-south1
 export ZONE=asia-south1-a
 
-export INPUT_GCS_PATH="gs://sangraha/spark_out/$lang/$spark_out_part/filtered_docs/filtered_docs/*/*.parquet"
-export OUTPUT_GCS_PATH="gs://sangraha/dedup/minhash/$lang"
+export INPUT_GCS_PATH="gs://sangraha/spark_out/hindi/dataset/filtered_docs/filtered_docs/dataset/*.parquet"
+export OUTPUT_GCS_PATH="gs://sangraha/dedup/minhash_new/hindi"
 
 
-# gcloud dataproc clusters create $CLUSTER_NAME \
-#     --enable-component-gateway \
-#     --region $REGION \
-#     --zone $ZONE \
-#     --master-machine-type c2d-standard-16 \
-#     --master-boot-disk-size 500 \
-#     --num-workers 3 \
-#     --worker-machine-type c2d-standard-16 \
-#     --worker-boot-disk-size 500 \
-#     --image-version "2.1-debian11" \
-#     --project $PROJECT_ID
+gcloud dataproc clusters create $CLUSTER_NAME \
+    --enable-component-gateway \
+    --region $REGION \
+    --zone $ZONE \
+    --master-machine-type c2d-standard-16 \
+    --master-boot-disk-size 100 \
+    --num-workers 30 \
+    --worker-machine-type c2d-standard-16 \
+    --worker-boot-disk-size 100 \
+    --image-version "2.1-debian11" \
+    --project $PROJECT_ID
 
 gcloud dataproc jobs submit pyspark --cluster ${CLUSTER_NAME}\
     --region $REGION \
     --jars gs://spark-lib/bigquery/spark-3.3-bigquery-0.32.2.jar \
     --driver-log-levels root=FATAL,__main__=DEBUG \
-    --properties="spark.executor.memory"="50g","spark.driver.memory"="8g","spark.executor.cores"="14" \
-    /data/priyam/setu/text-dedup/text_dedup/minhash_spark.py \
+    --properties="spark.executor.memory"="50g","spark.driver.memory"="30g","spark.executor.cores"="7" \
+    gs://sangraha/setu/text-dedup/minhash_spark.py \
     -- \
     --column "text" \
     --threshold "0.7" \
@@ -40,16 +40,16 @@ gcloud dataproc jobs submit pyspark --cluster ${CLUSTER_NAME}\
     --output $OUTPUT_GCS_PATH \
     --debug
 
-gcloud dataproc clusters create minhash-very-large \
-    --enable-component-gateway \
-    --region "asia-south1" \
-    --zone "asia-south1-a" \
-    --master-machine-type c2d-standard-16 \
-    --master-boot-disk-size 500 \
-    --num-workers 25 \
-    --worker-machine-type c2d-standard-16 \
-    --worker-boot-disk-size 500 \
-    --image-version "2.1-debian11"
+# gcloud dataproc clusters create minhash-very-large \
+#     --enable-component-gateway \
+#     --region "asia-south1" \
+#     --zone "asia-south1-a" \
+#     --master-machine-type c2d-standard-16 \
+#     --master-boot-disk-size 500 \
+#     --num-workers 25 \
+#     --worker-machine-type c2d-standard-16 \
+#     --worker-boot-disk-size 500 \
+#     --image-version "2.1-debian11"
 
 # PYTHON_SCRIPT="/data/priyam/setu/text-dedup/text_dedup/minhash_spark.py"
 
@@ -73,5 +73,17 @@ gcloud dataproc clusters create minhash-very-large \
 #     --column "text" \
 #     --output "/data/priyam/sangraha/dedup/minhash/assamese" \
 #     --debug
+
+gcloud dataproc clusters create minhash-30 \
+    --enable-component-gateway \
+    --region asia-south1 \
+    --zone asia-south1-a \
+    --master-machine-type n2-highmem-16 \
+    --master-boot-disk-size 500 \
+    --num-workers 30 \
+    --worker-machine-type n2-highmem-16 \
+    --worker-boot-disk-size 500 \
+    --image-version "2.1-debian11" \
+    --max-idle '30m'
 
 

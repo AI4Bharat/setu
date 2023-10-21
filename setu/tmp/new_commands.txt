@@ -1,4 +1,10 @@
 
+conda env export > dataproc/envs/environment.yaml
+
+gsutil -m cp dataproc/envs/environment.yaml gs://sangraha/setu/dataproc/envs
+
+gsutil -m cp dataproc/envs/setu.zip gs://sangraha/setu/dataproc/envs/
+
 FILTER_DATA_ROOT=/data/priyam/setu/setu/data python run.py --help
 
 FILTER_DATA_ROOT=/data/priyam/setu/setu/data python run.py DocCleanStage --help
@@ -32,7 +38,6 @@ SETU_DIR=/data/priyam/setu SETU_TMP_DIR=/data/priyam/tmp/ FILTER_DATA_ROOT=/data
     --j2p_verbose False \
     --j2p_run_mode data \
     --j2p_parquet_output_path /data/priyam/sangraha/new_setu_test/assamese/1/json2parquets
-
 
 
 # DocCleanStage

@@ -1,0 +1,283 @@
+done: true
+driverControlFilesUri: gs://dataproc-staging-asia-south1-690617486206-30otkfwr/google-cloud-dataproc-metainfo/1a2e69ec-be5e-4e99-994b-2a0587fa8d91/jobs/3cdc107d1a79495d831f4f95ef66b946/
+driverOutputResourceUri: gs://dataproc-staging-asia-south1-690617486206-30otkfwr/google-cloud-dataproc-metainfo/1a2e69ec-be5e-4e99-994b-2a0587fa8d91/jobs/3cdc107d1a79495d831f4f95ef66b946/driveroutput
+jobUuid: c96cdc72-8450-3955-8751-c1a96040838e
+placement:
+  clusterName: setu-debugging-15
+  clusterUuid: 1a2e69ec-be5e-4e99-994b-2a0587fa8d91
+pysparkJob:
+  args:
+  - --config
+  - gs://sangraha/setu/dataproc/configs/spark_punjabi_config.json
+  - --mode
+  - ocr
+  - --run_local
+  - 'False'
+  - VisualizeDocCleanStage
+  - --symbol_heavy_parquets
+  - gs://sangraha/spark_out/punjabi/*/lid_segregation/symbol_heavy/*/*.parquet
+  - --doc_clean_viz_output
+  - gs://sangraha/spark_out/punjabi/visualization/dataset/doc_clean
+  - --dc_viz_gcp_bucket
+  - sangraha
+  - --viz_dc_stage_run_mode
+  - stage
+  loggingConfig:
+    driverLogLevels:
+      __main__: DEBUG
+      root: FATAL
+  mainPythonFileUri: gs://sangraha/setu/setu/run.py
+  properties:
+    spark.driver.memory: 30g
+    spark.executor.cores: '12'
+    spark.executor.memory: 50g
+    spark.submit.deployMode: client
+  pythonFileUris:
+  - gs://sangraha/setu/dataproc/envs/setu.zip
+reference:
+  jobId: 3cdc107d1a79495d831f4f95ef66b946
+  projectId: sangraha-396106
+status:
+  state: DONE
+  stateStartTime: '2023-09-29T19:43:49.409984Z'
+statusHistory:
+- state: PENDING
+  stateStartTime: '2023-09-29T19:42:53.587336Z'
+- state: SETUP_DONE
+  stateStartTime: '2023-09-29T19:42:53.612710Z'
+- details: Agent reported job success
+  state: RUNNING
+  stateStartTime: '2023-09-29T19:42:53.981366Z'
+yarnApplications:
+- name: Sangraha Anaylsis
+  progress: 1.0
+  state: FINISHED
+  trackingUrl: http://setu-debugging-15-m.asia-south1-a.c.sangraha-396106.internal.:8088/proxy/application_1696011833167_0049/
+done: true
+driverControlFilesUri: gs://dataproc-staging-asia-south1-690617486206-30otkfwr/google-cloud-dataproc-metainfo/1a2e69ec-be5e-4e99-994b-2a0587fa8d91/jobs/b370c5c9f9184bdeb531c3c6d19dc255/
+driverOutputResourceUri: gs://dataproc-staging-asia-south1-690617486206-30otkfwr/google-cloud-dataproc-metainfo/1a2e69ec-be5e-4e99-994b-2a0587fa8d91/jobs/b370c5c9f9184bdeb531c3c6d19dc255/driveroutput
+jobUuid: 5948b765-284c-3dfa-9691-6c160be2725b
+placement:
+  clusterName: setu-debugging-15
+  clusterUuid: 1a2e69ec-be5e-4e99-994b-2a0587fa8d91
+pysparkJob:
+  args:
+  - --config
+  - gs://sangraha/setu/dataproc/configs/spark_punjabi_config.json
+  - --mode
+  - ocr
+  - --run_local
+  - 'False'
+  - VisualizeLIDStage
+  - --lid_parquets
+  - gs://sangraha/spark_out/punjabi/*/lid_segregation/doc_lid/*/*/*.parquet
+  - --cleaned_docs_parquets
+  - gs://sangraha/spark_out/punjabi/*/lid_segregation/doc_lid/*/*.parquet
+  - --lid_viz_output
+  - gs://sangraha/spark_out/punjabi/visualization/dataset/lid
+  - --lid_viz_gcp_bucket
+  - sangraha
+  - --viz_lid_stage_run_mode
+  - stage
+  - --viz_lid_perform_join
+  - 'False'
+  loggingConfig:
+    driverLogLevels:
+      __main__: DEBUG
+      root: FATAL
+  mainPythonFileUri: gs://sangraha/setu/setu/run.py
+  properties:
+    spark.driver.memory: 30g
+    spark.executor.cores: '12'
+    spark.executor.memory: 50g
+    spark.submit.deployMode: client
+  pythonFileUris:
+  - gs://sangraha/setu/dataproc/envs/setu.zip
+reference:
+  jobId: b370c5c9f9184bdeb531c3c6d19dc255
+  projectId: sangraha-396106
+status:
+  state: DONE
+  stateStartTime: '2023-09-29T19:44:56.168650Z'
+statusHistory:
+- state: PENDING
+  stateStartTime: '2023-09-29T19:43:52.925062Z'
+- state: SETUP_DONE
+  stateStartTime: '2023-09-29T19:43:52.947704Z'
+- details: Agent reported job success
+  state: RUNNING
+  stateStartTime: '2023-09-29T19:43:53.204184Z'
+yarnApplications:
+- name: Sangraha Anaylsis
+  progress: 1.0
+  state: FINISHED
+  trackingUrl: http://setu-debugging-15-m.asia-south1-a.c.sangraha-396106.internal.:8088/proxy/application_1696011833167_0050/
+done: true
+driverControlFilesUri: gs://dataproc-staging-asia-south1-690617486206-30otkfwr/google-cloud-dataproc-metainfo/1a2e69ec-be5e-4e99-994b-2a0587fa8d91/jobs/793fcfd9351c4675a0e5d5df25205238/
+driverOutputResourceUri: gs://dataproc-staging-asia-south1-690617486206-30otkfwr/google-cloud-dataproc-metainfo/1a2e69ec-be5e-4e99-994b-2a0587fa8d91/jobs/793fcfd9351c4675a0e5d5df25205238/driveroutput
+jobUuid: 27b6af9f-3c0e-3721-bbe5-aaf9609b8ea2
+placement:
+  clusterName: setu-debugging-15
+  clusterUuid: 1a2e69ec-be5e-4e99-994b-2a0587fa8d91
+pysparkJob:
+  args:
+  - --config
+  - gs://sangraha/setu/dataproc/configs/spark_punjabi_config.json
+  - --mode
+  - ocr
+  - --run_local
+  - 'False'
+  - VisualizeAnalysisStage
+  - --analysis_doc_stats_parquets
+  - gs://sangraha/spark_out/punjabi/*/analysis/doc_stats/*/*/*.parquet
+  - --analysis_viz_output
+  - gs://sangraha/spark_out/punjabi/visualization/dataset/analysis
+  - --ana_viz_language
+  - punjabi
+  - --ana_viz_gcp_bucket
+  - sangraha
+  - --viz_analysis_stage_run_mode
+  - stage
+  loggingConfig:
+    driverLogLevels:
+      __main__: DEBUG
+      root: FATAL
+  mainPythonFileUri: gs://sangraha/setu/setu/run.py
+  properties:
+    spark.driver.memory: 30g
+    spark.executor.cores: '12'
+    spark.executor.memory: 50g
+    spark.submit.deployMode: client
+  pythonFileUris:
+  - gs://sangraha/setu/dataproc/envs/setu.zip
+reference:
+  jobId: 793fcfd9351c4675a0e5d5df25205238
+  projectId: sangraha-396106
+status:
+  state: DONE
+  stateStartTime: '2023-09-29T19:47:04.551508Z'
+statusHistory:
+- state: PENDING
+  stateStartTime: '2023-09-29T19:44:59.334439Z'
+- state: SETUP_DONE
+  stateStartTime: '2023-09-29T19:44:59.371791Z'
+- details: Agent reported job success
+  state: RUNNING
+  stateStartTime: '2023-09-29T19:44:59.606956Z'
+yarnApplications:
+- name: Sangraha Anaylsis
+  progress: 1.0
+  state: FINISHED
+  trackingUrl: http://setu-debugging-15-m.asia-south1-a.c.sangraha-396106.internal.:8088/proxy/application_1696011833167_0051/
+done: true
+driverControlFilesUri: gs://dataproc-staging-asia-south1-690617486206-30otkfwr/google-cloud-dataproc-metainfo/1a2e69ec-be5e-4e99-994b-2a0587fa8d91/jobs/42f213e3351b4d4ba35c5ad302f36d33/
+driverOutputResourceUri: gs://dataproc-staging-asia-south1-690617486206-30otkfwr/google-cloud-dataproc-metainfo/1a2e69ec-be5e-4e99-994b-2a0587fa8d91/jobs/42f213e3351b4d4ba35c5ad302f36d33/driveroutput
+jobUuid: fd59fdda-39ba-3141-b39b-16574aeb8414
+placement:
+  clusterName: setu-debugging-15
+  clusterUuid: 1a2e69ec-be5e-4e99-994b-2a0587fa8d91
+pysparkJob:
+  args:
+  - --config
+  - gs://sangraha/setu/dataproc/configs/spark_punjabi_config.json
+  - --mode
+  - ocr
+  - --run_local
+  - 'False'
+  - VisualizeFilterStage
+  - --filtered_docs_parquets
+  - gs://sangraha/spark_out/punjabi/*/filtered_docs/filtered_docs/*/*.parquet
+  - --filter_viz_output
+  - gs://sangraha/spark_out/punjabi/visualization/dataset/filter
+  - --fil_viz_gcp_bucket
+  - sangraha
+  - --viz_filter_stage_run_mode
+  - stage
+  loggingConfig:
+    driverLogLevels:
+      __main__: DEBUG
+      root: FATAL
+  mainPythonFileUri: gs://sangraha/setu/setu/run.py
+  properties:
+    spark.driver.memory: 30g
+    spark.executor.cores: '12'
+    spark.executor.memory: 50g
+    spark.submit.deployMode: client
+  pythonFileUris:
+  - gs://sangraha/setu/dataproc/envs/setu.zip
+reference:
+  jobId: 42f213e3351b4d4ba35c5ad302f36d33
+  projectId: sangraha-396106
+status:
+  state: DONE
+  stateStartTime: '2023-09-29T19:47:59.598348Z'
+statusHistory:
+- state: PENDING
+  stateStartTime: '2023-09-29T19:47:07.373093Z'
+- state: SETUP_DONE
+  stateStartTime: '2023-09-29T19:47:07.398228Z'
+- details: Agent reported job success
+  state: RUNNING
+  stateStartTime: '2023-09-29T19:47:07.667428Z'
+yarnApplications:
+- name: Sangraha Anaylsis
+  progress: 1.0
+  state: FINISHED
+  trackingUrl: http://setu-debugging-15-m.asia-south1-a.c.sangraha-396106.internal.:8088/proxy/application_1696011833167_0052/
+done: true
+driverControlFilesUri: gs://dataproc-staging-asia-south1-690617486206-30otkfwr/google-cloud-dataproc-metainfo/d83f9aa0-6d42-4443-bcca-a8e58f2246c0/jobs/e2962fbf83d44cecbd7b32fb4100bfd2/
+driverOutputResourceUri: gs://dataproc-staging-asia-south1-690617486206-30otkfwr/google-cloud-dataproc-metainfo/d83f9aa0-6d42-4443-bcca-a8e58f2246c0/jobs/e2962fbf83d44cecbd7b32fb4100bfd2/driveroutput
+jobUuid: 4c60db08-bec9-3a26-93bc-da1c28e2f5ab
+placement:
+  clusterName: setu-debugging-50-highmem
+  clusterUuid: d83f9aa0-6d42-4443-bcca-a8e58f2246c0
+pysparkJob:
+  args:
+  - --config
+  - gs://sangraha/setu/dataproc/configs/spark_punjabi_config.json
+  - --mode
+  - ocr
+  - --run_local
+  - 'False'
+  - VisualizeDocCleanStage
+  - --viz_cleaned_docs_parquets
+  - gs://sangraha/spark_out_test/punjabi/*/cleaned_docs/cleaned_docs/*/*.parquet
+  - --viz_symbol_heavy_parquets
+  - gs://sangraha/spark_out_test/punjabi/*/cleaned_docs/symbol_heavy/*/*.parquet
+  - --doc_clean_viz_output
+  - gs://sangraha/spark_out_test/punjabi/visualization/dataset/doc_clean
+  - --dc_viz_gcp_bucket
+  - sangraha
+  - --viz_dc_stage_run_mode
+  - stage
+  loggingConfig:
+    driverLogLevels:
+      __main__: DEBUG
+      root: FATAL
+  mainPythonFileUri: gs://sangraha/setu/setu/run.py
+  properties:
+    spark.driver.memory: 30g
+    spark.executor.cores: '12'
+    spark.executor.memory: 50g
+    spark.submit.deployMode: client
+  pythonFileUris:
+  - gs://sangraha/setu/dataproc/envs/setu.zip
+reference:
+  jobId: e2962fbf83d44cecbd7b32fb4100bfd2
+  projectId: sangraha-396106
+status:
+  state: DONE
+  stateStartTime: '2023-10-02T09:23:27.092942Z'
+statusHistory:
+- state: PENDING
+  stateStartTime: '2023-10-02T09:22:16.929404Z'
+- state: SETUP_DONE
+  stateStartTime: '2023-10-02T09:22:16.953732Z'
+- details: Agent reported job success
+  state: RUNNING
+  stateStartTime: '2023-10-02T09:22:17.255324Z'
+yarnApplications:
+- name: Sangraha Anaylsis
+  progress: 1.0
+  state: FINISHED
+  trackingUrl: http://setu-debugging-50-highmem-m.asia-south1-a.c.sangraha-396106.internal.:8088/proxy/application_1696195790754_0043/

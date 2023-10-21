@@ -4,6 +4,7 @@ import re
 from ftfy import fix_and_explain
 from indicnlp.tokenize.indic_tokenize import trivial_tokenize
 from indicnlp.tokenize.sentence_tokenize import sentence_split
+from indicnlp.normalize.indic_normalize import IndicNormalizerFactory
 from nltk import ngrams
 from math import sqrt
 from collections import Counter, OrderedDict
@@ -94,6 +95,90 @@ def get_symbol_ratio(s, char_count, for_spark=True):
     if for_spark:
         return invalid_characters_count/char_count if char_count else None, invalid_characters_count
     return invalid_characters_count/char_count, invalid_characters_count, invalid_chars_found
+
+def is_num_or_punc_only(s, threshold=0.4):
+    
+    if s.isnumeric():
+        return True
+    
+    def is_valid_char(character):
+        pattern = (
+            r'['
+            # Handles Latin
+            r'\u0041-\u005A' 
+            r'\u0061-\u007A'
+            
+            # Handles Devnagari
+            r'\u0900-\u0963' 
+            r'\u0970-\u097F'
+            
+            # Handles Bengali
+            r'\u0980-\u09E3'
+            r'\u09F0-\u09FF'
+            
+            # Handles Gurumukhi
+            r'\u0A00-\u0A65'
+            r'\u0A70-\u0A7F'
+            
+            # Handles Gujarati
+            r'\u0A80-\u0AE5'
+            r'\u0AF0-\u0AFF'
+            
+            # Handles Telugu
+            r'\u0C00-\u0C65'
+            r'\u0C70-\u0C7F'
+            
+            # Handles Kannada
+            r'\u0C80-\u0CE5'
+            r'\u0CF0-\u0CFF'
+            
+            # Handles Malayalam
+            r'\u0D00-\u0D65'
+            r'\u0D70-\u0D7F'
+            
+            # Handles Meitei
+            r'\uABC0-\uABED'
+            
+            # Handles Oriya
+            r'\u0B00-\u0B65'
+            r'\u0B70-\u0B7F'
+            
+            # Handles Ol Chiki
+            r'\u1C5A-\u1C7F'
+            
+            # Handles Tamil
+            r'\u0B80-\u0BE5'
+            r'\u0BF0-\u0BFF'
+            
+            # Handles Arabic
+            r'\u0600-\u065F'
+            r'\u0670-\u06EF'
+            r'\u06FA-\u06FF'
+            
+            # Handles additional arabic characters
+            r'\u0750-\u077F'
+            r'\u08A0-\u08FF'
+            r'\u0870-\u089F'
+            r'\uFB50-\uFDFF'
+            r'\uFE70-\uFEFF'
+            r'\U00010EC0-\U00010EFF'        # for '\u', python exits at 4 hex digits and for '\U', python exits at 8 hex digits.
+            r']'
+        )
+
+        return re.match(pattern, character)
+    
+    char_count = len(s)
+    invalid_characters_count = 0
+    invalid_chars_found = []
+    exception_list = [" ", "\n"]   
+    char_counter = Counter(s)
+    for char in char_counter.keys():
+        if not is_valid_char(char) and char not in exception_list:
+                invalid_characters_count += char_counter[char]
+                invalid_chars_found += [char]    
+    invalid_ratio = invalid_characters_count/char_count if char_count else None
+    
+    return True if invalid_ratio and invalid_ratio >= threshold else False
 
 patterns = [
         # HTML
@@ -206,6 +291,49 @@ def terminal_punc_filter(text):
 
     return "\n".join(cleaned_chunks), total_chunks_flagged
 
+def normalize_text(
+    text, 
+    lang,
+    remove_nuktas=False,
+    nasals_mode='do_nothing',
+    do_normalize_chandras=False,
+    do_normalize_vowel_ending=False
+):
+    normalizer_lang = {
+        "assamese": "as",
+        "bengali": "bn",
+        "bodo": "hi",
+        "dogri": "hi",
+        "english": "en",
+        "gujarati": "gu",
+        "hindi": "hi",
+        "kannada": "kn",
+        "kashmiri": "ur",
+        "konkani": "kK",
+        "maithili": "hi",
+        "malayalam": "ml",
+        "marathi": "mr",
+        "manipuri": "mni",
+        "nepali": "ne",
+        "oriya": "or",
+        "punjabi": "pa",
+        "sanskrit": "sa",
+        "santhali": "sat",
+        "sindhi": "ur",
+        "tamil": "ta",
+        "telugu": "te",
+        "urdu": "ur",
+    }
+
+    factory = IndicNormalizerFactory()
+    normalizer = factory.get_normalizer(
+        language=normalizer_lang[lang], 
+        remove_nuktas=remove_nuktas,
+        nasals_mode=nasals_mode,
+        do_normalize_chandras=do_normalize_chandras,
+        do_normalize_vowel_ending=do_normalize_vowel_ending
+    )
+    return normalizer.normalize(text)
 
 def get_num_lines(line_list):
     return len(line_list)
@@ -281,7 +409,7 @@ def get_char_ngram_repetition(
             ngram_repetition[f"{n}_gram_characters"] = tuple(n_gram_freq_dist.keys())
             ngram_repetition[f"{n}_gram_characters_freq_dist"] = tuple(n_gram_freq_dist.values())
 
-        sorted_freq_dist = sorted(n_gram_freq_dist.items(), key=lambda x: x[1])
+        sorted_freq_dist = sorted(n_gram_freq_dist.items(), key=lambda x: x[1], reverse=True)
         k = int(sqrt(len(sorted_freq_dist)))
         sum_of_top_k = sum([sorted_freq_dist[i][1] for i in range(k)])
 

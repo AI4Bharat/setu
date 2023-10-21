@@ -2,9 +2,9 @@ import os
 import argparse
 from math import ceil
 import glob
-from core import SetuComponent
+from core import SetuStage, str2bool
 
-class BatchCreationComponent(SetuComponent):
+class BatchCreationStage(SetuStage):
 
     def __init__(self, config):
         super().__init__(config)
@@ -15,7 +15,7 @@ class BatchCreationComponent(SetuComponent):
         pass
 
 
-    def run_stage(self, **kwargs):
+    def run_stage_parallelized(self, **kwargs):
         raise NotImplementedError()
 
     @staticmethod
@@ -49,6 +49,9 @@ class BatchCreationComponent(SetuComponent):
             bin_sizes[smallest_bin_index] += filesize
 
         return bins
+
+    def run_data_parallelized(self, **kwargs):
+        raise NotImplementedError()
 
     def run_local(
         self,
@@ -97,7 +100,7 @@ class BatchCreationComponent(SetuComponent):
             return self.run_local(**kwargs)
         elif mode == "gcp":
             return self.run_gcp(**kwargs)
-        else
+        else:
             raise ValueError("`mode` only supports 2 values currently: `local` & `gcp`")
 
         

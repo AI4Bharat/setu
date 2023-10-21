@@ -11,5 +11,6 @@ from .utilities import (
     rename_partitioned_directories,
     ChunkHandler,
     SparkOptimizedHandlers,
-    str2bool
+    str2bool,
+    list_of_strings
 )

@@ -1,4 +1,6 @@
 import argparse
+import os
+import subprocess
 from argparse import Namespace
 from core import (
     CONSTANTS,
@@ -9,6 +11,9 @@ import json
 from components.text_extraction import TextExtractionComponent
 from components.crawl_analysis import CrawlAnalysisComponent
 from components.flagging_and_removal import FlagAndRemoveComponent
+from components.visualization import VisualizationComponent
+from components.ocr_postprocessing import OCRPostProcessingComponent
+from components.utility import UtilityComponent
 
 class Setu():
 
@@ -21,12 +26,19 @@ class Setu():
         self._stage_component_mapping = self.get_stage_component_mapping()
 
         self.te_component = TextExtractionComponent(self.config, mode=source_mode)
+        self.ocr_component = OCRPostProcessingComponent(self.config)
         self.ca_component = CrawlAnalysisComponent(self.config)
         self.fr_component = FlagAndRemoveComponent(self.config)
+        self.viz_component = VisualizationComponent(self.config)
+        self.util_component = UtilityComponent(self.config)
+
         self.components = {
             self.te_component.name: self.te_component,
+            self.ocr_component.name: self.ocr_component,
             self.ca_component.name: self.ca_component,
             self.fr_component.name: self.fr_component,
+            self.viz_component.name: self.viz_component,
+            self.util_component.name: self.util_component,
         }
         
     def get_component_list():
@@ -64,13 +76,18 @@ class Setu():
         stage_parser = parser.add_subparsers(dest="stage", help='Indicate what stage to run inside a component')
         
         stage_parser = TextExtractionComponent.add_cmdline_args(stage_parser)
+        stage_parser = OCRPostProcessingComponent.add_cmdline_args(stage_parser)
         stage_parser = CrawlAnalysisComponent.add_cmdline_args(stage_parser)
         stage_parser = FlagAndRemoveComponent.add_cmdline_args(stage_parser)
+        stage_parser = VisualizationComponent.add_cmdline_args(stage_parser)
+        stage_parser = UtilityComponent.add_cmdline_args(stage_parser)
 
         stage_parser = stage_parser.add_parser(cls.get_pipeline_name(), help=f'Run complete end-to-end {cls.get_pipeline_name()}')
         stage_parser = TextExtractionComponent.add_cmdline_args(stage_parser, for_full_pipeline=True)
+        stage_parser = OCRPostProcessingComponent.add_cmdline_args(stage_parser, for_full_pipeline=True)
         stage_parser = CrawlAnalysisComponent.add_cmdline_args(stage_parser, for_full_pipeline=True)
         stage_parser = FlagAndRemoveComponent.add_cmdline_args(stage_parser, for_full_pipeline=True)
+        stage_parser = VisualizationComponent.add_cmdline_args(stage_parser, for_full_pipeline=True)
 
         args = parser.parse_args()
         
@@ -85,8 +102,11 @@ class Setu():
         stage_component_map = {}
         for component in [
             TextExtractionComponent,
+            OCRPostProcessingComponent,
             CrawlAnalysisComponent,
-            FlagAndRemoveComponent
+            FlagAndRemoveComponent,
+            VisualizationComponent,
+            UtilityComponent,
         ]:
             stage_component_map = stage_component_map | component.get_stage_mapping()
 
@@ -100,6 +120,8 @@ class Setu():
         
         if config_file.startswith("gs://"):
             tmp_location = "/tmp/" + os.path.split(config_file)[1]
+
+            # Refer to this: https://stackoverflow.com/a/45991873
             subprocess.run(["gsutil", "cp", config_file, tmp_location])
 
         with open(tmp_location, "r") as config_f:
