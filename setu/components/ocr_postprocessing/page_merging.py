@@ -4,9 +4,12 @@ import subprocess
 from pyspark.sql.functions import col
 from pyspark.sql import functions as F
 from pyspark.sql.window import Window
+from pyspark.sql.types import StringType
 import time
 from pyspark.sql.functions import sha2, concat_ws
+from .ocr_filters import get_ocr_url
 
+get_ocr_url_udf = F.udf(get_ocr_url, StringType())
 
 class PageMergeStage(SetuStage):
 
@@ -75,9 +78,10 @@ class PageMergeStage(SetuStage):
         df = self.salting(df, self.n_splits)
 
         df = df.select(
-            F.sha2(F.concat_ws("||", *result_df.columns), 256).alias("doc_id"), 
-            F.col("uri").alias("url"), 
-            "*").drop(*["uri", "group_id"])
+            F.sha2(F.concat_ws("||", *df.columns), 256).alias("doc_id"), 
+            "*").drop(*["group_id"])
+
+        df = df.withColumn("url", get_ocr_url_udf("uri", "page_nos"))
 
         df.write.mode("overwrite").parquet(output_path)
 

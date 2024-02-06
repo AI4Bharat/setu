@@ -8,6 +8,16 @@ import builtins as py_builtin
 import statistics
 from pyspark.sql.types import Row
 
+def get_max_lang(lang_scores):
+    max_conf = 0.0
+    max_lang = None
+    if lang_scores:
+        for lang_score in lang_scores:
+            if lang_score["confidence"] > max_conf:
+                max_conf = lang_score["confidence"]
+                max_lang = lang_score["languageCode"]
+    return Row("languageCode", "lang_confidence")(max_lang, max_conf)
+
 def approx_intersection_suppression(boxes, scores, threshold):
     # Sort the boxes by score in descending order
     order = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)
@@ -217,13 +227,49 @@ def check_bbox_overlap(bboxes, bbox_to_keep):
     bboxes_for_iou = para_bboxes_array[:, [0, 2]].reshape(-1, 4).tolist()
     areas_for_iou = [Polygon(bbox).area for bbox in para_bboxes_array]
     max_iou = overlap_detection(bboxes_for_iou, areas_for_iou)
-    
     return max_iou
 
-def parse_ocr_output(bboxes, bbox_to_keep):
-            
-    responseText = ""
+def check_block_density(bboxes, bbox_to_keep):
+    block_density = []
+    paragraph_idx = 0
+    for i, block in enumerate(bboxes):
+        block_coords = []
+        for coords in block["boundingBox"]["normalizedVertices"]:
+            x, y = 0.0, 0.0
+            if coords["x"]:
+                x = coords["x"]
+            if coords["y"]:
+                y = coords["y"]
+            block_coords += [(x, y)]  
+        paragraph_bboxes = []   
+        for j, paragraph in enumerate(block["paragraphs"]):
+            if paragraph_idx not in bbox_to_keep:
+                paragraph_idx += 1
+                continue
+            para_bbox = []
+            for coords in paragraph["boundingBox"]["normalizedVertices"]:
+                x, y = 0.0, 0.0
+                if coords["x"]:
+                    x = coords["x"]
+                if coords["y"]:
+                    y = coords["y"]
+                para_bbox += [(x, y)]
+            paragraph_bboxes += [para_bbox]
+            paragraph_idx += 1
+        
+        block_polygon_area = Polygon(block_coords).area
+        polygon_areas = [Polygon(bbox).area for bbox in paragraph_bboxes]
+        total_paragraph_area = sum(polygon_areas)
+        if block_polygon_area and total_paragraph_area:
+            block_density += [total_paragraph_area/block_polygon_area]
 
+    min_block_density = None
+    if len(block_density):
+        min_block_density = min(block_density)
+    return min_block_density
+
+def parse_ocr_output(bboxes, bbox_to_keep): 
+    responseText = ""
     paragraph_bboxes = []
     for block in bboxes:
         for paragraph in block["paragraphs"]:
@@ -251,3 +297,11 @@ def parse_ocr_output(bboxes, bbox_to_keep):
         responseText += paragraphText
         
     return responseText
+
+def get_ocr_url(uri, page_nos):
+    gs_removed = uri.replace("gs://sangraha_pdfs/", "")
+    base, filename = os.path.split(gs_removed)
+    lang, identifier = os.path.split(base)
+    first_page_no = page_nos.split(",")[0]
+    url = f"https://archive.org/download/{identifier}/{filename}#page={first_page_no}"
+    return url

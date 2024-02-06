@@ -60,8 +60,8 @@ gcloud dataproc clusters create setu-debugging-0-highmem \
     --master-machine-type n2-highmem-16 \
     --master-boot-disk-size 500 \
     --image-version '2.1-ubuntu20' \
-    --properties='dataproc:conda.env.config.uri=gs://sangraha/setu/dataproc/envs/environment.yaml','spark-env:FILTER_DATA_ROOT=/opt/setu/filter_data/filter_data/' \
-    --initialization-actions='gs://sangraha/setu/dataproc/compute_image/install_additional_deps.sh'
+    --properties='dataproc:conda.env.config.uri=gs://sarvam_sangraha/setu/dataproc/envs/environment.yaml','spark-env:FILTER_DATA_ROOT=/opt/setu/filter_data/filter_data/' \
+    --initialization-actions='gs://sarvam_sangraha/setu/dataproc/compute_image/install_additional_deps.sh'
 
 gcloud dataproc clusters create setu-debugging-2-highmem \
     --enable-component-gateway \
@@ -79,30 +79,30 @@ gcloud dataproc clusters create setu-debugging-2-highmem \
 
 gcloud dataproc clusters create setu-debugging-5-highmem \
     --enable-component-gateway \
-    --region asia-south1 \
-    --zone asia-south1-a \
-    --master-machine-type c2-standard-16 \
+    --region us-central1 \
+    --zone us-central1-a \
+    --master-machine-type n2-highmem-16 \
     --master-boot-disk-size 500 \
     --num-workers 5 \
-    --worker-machine-type c2-standard-16 \
+    --worker-machine-type n2-highmem-16 \
     --worker-boot-disk-size 500 \
     --image-version '2.1-ubuntu20' \
-    --properties='dataproc:conda.env.config.uri=gs://sangraha/setu/dataproc/envs/environment.yaml','spark-env:FILTER_DATA_ROOT=/opt/setu/filter_data/filter_data/' \
-    --initialization-actions='gs://sangraha/setu/dataproc/compute_image/install_additional_deps.sh' \
+    --properties='dataproc:conda.env.config.uri=gs://sarvam_sangraha/setu/dataproc/envs/environment.yaml','spark-env:FILTER_DATA_ROOT=/opt/setu/filter_data/filter_data/' \
+    --initialization-actions='gs://sarvam_sangraha/setu/dataproc/compute_image/install_additional_deps.sh' \
     --max-idle "10m"
 
 gcloud dataproc clusters create setu-debugging-15-highmem \
     --enable-component-gateway \
-    --region asia-south1 \
-    --zone asia-south1-a \
+    --region us-central1 \
+    --zone us-central1-a \
     --master-machine-type n2-highmem-16 \
     --master-boot-disk-size 100 \
     --num-workers 15 \
     --worker-machine-type n2-highmem-16 \
     --worker-boot-disk-size 100 \
     --image-version '2.1-ubuntu20' \
-    --properties='dataproc:conda.env.config.uri=gs://sangraha/setu/dataproc/envs/environment.yaml','spark-env:FILTER_DATA_ROOT=/opt/setu/filter_data/filter_data/' \
-    --initialization-actions='gs://sangraha/setu/dataproc/compute_image/install_additional_deps.sh' \
+    --properties='dataproc:conda.env.config.uri=gs://sarvam_sangraha/setu/dataproc/envs/environment.yaml','spark-env:FILTER_DATA_ROOT=/opt/setu/filter_data/filter_data/' \
+    --initialization-actions='gs://sarvam_sangraha/setu/dataproc/compute_image/install_additional_deps.sh' \
     --max-idle "10m"
 
 gcloud dataproc clusters create setu-debugging-40-highmem \
@@ -121,14 +121,14 @@ gcloud dataproc clusters create setu-debugging-40-highmem \
 
 gcloud dataproc clusters create setu-debugging-50-highmem \
     --enable-component-gateway \
-    --region asia-south1 \
-    --zone asia-south1-a \
+    --region us-central1 \
+    --zone us-central1-a \
     --master-machine-type n2-highmem-32 \
-    --master-boot-disk-size 500 \
+    --master-boot-disk-size 300 \
     --num-workers 50 \
     --worker-machine-type n2-highmem-16 \
-    --worker-boot-disk-size 500 \
+    --worker-boot-disk-size 300 \
     --image-version '2.1-ubuntu20' \
-    --properties='dataproc:conda.env.config.uri=gs://sangraha/setu/dataproc/envs/environment.yaml','spark-env:FILTER_DATA_ROOT=/opt/setu/filter_data/filter_data/' \
-    --initialization-actions='gs://sangraha/setu/dataproc/compute_image/install_additional_deps.sh' \
-    --max-idle '10m'
+    --properties='dataproc:conda.env.config.uri=gs://sarvam_sangraha/setu/dataproc/envs/environment.yaml','spark-env:FILTER_DATA_ROOT=/opt/setu/filter_data/filter_data/' \
+    --initialization-actions='gs://sarvam_sangraha/setu/dataproc/compute_image/install_additional_deps.sh' \
+    --max-idle '5m'

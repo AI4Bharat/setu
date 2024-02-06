@@ -6,7 +6,7 @@ from pyspark.sql.types import (
     StructType, 
     StructField
 )
-from pyspark.sql.functions import lit, rand
+from pyspark.sql.functions import lit, rand, col
 import glob
 import json
 from functools import partial
@@ -72,6 +72,14 @@ class JSON2ParquetStage(SetuStage):
         )
 
         parser.add_argument(
+            "--j2p_is_multiline",
+            type=str2bool,
+            default=False,
+            required=False,
+            help="Whether to jsons are multiline or not",
+        )
+
+        parser.add_argument(
             "--j2p_parquet_output_path",
             type=str,
             help="directory where parquets will be stored",
@@ -102,6 +110,7 @@ class JSON2ParquetStage(SetuStage):
         cols,
         docs_per_partition,
         doc_id_col,
+        is_multiline,
         output_path,
         lang,
     ):
@@ -109,9 +118,13 @@ class JSON2ParquetStage(SetuStage):
         # Currently, written assuming the json structure
         # will be same across all sources: `crawl`, `ocr` & `asr`.
         
-        json_df = spark.read.format("json").schema(self.schema_creator(cols)).load(json_glob)
+        json_df = spark.read.format("json").options(multiline=is_multiline, ignoreCorruptFiles=True).schema(self.schema_creator(cols)).load(json_glob)
+        if "body" in cols:
+            json_df = json_df.select("*", col("body").alias("text")).drop("body")
         if self.mode == "crawl":
             json_df = json_df.select("doc_id", "url", "source", lit(lang).alias("language"), "text")
+            if "URL" in cols:
+                json_df = json_df.select("*", col("URL").alias("url")).drop("URL")
         elif self.mode == "ocr":
             json_df = json_df.select("*", lit(lang).alias("language"))
         
@@ -284,6 +297,7 @@ class JSON2ParquetStage(SetuStage):
         j2p_samples_per_partition,
         j2p_verbose,
         j2p_run_mode,
+        j2p_is_multiline,
         j2p_parquet_output_path,
         run_local,
         j2p_bucket,
@@ -297,6 +311,7 @@ class JSON2ParquetStage(SetuStage):
                 cols=j2p_cols,
                 docs_per_partition=j2p_samples_per_partition,
                 doc_id_col="doc_id",
+                is_multiline=j2p_is_multiline,
                 output_path=j2p_parquet_output_path,
                 lang=language,
             )
@@ -321,6 +336,7 @@ class JSON2ParquetStage(SetuStage):
                 spark=spark,
                 json_list=json_list,
                 j2p_bucket=j2p_bucket,
+                is_multiline=j2p_is_multiline,
                 docs_per_partition=j2p_samples_per_partition,
                 output_path=j2p_parquet_output_path,
                 lang=language,

@@ -148,7 +148,8 @@ class ExtractTextStage(SetuStage):
 
             for row in partition:
                 out = []
-                for col in ["doc_id", "url", "source", "timestamp", "language"]:
+                # for col in ["doc_id", "url", "source", "timestamp", "language"]:
+                for col in ["doc_id", "url", "source", "timestamp"]:
                     out += [row[col]]
                 print(f"Performing extraction on: {row['url']}")
                 try:
@@ -182,7 +183,7 @@ class ExtractTextStage(SetuStage):
             StructField("url", StringType(), True),
             StructField("source", StringType(), True),
             StructField("timestamp", StringType(), True),
-            StructField("language", StringType(), True),
+            # StructField("language", StringType(), True),
             StructField("successful_extraction", BooleanType(), False),
             StructField("title", StringType(), True),
             StructField("description", StringType(), True),

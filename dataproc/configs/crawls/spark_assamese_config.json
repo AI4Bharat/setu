@@ -13,10 +13,13 @@
     "lid_probability_threshold": 0.9,
     "remove_code": true,
     "remove_terminal_invalid": true,
+    "remove_only_num_or_punc_chunks": true,
+    "repeated_chunk_filter": false,
+    "chunk_length_filter": true,
     "remove_only_number": true,
     "save_nsfw_data": true,
-    "nsfw_filter": false,
-    "nsfw_threshold": 1.0,
+    "nsfw_filter": true,
+    "nsfw_threshold": 0.02,
     "non_li_filter": true,
     "non_li_char_threshold": 0.03,
     "line_count_filter": true,
@@ -31,5 +34,14 @@
     "char_repetition_filter": true,
     "char_ngram_cum_thresholds": {
         "10": 0.1
-    }
+    },
+    "remove_horizontally_sparse": false,
+    "horizontal_coverage_threshold": 0.7,
+    "remove_vertically_sparse": false,
+    "vertical_coverage_threshold": 0.5,
+    "remove_overlapping": false,
+    "max_iou_threshold": 0.004,
+    "remove_sparse_blocked": false,
+    "block_density_threshold": 0.5,
+    "remove_script_unconfident": false
 }

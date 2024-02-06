@@ -71,17 +71,23 @@ class PageFilteringStage(SetuStage):
 
         if perform_flagging:
             df = df \
-                .select("*", when(df["horizontal_coverage"] <= self.config.horizontal_coverage_threshold, True).otherwise(False).alias("is_horizontally_sparse")) \
+                .select("*", when(df["horizontal_coverage"] < self.config.horizontal_coverage_threshold, True).otherwise(False).alias("is_horizontally_sparse")) \
                 .select("*", when(df["vertical_coverage"] < self.config.vertical_coverage_threshold, True).otherwise(False).alias("is_vertically_sparse")) \
                 .select("*", when(df["max_iou"] > self.config.max_iou_threshold , True).otherwise(False).alias("is_overlapping")) \
-                .select("*", when(df["script_coverage"] == False, True).otherwise(False).alias("is_script_unconfident"))
+                .select("*", when(df["script_coverage"] == False, True).otherwise(False).alias("is_script_unconfident")) \
+                .select("*", when(df["min_block_density"] < self.config.block_density_threshold, True).otherwise(False).alias("contains_sparse_blocks"))
 
         if perform_removal:
-            df = df \
-                .filter(df.is_horizontally_sparse == False) \
-                .filter(df.is_vertically_sparse == False) \
-                .filter(df.is_overlapping == False) \
-                .filter(df.is_script_unconfident == False)
+            if self.config.remove_horizontally_sparse:
+                df = df.filter(df.is_horizontally_sparse == False)
+            if self.config.remove_vertically_sparse:
+                df = df.filter(df.is_vertically_sparse == False)
+            if self.config.remove_overlapping:
+                df = df.filter(df.is_overlapping == False)
+            if self.config.remove_script_unconfident:
+                df = df.filter(df.is_script_unconfident == False)
+            if self.config.remove_sparse_blocked:
+                df = df.filter(df.contains_sparse_blocks == False)
 
         df = self.salting(df, self.n_splits)
         df.write.mode("overwrite").parquet(output_path)

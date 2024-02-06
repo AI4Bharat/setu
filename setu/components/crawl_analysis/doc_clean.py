@@ -13,7 +13,8 @@ from pyspark.sql.functions import (
     udf, 
     col, 
     length, 
-    spark_partition_id
+    spark_partition_id,
+    count
 )
 from pyspark.sql.types import (
     BooleanType,
@@ -162,15 +163,15 @@ class DocCleanStage(SetuStage):
 
         curr_cols = list(df.schema.names)
         
-        df = df.select("*", find_code_spans_udf(doc_id_col, text_col).alias("code_span_results")) \
-                .select(*curr_cols, "code_span_results.*")
-        
         if verbose:
             df.explain(mode="formatted")
             df.show(n=5)
             print("Completed `find_code_spans`....")
 
         if self.config.remove_code:
+
+            df = df.select("*", find_code_spans_udf(doc_id_col, text_col).alias("code_span_results")) \
+                    .select(*curr_cols, "code_span_results.*")
 
             df = df.withColumn(text_col, remove_code_udf(text_col, "code_spans"))
 
@@ -185,10 +186,10 @@ class DocCleanStage(SetuStage):
 
         curr_cols = list(df.schema.names)
 
-        df = df.select("*", get_symbol_ratio_udf(text_col, "uncleaned_chars_count").alias("symbol_ratio_results")) \
-                .select(*curr_cols, "symbol_ratio_results.*")
-
         if use_symbol_filter:
+
+            df = df.select("*", get_symbol_ratio_udf(text_col, "uncleaned_chars_count").alias("symbol_ratio_results")) \
+                    .select(*curr_cols, "symbol_ratio_results.*")
 
             if save_symbol_heavy_docs:
 
@@ -216,9 +217,14 @@ class DocCleanStage(SetuStage):
                                 .filter(col("is_num_or_punc_only") == False)
 
         if self.config.repeated_chunk_filter:
-            spans_df = spans_df.groupBy("url", text_col) \
-                                            .agg(count("*").alias("repetition_count")) \
-                                            .filter(col("repetition_count") == 1)
+            filtered_chunks = spans_df.groupBy("url", text_col) \
+                                    .agg(count("*").alias("repetition_count")) \
+                                    .filter(col("repetition_count") == 1)
+                                    
+            spans_df = spans_df.join(
+                filtered_chunks.select("url", "text"), 
+                ["url", "text"]
+            )
 
         df = self.salting(df, self.n_splits)
         
@@ -236,7 +242,7 @@ class DocCleanStage(SetuStage):
             print("Completed all `chunk cleaning filters`")
 
         doc_df = self.chunk_handler.lines2doc(spans_df, text_col, doc_id_col, "pos", '\n')
-        spans_df.unpersist(True)
+
         doc_df = self.salting(doc_df, self.n_splits)
 
         if verbose:
@@ -344,7 +350,7 @@ class DocCleanStage(SetuStage):
             text_col,
             additional_cols_to_use,
             use_symbol_filter,
-            symbol_filter_output_path
+            symbol_filter_output_path,
         ):
 
             print(f"Performing Document Cleaning on partition {idx}......")
@@ -391,7 +397,7 @@ class DocCleanStage(SetuStage):
 
                 if use_symbol_filter and symbol_ratio >=self.config.symbol_threshold :
                     for col in [doc_id_col, text_col] + additional_cols_to_use:
-                        symbol_heavy_out[col] += [row[col]]
+                        symbol_heavy_out[col] += [str(row[col])]
                     symbol_heavy_out["code_spans"] += [code_spans]
                     symbol_heavy_out["uncleaned_chars_count"] += [uncleaned_chars_count]
                     symbol_heavy_out["uncleaned_words_count"] += [uncleaned_words_count]
@@ -400,18 +406,33 @@ class DocCleanStage(SetuStage):
                     symbol_heavy_out["invalid_char_count"] += [invalid_char_count]
                 else:
                     chunks = text.split("\n")
-                    terminal_valid = tuple(map(is_terminal_valid, chunks))
                     cleaned_text = ""
-                    for i, terminal_valid_check in enumerate(terminal_valid):
-                        if terminal_valid_check:
-                            cleaned_text += chunks[i] + "\n"
+                    for i, chunk in enumerate(chunks):
+                        
+                        is_num_or_punc_valid = True
+                        if self.config.remove_only_num_or_punc_chunks:
+                            if is_num_or_punc_only(chunk):
+                                is_num_or_punc_valid = False
+
+                        is_chunk_terminal_valid = True
+                        if self.config.remove_terminal_invalid:
+                            if not is_terminal_valid(chunk):
+                                is_chunk_terminal_valid = False
+
+                        is_chunk_long_enough = True
+                        if self.config.chunk_length_filter:
+                            if get_word_count(chunk) <= 1:
+                                is_chunk_long_enough = False
                     
+                        if is_num_or_punc_valid and is_chunk_terminal_valid and is_chunk_long_enough:
+                            cleaned_text += chunk + "\n"
+
                     if not len(cleaned_text):
                         cleaned_text = None
 
                     res_list = [row[doc_id_col], cleaned_text]
                     for col in additional_cols_to_use:
-                        res_list += [row[col]]
+                        res_list += [str(row[col])]
                     res_list += [
                         code_spans, uncleaned_chars_count,
                         uncleaned_words_count, uncleaned_bytes,
@@ -445,7 +466,7 @@ class DocCleanStage(SetuStage):
             ]
             +
             [
-                StructField("code_spans", ArrayType(ArrayType(IntegerType())), True), 
+                StructField("code_spans", ArrayType(ArrayType(IntegerType())), True),
                 StructField("uncleaned_chars_count", IntegerType(), True),
                 StructField("uncleaned_words_count", IntegerType(), True),
                 StructField("uncleaned_bytes", IntegerType(), True),
@@ -468,6 +489,25 @@ class DocCleanStage(SetuStage):
         cleaned_doc_df = spark.createDataFrame(cleaned_doc_rdd, schema=result_schema)
 
         cleaned_doc_df = self.salting(cleaned_doc_df, self.n_splits)
+
+        if self.config.repeated_chunk_filter:
+
+            spans_df = self.chunk_handler.doc2lines(cleaned_doc_df, text_col, "\n")
+
+            filtered_chunks = spans_df.groupBy("url", text_col) \
+                                    .agg(count("*").alias("repetition_count")) \
+                                    .filter(col("repetition_count") == 1)
+                                    
+            spans_df = spans_df.join(
+                filtered_chunks.select("url", "text"), 
+                ["url", "text"]
+            )
+
+            doc_df = self.chunk_handler.lines2doc(spans_df, text_col, doc_id_col, "pos", '\n')
+
+            cleaned_doc_df = cleaned_doc_df \
+                                .drop(text_col) \
+                                .join(doc_df, on=[doc_id_col], how="left")
 
         cleaned_doc_df.write.mode("overwrite").parquet(cleaned_doc_output_path)
 

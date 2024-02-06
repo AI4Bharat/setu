@@ -1,9 +1,11 @@
 import argparse
 from core import SetuStage, str2bool
 import subprocess
-from pyspark.sql.functions import explode, col, max, when
+from .ocr_filters import get_max_lang
+from pyspark.sql.functions import explode, col, max, when, udf
 from pyspark.sql.types import (
-    BooleanType,
+    BooleanType, 
+    FloatType,
     StringType, 
     StructType, 
     StructField,
@@ -11,6 +13,14 @@ from pyspark.sql.types import (
 )
 import glob
 import trafilatura
+
+get_max_lang_udf = udf(
+    get_max_lang,
+    StructType([
+        StructField("languageCode", StringType(), True),
+        StructField("lang_confidence", FloatType(), True),
+    ]),
+)
 
 class FormatConversionStage(SetuStage):
 
@@ -53,11 +63,30 @@ class FormatConversionStage(SetuStage):
 
     def run_stage_parallelized(
         self,
-        json_glob,
+        df,
         docs_per_partition,
         output_path,
     ):
-        df = spark.read.format("json").options(multiline=True).load(json_glob)
+        
+        # df = df.select("inputConfig.*", "responses") \
+        #         .select("gcsSource.*", "mimeType", "responses") \
+        #         .select("uri", "mimeType", explode("responses").alias("pages")) \
+        #         .select("uri", "mimeType", "pages.*") \
+        #         .na.drop(subset=["fullTextAnnotation"]) \
+        #         .select("uri", "mimeType", "context.pageNumber", "fullTextAnnotation") \
+        #         .select("uri", "mimeType", "pageNumber", "fullTextAnnotation.pages") \
+        #         .select("uri", "mimeType", "pageNumber", explode("pages").alias("pages")) \
+        #         .select("uri", "mimeType", "pageNumber", "pages.*") \
+        #         .select("uri", "mimeType", "pageNumber", "blocks", "confidence", "width", "height", "property.detectedLanguages") \
+        #         .select("uri", "mimeType", "pageNumber", "blocks", "confidence", "width", "height", explode("detectedLanguages").alias("language_scores")) \
+        #         .withColumn("page_confidence", col("confidence")).drop("confidence") \
+        #         .select("uri", "mimeType", "pageNumber", "blocks", "page_confidence", "width", "height", "language_scores.*") \
+        #         .withColumn("lang_confidence", col("confidence")).drop("confidence")
+                
+        # lang_df = df.groupBy("uri", "pageNumber").agg(max("lang_confidence").alias("lang_confidence"))
+        # df = df.join(lang_df, ["uri", "pageNumber", "lang_confidence"])
+        # df = self.set_split_count_and_salt(df, docs_per_partition)
+
         df = df.select("inputConfig.*", "responses") \
                 .select("gcsSource.*", "mimeType", "responses") \
                 .select("uri", "mimeType", explode("responses").alias("pages")) \
@@ -68,15 +97,14 @@ class FormatConversionStage(SetuStage):
                 .select("uri", "mimeType", "pageNumber", explode("pages").alias("pages")) \
                 .select("uri", "mimeType", "pageNumber", "pages.*") \
                 .select("uri", "mimeType", "pageNumber", "blocks", "confidence", "width", "height", "property.detectedLanguages") \
-                .select("uri", "mimeType", "pageNumber", "blocks", "confidence", "width", "height", explode("detectedLanguages").alias("language_scores")) \
+                .select("uri", "mimeType", "pageNumber", "blocks", "confidence", "width", "height", get_max_lang_udf("detectedLanguages").alias("language_scores")) \
                 .withColumn("page_confidence", col("confidence")).drop("confidence") \
-                .select("uri", "mimeType", "pageNumber", "blocks", "page_confidence", "width", "height", "language_scores.*") \
-                .withColumn("lang_confidence", col("confidence")).drop("confidence")
-                
-        df = df.dropDuplicates(["uri"])
-        lang_df = df.groupBy("uri", "pageNumber").agg(max("lang_confidence").alias("lang_confidence"))
-        df = df.join(lang_df, ["uri", "pageNumber", "lang_confidence"])
+                .select("uri", "mimeType", "pageNumber", "blocks", "page_confidence", "width", "height", "language_scores.*")
+
+        df.show(5)
+
         df = self.set_split_count_and_salt(df, docs_per_partition)
+
         df.write.mode("overwrite").parquet(output_path)
 
 
@@ -98,10 +126,10 @@ class FormatConversionStage(SetuStage):
         fc_output_path,
         run_local,
     ):
-
+        df = spark.read.format("json").options(multiline=True).load(fc_json_glob)
         if fc_run_mode == "stage":
             return self.run_stage_parallelized(
-                json_glob=fc_json_glob,
+                df=df,
                 docs_per_partition=fc_samples_per_partition,
                 output_path=fc_output_path,
             )

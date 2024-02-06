@@ -1,7 +1,7 @@
 {
     "use_spark": true,
     "appname": "Sangraha Anaylsis",
-    "symbol_threshold": 0.2,
+    "symbol_threshold": 0.1,
     "indiclid_ftn_path": "models/indiclid-ftn/model_baseline_roman.bin",
     "indiclid_ftr_path": "models/indiclid-ftr/model_baseline_roman.bin",
     "indiclid_bert_path": "models/indiclid-bert/basline_nn_simple.pt",
@@ -12,7 +12,10 @@
     "iso_mapping_json_path": "lang_iso_mapping.json",
     "lid_probability_threshold": 0.9,
     "remove_code": true,
-    "remove_terminal_invalid": true,
+    "remove_terminal_invalid": false,
+    "remove_only_num_or_punc_chunks": true,
+    "repeated_chunk_filter": true,
+    "chunk_length_filter": true,
     "remove_only_number": true,
     "save_nsfw_data": true,
     "nsfw_filter": true,
@@ -31,5 +34,14 @@
     "char_repetition_filter": false,
     "char_ngram_cum_thresholds": {
         "10": 0.2
-    }
+    },
+    "remove_horizontally_sparse": true,
+    "horizontal_coverage_threshold": 0.7,
+    "remove_vertically_sparse": true,
+    "vertical_coverage_threshold": 0.5,
+    "remove_overlapping": true,
+    "max_iou_threshold": 0.004,
+    "remove_sparse_blocked": true,
+    "block_density_threshold": 0.5,
+    "remove_script_unconfident": true
 }

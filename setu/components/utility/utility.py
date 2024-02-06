@@ -2,6 +2,7 @@ import argparse
 from core import SetuComponent
 from .custom_join import CustomJoinStage
 from .page2pdf import Page2PDFStage
+from .normalize import NormalizeStage
 
 class UtilityComponent(SetuComponent):
 
@@ -9,10 +10,12 @@ class UtilityComponent(SetuComponent):
         super().__init__(config)
         self.cj_stage = CustomJoinStage(self.config)
         self.p2p_stage = Page2PDFStage(self.config)
+        self.n_stage = NormalizeStage(self.config)
 
         self.stages = {
             self.cj_stage.name: self.cj_stage,
             self.p2p_stage.name: self.p2p_stage,
+            self.n_stage.name: self.n_stage,
         }
 
     @classmethod
@@ -24,6 +27,9 @@ class UtilityComponent(SetuComponent):
         p2p_subparser = parser.add_parser(Page2PDFStage.get_stage_name(), help='Run page2pdf stage of utility component')
         p2p_subparser = Page2PDFStage.add_cmdline_args(p2p_subparser)
 
+        n_subparser = parser.add_parser(NormalizeStage.get_stage_name(), help="Run normalize stage of utility component.")
+        n_subparser = NormalizeStage.add_cmdline_args(n_subparser)
+
         return parser
 
     @classmethod
@@ -31,6 +37,7 @@ class UtilityComponent(SetuComponent):
         return dict.fromkeys([
             CustomJoinStage.get_stage_name(), 
             Page2PDFStage.get_stage_name(),
+            NormalizeStage.get_stage_name(),
             cls.get_component_name()
         ], cls.get_component_name())
 

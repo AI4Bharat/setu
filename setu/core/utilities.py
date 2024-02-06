@@ -66,7 +66,23 @@ class ChunkHandler():
 
     def lines2doc(self, df, text_column, identifier_column, sort_column, join_symbol):
 
-        join_lines = udf(lambda x: join_symbol.join([line[text_column] for line in x if line]), StringType())
+        def join_using_symbol(x):
+            lines = []
+            for line in x:
+                if line:
+                    lines += [line[text_column]]
+            
+            text = ""
+            for line in lines:
+                if len(line) >= 2 and line[0] == " " and line[1] == " ":
+                    text += line[1:]
+                else:
+                    text += line
+            return text
+
+
+        # join_lines = udf(lambda x: join_symbol.join([line[text_column] for line in x if line]), StringType())
+        join_lines = udf(join_using_symbol, StringType())
 
         df = df.withColumn(text_column, struct([sort_column, text_column])).select(identifier_column, text_column) \
                 .groupBy(identifier_column) \

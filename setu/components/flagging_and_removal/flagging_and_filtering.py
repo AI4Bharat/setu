@@ -255,6 +255,8 @@ class FlaggingAndFilteringStage(SetuStage):
         else:
             doc_stats_df = spark.read.format("parquet").load(doc_stats_parquets_path)
 
+        doc_stats_df = doc_stats_df.dropDuplicates(["doc_id"])
+
         if fnf_run_mode == "stage":
             return self.run_stage_parallelized(
                 doc_stats_df=doc_stats_df,

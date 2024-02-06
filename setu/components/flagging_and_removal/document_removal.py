@@ -105,6 +105,8 @@ class DocumentRemovalStage(SetuStage):
     ):
 
         df = spark.read.format("parquet").load(analysis_out_path)
+        df = df.dropDuplicates(["doc_id"])
+        
         doc_stats_df = spark.read.format("parquet").load(doc_stats_path)
 
         if doc_removal_run_mode == "stage":

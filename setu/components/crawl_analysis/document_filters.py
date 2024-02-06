@@ -22,6 +22,7 @@ from pyspark.sql.types import (
 from functools import partial
 import json
 import statistics
+from unicodedata import normalize
 
 def get_symbol_ratio(s, char_count, for_spark=True):
 
@@ -174,8 +175,8 @@ def is_num_or_punc_only(s, threshold=0.4):
     char_counter = Counter(s)
     for char in char_counter.keys():
         if not is_valid_char(char) and char not in exception_list:
-                invalid_characters_count += char_counter[char]
-                invalid_chars_found += [char]    
+            invalid_characters_count += char_counter[char]
+            invalid_chars_found += [char]    
     invalid_ratio = invalid_characters_count/char_count if char_count else None
     
     return True if invalid_ratio and invalid_ratio >= threshold else False
@@ -246,7 +247,7 @@ def split_at_terminal_punc(text, lang, lang_code):
 def split_with_delimiter(
     text,
     # delimiter_pattern=r'[.?!।॥:,؟۔](?:\n+)?'
-    delimiter_pattern=r'[.?!।॥؟۔](?:\n+)?'
+    delimiter_pattern=r'[.?!।|॥؟۔](?:\n+)?'
 ):
     lines = re.split(f'({delimiter_pattern})', text)
     if len(lines) % 2 == 0:
@@ -304,7 +305,7 @@ def normalize_text(
         "bengali": "bn",
         "bodo": "hi",
         "dogri": "hi",
-        "english": "en",
+        "english": None,
         "gujarati": "gu",
         "hindi": "hi",
         "kannada": "kn",
@@ -313,27 +314,30 @@ def normalize_text(
         "maithili": "hi",
         "malayalam": "ml",
         "marathi": "mr",
-        "manipuri": "mni",
+        "manipuri": None,
         "nepali": "ne",
         "oriya": "or",
         "punjabi": "pa",
         "sanskrit": "sa",
-        "santhali": "sat",
+        "santhali": None,
         "sindhi": "ur",
-        "tamil": "ta",
+        "tamil": "ta",  
         "telugu": "te",
         "urdu": "ur",
     }
 
     factory = IndicNormalizerFactory()
-    normalizer = factory.get_normalizer(
-        language=normalizer_lang[lang], 
-        remove_nuktas=remove_nuktas,
-        nasals_mode=nasals_mode,
-        do_normalize_chandras=do_normalize_chandras,
-        do_normalize_vowel_ending=do_normalize_vowel_ending
-    )
-    return normalizer.normalize(text)
+    if lang not in ["english", "manipuri", "santhali", "other"]:
+        normalizer = factory.get_normalizer(
+            language=normalizer_lang[lang],
+            # remove_nuktas=remove_nuktas,
+            # nasals_mode=nasals_mode,
+            # do_normalize_chandras=do_normalize_chandras,
+            # do_normalize_vowel_ending=do_normalize_vowel_ending
+        )
+        return normalize('NFKC', normalizer.normalize(text))
+    else:
+        return normalize('NFKC', text)
 
 def get_num_lines(line_list):
     return len(line_list)
@@ -348,7 +352,7 @@ def get_line_length_stats(line_lengths):
     }
 
 def get_aggregate_stats(
-    line_stats_list, 
+    line_stats_list,  
     nsfw_count_key, 
     words_count_key, 
     char_count_key,

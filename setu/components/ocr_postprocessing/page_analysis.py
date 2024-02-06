@@ -19,6 +19,7 @@ from .ocr_filters import (
     check_script_coverage,
     check_plane_coverage,
     check_bbox_overlap,
+    check_block_density,
 )
 from functools import partial
 
@@ -43,6 +44,7 @@ check_script_coverage_udf = udf(
     partial(check_script_coverage, to_fail_threshold=0.5, failed_paras_ratio=0.3),
     BooleanType(),
 )
+check_block_density_udf = udf(check_block_density, FloatType())
 
 class PageAnalysisStage(SetuStage):
 
@@ -97,11 +99,11 @@ class PageAnalysisStage(SetuStage):
             .select("*", check_horizontal_coverage_udf("blocks", "bbox_to_keep").alias("horizontal_coverage")) \
             .select("*", check_vertical_coverage_udf("blocks", "bbox_to_keep").alias("vertical_coverage")) \
             .select("*", check_bbox_overlap_udf("blocks", "bbox_to_keep").alias("max_iou")) \
-            .select("*", check_script_coverage_udf("blocks").alias("script_coverage"))
+            .select("*", check_script_coverage_udf("blocks").alias("script_coverage")) \
+            .select("*", check_block_density_udf("blocks", "bbox_to_keep").alias("min_block_density"))
         df = self.salting(df, self.n_splits)
         df.write.mode("overwrite").parquet(output_path)
         
-
     def run_data_parallelized(
         self,
         spark,

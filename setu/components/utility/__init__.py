@@ -2,3 +2,4 @@
 from .custom_join import CustomJoinStage
 from .page2pdf import Page2PDFStage
 from .utility import UtilityComponent
+from .normalize import NormalizeStage
