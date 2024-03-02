@@ -66,7 +66,7 @@ check_boolean $save_nsfw_data "save_nsfw_data"
 
 echo -e "\n"
 echo "Environment Variables:"
-echo "SETU_DIR=$SETU_DIR"
+echo "SETU_DIR=$SETU_DIR" ## 
 echo "SETU_TMP_DIR=$SETU_TMP_DIR"
 echo -e "\n"
 echo "Provided Arguments:"
