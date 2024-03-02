@@ -10,6 +10,9 @@ Welcome to Setu's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   setu
+   setu.core
+   setu.components
 
 
 Indices and tables
