@@ -7,8 +7,11 @@ Setu is a comprehensive pipeline designed to clean, filter, and deduplicate dive
 # Table of Contents
 1. [Quickstart](#quickstart)
 2. [Overview](#overview)
+3. [Usage](#usage)
 
 # Quickstart
+This documentation provides an overview of Setu and its workflow, enabling users to efficiently manage and process Web, PDF, and Speech data with Apache Spark.
+
 Note that users who want to run the pipeline on Windows systems are advised to use WSL (Windows Subsystem for Linux) for easier usage. This is due to the presence of dependencies and scripts that are only usable in a Linux environment.
 
 ## Installation
@@ -75,13 +78,19 @@ pyspark
 
 ## Document Preparation
 
-The first stage of Setu focuses on extracting text from a variety of sources to create text documents for further processing. For Web documents, Setu utilizes trafilatura (Barbaresi, 2021b) to extract text from HTML. Meanwhile, PDFs undergo a pipeline that leverages bounding box related information to filter out pages potentially afflicted with recognition issues and noise.
+The first stage of Setu focuses on extracting text from a variety of sources to create text documents for further processing. For Web documents, Setu utilizes [trafilatura](https://trafilatura.readthedocs.io/en/latest/) (Barbaresi, 2021b) to extract text from HTML. Meanwhile, PDFs undergo a pipeline that generate OCR JSON outputs utilizing [GCP Cloud Vision SDK](https://cloud.google.com/sdk/gcloud/reference/ml/vision/detect-text-pdf) that leverages bounding box related information to filter out pages potentially afflicted with recognition issues and noise.
 
-This documentation provides an overview of Setu and its workflow, enabling users to efficiently manage and process Web, PDF, and Speech data with Apache Spark.
+
 
 ## Cleaning and Analysis Stage
 
-In the cleaning and analysis stage, Setu focuses on reducing noise within individual documents. It employs a multi-model approach for language identification, leveraging outputs from IndicLID, NLLB, and gcld3. Various statistics such as character and word counts, NSFW word count, and n-gram repetition ratio are computed during analysis.
+In the cleaning and analysis stage, Setu focuses on reducing noise within individual documents. It employs a multi-model approach for language identification, leveraging outputs from three different Language Identification Libraries:
+
+- [IndicLID](https://github.com/AI4Bharat/IndicLID)
+- [NLLB](https://huggingface.co/facebook/fasttext-language-identification)
+- [Google cld3](https://github.com/google/cld3)
+
+Various statistics such as character and word counts, NSFW word count, and n-gram repetition ratio are computed during analysis.
 
 ## Flagging and Filtering Stage
 
@@ -89,4 +98,4 @@ During the flagging and filtering stage, Setu applies filters based on the compu
 
 ## Deduplication Stage
 
-The deduplication stage of Setu performs fuzzy deduplication using MinHashLSH implemented in text-dedup. This stage helps in identifying and eliminating duplicate documents, enhancing data cleanliness and efficiency.
+The deduplication stage of Setu performs fuzzy deduplication using MinHashLSH implemented in [text-dedup](https://github.com/ChenghaoMou/text-dedup). This stage helps in identifying and eliminating duplicate documents, enhancing data cleanliness and efficiency.
