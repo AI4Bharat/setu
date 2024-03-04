@@ -1,8 +1,77 @@
 # Setu: Web, PDF, and Speech Data Cleaning Pipeline
 
+![Overview of the Setu Pipeline](./setu.png)
+
 Setu is a comprehensive pipeline designed to clean, filter, and deduplicate diverse data sources including Web, PDF, and Speech data. Built on Apache Spark, Setu encompasses four key stages: document preparation, document cleaning and analysis, flagging and filtering, and deduplication.
 
-# Setu Pipeline Stagewise Summary
+# Table of Contents
+1. [Quickstart](#quickstart)
+2. [Overview](#overview)
+
+# Quickstart
+Note that users who want to run the pipeline on Windows systems are advised to use WSL (Windows Subsystem for Linux) for easier usage. This is due to the presence of dependencies and scripts that are only usable in a Linux environment.
+
+## Installation
+
+### Install Python onto WSL
+
+- Before installing make sure your Python Version is 3.10.X or above. For ease of installation we recommend using 3.10.X. Also make sure you have Miniconda installed as we will be using conda enviroments.
+
+### Install Java OpenJDK
+
+```bash
+sudo update
+sudo apt install openjdk-11-jdk
+java --version 
+```
+
+### Install Spark for Hadoop 3.3
+
+Note : Ensure you do this the following in your home/user folder
+
+```bash
+wget https://dlcdn.apache.org/spark/spark-3.5.1/spark-3.5.1-bin-hadoop3.tgz
+```
+```bash
+mkdir ~/hadoop/spark-3.3.0
+tar -xvzf spark-3.3.0-bin-hadoop3.tgz -C ~/hadoop/spark-3.3.0 --strip 1
+```
+
+### Configuration
+- Edit your bashrc file and add the following lines
+```
+export SPARK_HOME= ~/hadoop/spark-3.3.0                                
+export PATH=$SPARK_HOME/bin:$PATH
+source ~/.bashrc
+```
+- Copy the default spark config template and save it as config file.
+```
+cp $SPARK_HOME/conf/spark-defaults.conf.template $SPARK_HOME/conf/spark-defaults.conf
+```
+- Edit the config file and mnetion spark host address.
+```
+nano $SPARK_HOME/conf/spark-defaults.conf
+spark.driver.host	localhost
+```
+- Test your spark installation by running spark-shell.
+```bash
+spark-shell
+```
+
+### Setu Environment Setup
+
+You can now directly create the conda environment from the environment.yaml file provided.
+
+```bash
+conda env create -f environment.yml
+```
+
+Make sure that Pyspark is working by running pyspark on the terminal
+```bash
+pyspark
+```
+
+# Overview
 
 ## Document Preparation
 
@@ -21,45 +90,3 @@ During the flagging and filtering stage, Setu applies filters based on the compu
 ## Deduplication Stage
 
 The deduplication stage of Setu performs fuzzy deduplication using MinHashLSH implemented in text-dedup. This stage helps in identifying and eliminating duplicate documents, enhancing data cleanliness and efficiency.
-
-# Setu Conda Environment Setup
-
-To set up the Setu environment using Conda and install packages from the `setu_env.txt` file, follow these instructions:
-
-## 1. Install Conda
-
-If you haven't already installed Conda, download and install Miniconda or Anaconda from the [official website](https://docs.conda.io/en/latest/miniconda.html).
-
-## 2. Create a New Conda Environment
-
-Open a terminal or command prompt and create a new Conda environment using the following command:
-
-```console
-conda create --name setu_env python=3.10
-```
-
-## 3. Activate the Conda Environment
-
-Activate the newly created environment using the following command:
-
-```console
-conda activate setu_env
-```
-
-## 4. Install Packages from the setu_env.txt File
-
-Use the following command to install packages listed in the `setu_env.txt` file:
-
-```console
-conda install --file setu_env.txt
-```
-
-This command will install all the required packages specified in the `setu_env.txt` file into your Conda environment.
-
-## 5. Verify Installation
-
-To verify that the packages have been installed correctly, you can run:
-
-```console
-conda list
-```
