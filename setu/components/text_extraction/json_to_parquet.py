@@ -151,59 +151,58 @@ class JSON2ParquetStage(SetuStage):
         docs_per_partition,
         output_path,
         lang,
-        run_local
+        run_local,
+        is_multiline=None
     ):
 
-        # def read_files_from_list(idx, partition, lang, run_local=True):
+        def read_files_from_list(idx, partition, lang, run_local=True):
 
-        #     print(f"Starting processing of partition - {idx}")
+            print(f"Starting processing of partition - {idx}")
 
-        #     if not run_local:
-        #         tmp_list = [f"{i}\n" for i in json_list]
-        #         with open(f"/tmp/json_data_{self.mode}_{idx}.txt", "w") as tmp_f:
-        #             tmp_f.writelines(tmp_list)
-        #         subprocess.run([
-        #             f"cat",
-        #             f"/tmp/json_data_{self.mode}_{idx}.txt",
-        #             "|",
-        #             "gsutil", 
-        #             "-m",
-        #             "cp",
-        #             "-I", 
-        #             f"/tmp/json_data_{self.mode}_{idx}"
-        #         ])
-        #         json_list = glob.glob(f"/tmp/json_data_{self.mode}_{idx}/*.json")
+            if not run_local:
+                tmp_list = [f"{i}\n" for i in json_list]
+                with open(f"/tmp/json_data_{self.mode}_{idx}.txt", "w") as tmp_f:
+                    tmp_f.writelines(tmp_list)
+                subprocess.run([
+                    f"cat",
+                    f"/tmp/json_data_{self.mode}_{idx}.txt",
+                    "|",
+                    "gsutil", 
+                    "-m",
+                    "cp",
+                    "-I", 
+                    f"/tmp/json_data_{self.mode}_{idx}"
+                ])
+                json_list = glob.glob(f"/tmp/json_data_{self.mode}_{idx}/*.json")
 
-        #     for row in partition:
-        #         json_path = row["value"]
-        #         print(f"Performing extraction on: {json_path}")
-        #         with open(json_path, "r") as jf:
-        #             content = json.load(jf)
-        #         out = [content["doc_id"], content["url"], content["source"], lang, content["text"]]
-        #         yield out
+            for row in partition:
+                json_path = row["value"]
+                print(f"Performing extraction on: {json_path}")
+                with open(json_path, "r") as jf:
+                    content = json.load(jf)
+                out = [content["doc_id"], content["url"], content["source"], lang, content["text"]]
+                yield out
 
-        # save_parquets = partial(
-        #     read_files_from_list, lang=lang, run_local=run_local
-        # )
+        save_parquets = partial(
+            read_files_from_list, lang=lang, run_local=run_local
+        )
 
-        # jsons_path_df = spark.createDataFrame(json_list, StringType())
-        # # curr_cols = list(jsons_path_df.schema.names)
-        # json_path_df = self.set_split_count_and_salt(jsons_path_df, docs_per_partition)
-        # parquet_rdd = json_path_df.rdd.mapPartitionsWithIndex(save_parquets)
+        jsons_path_df = spark.createDataFrame(json_list, StringType())
+        # curr_cols = list(jsons_path_df.schema.names)
+        json_path_df = self.set_split_count_and_salt(jsons_path_df, docs_per_partition)
+        parquet_rdd = json_path_df.rdd.mapPartitionsWithIndex(save_parquets)
 
-        # result_schema = StructType([
-        #     StructField("doc_id", StringType(), True),
-        #     StructField("url", StringType(), True),
-        #     StructField("source", StringType(), True),
-        #     StructField("language", StringType(), True),
-        #     StructField("text", StringType(), True),
-        # ])
-        # df = spark.createDataFrame(parquet_rdd, schema=result_schema)
-        # df = self.salting(df, self.n_splits)
-        # df.write.mode("overwrite") \
-        #     .parquet(output_path)
-
-        pass
+        result_schema = StructType([
+            StructField("doc_id", StringType(), True),
+            StructField("url", StringType(), True),
+            StructField("source", StringType(), True),
+            StructField("language", StringType(), True),
+            StructField("text", StringType(), True),
+        ])
+        df = spark.createDataFrame(parquet_rdd, schema=result_schema)
+        df = self.salting(df, self.n_splits)
+        df.write.mode("overwrite") \
+            .parquet(output_path)
 
     def convert_ocr_output(
         self,

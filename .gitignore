@@ -171,3 +171,5 @@ nutch/apache-*
 nutch/tmp
 *.tar.gz
 *.zip
+examples/my_commands.md
+examples/output
