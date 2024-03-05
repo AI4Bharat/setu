@@ -75,6 +75,7 @@ pyspark
 ```
 
 # Overview
+As part of the IndicLLMSuite : A Blueprint for Creating Pre-training and Fine-Tuning Datasets for Indian Languages we release Sangraha, a 251 billion tokens dataset summed up over 22 languages extracted from curated URLs, existing multilingual corpora, and large-scale translations. 
 
 For data collection we utilize scrapyd to crawl a large collection of web URLs curated across all 22 Indic languages. For PDF documents we download Book collections from [Internet Archive](archive.org) pertaining to Indic Languages. For ease of downloading PDF files, You can refer to [Sangraha Data Download](https://github.com/AI4Bharat/sangraha-download-pipeline).
 
