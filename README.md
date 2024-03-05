@@ -10,7 +10,7 @@ Setu is a comprehensive pipeline designed to clean, filter, and deduplicate dive
 3. [Usage](#usage)
 
 # Quickstart
-This documentation provides an overview of Setu and its workflow, enabling users to efficiently manage and process Web, PDF, and Speech data with Apache Spark.
+This documentation provides an overview of Setu and its workflow, enabling users to efficiently manage and process Web, PDF, and Speech data with [Apache Spark](https://spark.apache.org/downloads.html).
 
 Note that users who want to run the pipeline on Windows systems are advised to use WSL (Windows Subsystem for Linux) for easier usage. This is due to the presence of dependencies and scripts that are only usable in a Linux environment.
 
@@ -76,9 +76,11 @@ pyspark
 
 # Overview
 
+For data collection we utilize scrapyd to crawl a large collection of web URLs curated across all 22 Indic languages. For PDF documents we download Book collections from [Internet Archive](archive.org) pertaining to Indic Languages. For ease of downloading PDF files, You can refer to [Sangraha Data Download](https://github.com/AI4Bharat/sangraha-download-pipeline).
+
 ## Document Preparation
 
-The first stage of Setu focuses on extracting text from a variety of sources to create text documents for further processing. For Web documents, Setu utilizes [trafilatura](https://trafilatura.readthedocs.io/en/latest/) (Barbaresi, 2021b) to extract text from HTML. Meanwhile, PDFs undergo a pipeline that generate OCR JSON outputs utilizing [GCP Cloud Vision SDK](https://cloud.google.com/sdk/gcloud/reference/ml/vision/detect-text-pdf) that leverages bounding box related information to filter out pages potentially afflicted with recognition issues and noise.
+The first stage of Setu focuses on extracting text from a variety of sources to create text documents for further processing. For Web documents, Setu utilizes [trafilatura](https://trafilatura.readthedocs.io/en/latest/) (Barbaresi, 2021b) to extract text from HTML. Meanwhile, PDFs undergo a pipeline that generate OCR JSON outputs utilizing [GCP Cloud Vision SDK](https://cloud.google.com/sdk/gcloud/reference/ml/vision/detect-text-pdf). Once these JSONs are generated, Setu leverages bounding box related information to filter out pages potentially afflicted with recognition issues and noise.
 
 
 
