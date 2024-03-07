@@ -21,13 +21,22 @@ Before running the commands make see to that you are in the setu/setu directory 
 ```bash
 SETU_DIR=/home/$USER/setu SETU_TMP_DIR=/home/$USER/tmp/ FILTER_DATA_ROOT=/home/$USER/setu/setu/data \
     spark-submit \
-    --master $SPARK_MASTER_URL \
+    --master spark://YDEARYZEN.:7077 \
     --deploy-mode client \
     --driver-java-options -Djava.io.tmpdir=/home/$USER/tmp/ \
     --conf "spark.driver.extraJavaOptions=-Djava.io.tmpdir=/home/$USER/tmp/" \
     --conf "spark.executor.extraJavaOptions=-Djava.io.tmpdir=/home/$USER/tmp/" \
     --conf spark.worker.dir="/home/$USER/tmp/" \
     --conf spark.local.dir="/home/$USER/tmp/" \
+    --conf spark.sql.execution.arrow.pyspark.enabled=true \
+    --conf spark.sql.broadcastTimeout=36000 \
+    --conf spark.driver.maxResultSize=0 \
+    --conf spark.sql.autoBroadcastJoinThreshold=-1 \
+    --conf spark.sql.adaptive.enabled=true \
+    --conf spark.serializer='org.apache.spark.serializer.KryoSerializer' \
+    --conf spark.speculation=true \
+    --conf "spark.default.parallelism=128" \
+    --conf "spark.sql.shuffle.partitions=512" \
     --num-executors 4 \
     --executor-cores 2 \
     --executor-memory 3G \
@@ -35,7 +44,7 @@ SETU_DIR=/home/$USER/setu SETU_TMP_DIR=/home/$USER/tmp/ FILTER_DATA_ROOT=/home/$
     --archives "/home/$USER/setu/dataproc/envs/setu.zip" \
     --conf 'spark.executorEnv.PYTHONPATH=setu.zip' \
     --conf 'spark.executorEnv.FILTER_DATA_ROOT=setu.zip/data' \
-    run.py \
+    /home/$USER/setu/setu/run.py \
     --config /home/$USER/setu/configs/crawls/spark_english_config.json \
     --mode crawl \
     --run_local True \
@@ -51,15 +60,24 @@ SETU_DIR=/home/$USER/setu SETU_TMP_DIR=/home/$USER/tmp/ FILTER_DATA_ROOT=/home/$
 # TextExtractStage
 
 ```bash
-!SETU_DIR=/home/$USER/setu SETU_TMP_DIR=/home/$USER/tmp/ FILTER_DATA_ROOT=/home/$USER/setu/setu/data \
+SETU_DIR=/home/$USER/setu SETU_TMP_DIR=/home/$USER/tmp/ FILTER_DATA_ROOT=/home/$USER/setu/setu/data \
     spark-submit \
-    --master $SPARK_MASTER_URL \
+    --master spark://YDEARYZEN.:7077 \
     --deploy-mode client \
     --driver-java-options -Djava.io.tmpdir=/home/$USER/tmp/ \
     --conf "spark.driver.extraJavaOptions=-Djava.io.tmpdir=/home/$USER/tmp/" \
     --conf "spark.executor.extraJavaOptions=-Djava.io.tmpdir=/home/$USER/tmp/" \
     --conf spark.worker.dir="/home/$USER/tmp/" \
     --conf spark.local.dir="/home/$USER/tmp/" \
+    --conf spark.sql.execution.arrow.pyspark.enabled=true \
+    --conf spark.sql.broadcastTimeout=36000 \
+    --conf spark.driver.maxResultSize=0 \
+    --conf spark.sql.autoBroadcastJoinThreshold=-1 \
+    --conf spark.sql.adaptive.enabled=true \
+    --conf spark.serializer='org.apache.spark.serializer.KryoSerializer' \
+    --conf spark.speculation=true \
+    --conf "spark.default.parallelism=128" \
+    --conf "spark.sql.shuffle.partitions=512" \
     --num-executors 4 \
     --executor-cores 2 \
     --executor-memory 3G \
@@ -84,13 +102,22 @@ SETU_DIR=/home/$USER/setu SETU_TMP_DIR=/home/$USER/tmp/ FILTER_DATA_ROOT=/home/$
 ```bash
 SETU_DIR=/home/$USER/setu SETU_TMP_DIR=/home/$USER/tmp/ FILTER_DATA_ROOT=/home/$USER/setu/setu/data \
     spark-submit \
-    --master $SPARK_MASTER_URL \
+    --master spark://YDEARYZEN.:7077 \
     --deploy-mode client \
     --driver-java-options -Djava.io.tmpdir=/home/$USER/tmp/ \
     --conf "spark.driver.extraJavaOptions=-Djava.io.tmpdir=/home/$USER/tmp/" \
     --conf "spark.executor.extraJavaOptions=-Djava.io.tmpdir=/home/$USER/tmp/" \
     --conf spark.worker.dir="/home/$USER/tmp/" \
     --conf spark.local.dir="/home/$USER/tmp/" \
+    --conf spark.sql.execution.arrow.pyspark.enabled=true \
+    --conf spark.sql.broadcastTimeout=36000 \
+    --conf spark.driver.maxResultSize=0 \
+    --conf spark.sql.autoBroadcastJoinThreshold=-1 \
+    --conf spark.sql.adaptive.enabled=true \
+    --conf spark.serializer='org.apache.spark.serializer.KryoSerializer' \
+    --conf spark.speculation=true \
+    --conf "spark.default.parallelism=128" \
+    --conf "spark.sql.shuffle.partitions=512" \
     --num-executors 4 \
     --executor-cores 2 \
     --executor-memory 3G \
@@ -98,12 +125,12 @@ SETU_DIR=/home/$USER/setu SETU_TMP_DIR=/home/$USER/tmp/ FILTER_DATA_ROOT=/home/$
     --archives "/home/$USER/setu/dataproc/envs/setu.zip" \
     --conf 'spark.executorEnv.PYTHONPATH=setu.zip' \
     --conf 'spark.executorEnv.FILTER_DATA_ROOT=setu.zip/data' \
-    run.py \
+    /home/$USER/setu/setu/run.py \
     --config /home/$USER/setu/configs/crawls/spark_english_config.json \
     --mode crawl \
     --run_local True \
     DocCleanStage \
-    --doc_df_parquets_path "/home/$USER/sample_data/output/j2p_output/*.parquet" \
+    --doc_df_parquets_path "/home/$USER/setu/examples/output/te_output/*.parquet" \
     --is_doc_df_path_batched False \
     --doc_clean_additional_cols_to_use "url,source,language" \
     --use_symbol_filter True \
@@ -111,8 +138,8 @@ SETU_DIR=/home/$USER/setu SETU_TMP_DIR=/home/$USER/tmp/ FILTER_DATA_ROOT=/home/$
     --doc_clean_verbose False \
     --doc_clean_run_mode data \
     --save_symbol_heavy_docs True \
-    --symbol_filter_output_path "/home/$USER/sample_data/symbol_filter/" \
-    --cleaned_doc_output_path "/home/$USER/sample_data/cleaned_docs/"
+    --symbol_filter_output_path "/home/$USER/setu/examples/output/symbol_filter/" \
+    --cleaned_doc_output_path "/home/$USER/setu/examples/output/cleaned_docs/"
 ```
 
 
@@ -121,7 +148,7 @@ SETU_DIR=/home/$USER/setu SETU_TMP_DIR=/home/$USER/tmp/ FILTER_DATA_ROOT=/home/$
 ```bash
 SETU_DIR=/home/$USER/setu SETU_TMP_DIR=/home/$USER/tmp/ FILTER_DATA_ROOT=/home/$USER/setu/setu/data \
     spark-submit \
-    --master $SPARK_MASTER_URL \
+    --master spark://YDEARYZEN.:7077 \
     --deploy-mode client \
     --driver-java-options -Djava.io.tmpdir=/home/$USER/tmp/ \
     --conf "spark.driver.extraJavaOptions=-Djava.io.tmpdir=/home/$USER/tmp/" \
@@ -137,25 +164,25 @@ SETU_DIR=/home/$USER/setu SETU_TMP_DIR=/home/$USER/tmp/ FILTER_DATA_ROOT=/home/$
     --conf spark.speculation=true \
     --conf "spark.default.parallelism=128" \
     --conf "spark.sql.shuffle.partitions=512" \
-    --num-executors 16 \
-    --executor-cores 8 \
-    --executor-memory 32G \
-    --driver-memory 50G \
+    --num-executors 4 \
+    --executor-cores 2 \
+    --executor-memory 3G \
+    --driver-memory 6G \
     --archives "/home/$USER/setu/dataproc/envs/setu.zip" \
     --conf 'spark.executorEnv.PYTHONPATH=setu.zip' \
     --conf 'spark.executorEnv.FILTER_DATA_ROOT=setu.zip/data' \
-    run.py \
+    /home/$USER/setu/setu/run.py \
     --config /home/$USER/setu/configs/crawls/spark_english_config.json \
     --mode crawl \
     --run_local True \
     LIDStage \
-    --lid_df_parquets_path "/home/$USER/sample_data/cleaned_docs/*.parquet" \
+    --lid_df_parquets_path "/home/$USER/setu/examples/output/cleaned_docs/*.parquet" \
     --is_lid_df_path_batched False \
     --lid_additional_cols "url,source,language" \
     --lid_samples_per_partition 1500 \
     --lid_verbose False \
     --lid_run_mode data \
-    --doc_lid_output_path "/home/$USER/sample_data/lid/"
+    --doc_lid_output_path "/home/$USER/setu/examples/output/lid/"
 ```
 
 
@@ -164,7 +191,7 @@ SETU_DIR=/home/$USER/setu SETU_TMP_DIR=/home/$USER/tmp/ FILTER_DATA_ROOT=/home/$
 ```bash
 SETU_DIR=/home/$USER/setu SETU_TMP_DIR=/home/$USER/tmp/ FILTER_DATA_ROOT=/home/$USER/setu/setu/data \
     spark-submit \
-    --master $SPARK_MASTER_URL \
+    --master spark://YDEARYZEN.:7077 \
     --deploy-mode client \
     --driver-java-options -Djava.io.tmpdir=/home/$USER/tmp/ \
     --conf "spark.driver.extraJavaOptions=-Djava.io.tmpdir=/home/$USER/tmp/" \
@@ -180,27 +207,27 @@ SETU_DIR=/home/$USER/setu SETU_TMP_DIR=/home/$USER/tmp/ FILTER_DATA_ROOT=/home/$
     --conf spark.speculation=true \
     --conf "spark.default.parallelism=128" \
     --conf "spark.sql.shuffle.partitions=512" \
-    --num-executors 16 \
-    --executor-cores 8 \
-    --executor-memory 32G \
-    --driver-memory 50G \
+    --num-executors 4 \
+    --executor-cores 2 \
+    --executor-memory 3G \
+    --driver-memory 6G \
     --archives "/home/$USER/setu/dataproc/envs/setu.zip" \
     --conf 'spark.executorEnv.PYTHONPATH=setu.zip' \
     --conf 'spark.executorEnv.FILTER_DATA_ROOT=setu.zip/data' \
-    run.py \
+    /home/$USER/setu/setu/run.py \
     --config /home/$USER/setu/configs/crawls/spark_english_config.json \
     --mode crawl \
     --run_local True \
     AnalysisStage \
-    --analysis_df_parquets_path "/home/$USER/sample_data/lid/*/*.parquet" \
+    --analysis_df_parquets_path "/home/$USER/setu/examples/output/lid/*/*.parquet" \
     --is_analysis_df_path_batched False \
     --analysis_additional_cols_to_use "url,source,language,doc_lang,doc_lang_iso" \
     --analysis_samples_per_partition 1500 \
     --analysis_verbose False \
     --analysis_run_mode stage \
-    --line_stats_output_path "/home/$USER/sample_data/line_stats/" \
-    --doc_stats_output_path "/home/$USER/sample_data/doc_stats/" \
-    --analysis_output_path "/home/$USER/sample_data/analysis/"
+    --line_stats_output_path "/home/$USER/setu/examples/output/line_stats/" \
+    --doc_stats_output_path "/home/$USER/setu/examples/output/doc_stats/" \
+    --analysis_output_path "/home/$USER/setu/examples/output/analysis/"
 ```
 
 # FlaggingAndFilteringStage
@@ -208,7 +235,7 @@ SETU_DIR=/home/$USER/setu SETU_TMP_DIR=/home/$USER/tmp/ FILTER_DATA_ROOT=/home/$
 ```bash
 SETU_DIR=/home/$USER/setu SETU_TMP_DIR=/home/$USER/tmp/ FILTER_DATA_ROOT=/home/$USER/setu/setu/data \
     spark-submit \
-    --master $SPARK_MASTER_URL \
+    --master spark://YDEARYZEN.:7077 \
     --deploy-mode client \
     --driver-java-options -Djava.io.tmpdir=/home/$USER/tmp/ \
     --conf "spark.driver.extraJavaOptions=-Djava.io.tmpdir=/home/$USER/tmp/" \
@@ -224,26 +251,26 @@ SETU_DIR=/home/$USER/setu SETU_TMP_DIR=/home/$USER/tmp/ FILTER_DATA_ROOT=/home/$
     --conf spark.speculation=true \
     --conf "spark.default.parallelism=128" \
     --conf "spark.sql.shuffle.partitions=512" \
-    --num-executors 16 \
-    --executor-cores 8 \
-    --executor-memory 32G \
-    --driver-memory 50G \
+    --num-executors 4 \
+    --executor-cores 2 \
+    --executor-memory 3G \
+    --driver-memory 6G \
     --archives "/home/$USER/setu/dataproc/envs/setu.zip" \
     --conf 'spark.executorEnv.PYTHONPATH=setu.zip' \
     --conf 'spark.executorEnv.FILTER_DATA_ROOT=setu.zip/data' \
-    run.py \
+    /home/$USER/setu/setu/run.py \
     --config /home/$USER/setu/configs/crawls/spark_english_config.json \
     --mode crawl \
     --run_local True \
     FlaggingAndFilteringStage \
-    --doc_stats_parquets_path "/home/$USER/sample_data/doc_stats/*/*.parquet" \
+    --doc_stats_parquets_path "/home/$USER/setu/examples/output/doc_stats/*/*.parquet" \
     --is_doc_stats_path_batched False \
     --fnf_samples_per_partition 1500 \
     --fnf_verbose False \
     --fnf_run_mode stage \
     --save_nsfw_data True \
-    --nsfw_output_path "/home/$USER/sample_data/nsfw/" \
-    --filtered_doc_stats_output_path "/home/$USER/sample_data/filtered_doc_stats/"
+    --nsfw_output_path "/home/$USER/setu/examples/output/nsfw/" \
+    --filtered_doc_stats_output_path "/home/$USER/setu/examples/output/filtered_doc_stats/"
 ```
 
 # DocumentRemovalStage
@@ -251,7 +278,7 @@ SETU_DIR=/home/$USER/setu SETU_TMP_DIR=/home/$USER/tmp/ FILTER_DATA_ROOT=/home/$
 ```bash
 SETU_DIR=/home/$USER/setu SETU_TMP_DIR=/home/$USER/tmp/ FILTER_DATA_ROOT=/home/$USER/setu/setu/data \
     spark-submit \
-    --master $SPARK_MASTER_URL \
+    --master spark://YDEARYZEN.:7077 \
     --deploy-mode client \
     --driver-java-options -Djava.io.tmpdir=/home/$USER/tmp/ \
     --conf "spark.driver.extraJavaOptions=-Djava.io.tmpdir=/home/$USER/tmp/" \
@@ -267,23 +294,23 @@ SETU_DIR=/home/$USER/setu SETU_TMP_DIR=/home/$USER/tmp/ FILTER_DATA_ROOT=/home/$
     --conf spark.speculation=true \
     --conf "spark.default.parallelism=128" \
     --conf "spark.sql.shuffle.partitions=512" \
-    --num-executors 16 \
-    --executor-cores 8 \
-    --executor-memory 32G \
-    --driver-memory 50G \
+    --num-executors 4 \
+    --executor-cores 2 \
+    --executor-memory 3G \
+    --driver-memory 6G \
     --archives "/home/$USER/setu/dataproc/envs/setu.zip" \
     --conf 'spark.executorEnv.PYTHONPATH=setu.zip' \
     --conf 'spark.executorEnv.FILTER_DATA_ROOT=setu.zip/data' \
-    run.py \
+    /home/$USER/setu/setu/run.py \
     --config /home/$USER/setu/configs/crawls/spark_english_config.json \
     --mode crawl \
     --run_local True \
     DocumentRemovalStage \
-    --analysis_out_path "/home/$USER/sample_data/analysis/*/*.parquet" \
-    --doc_stats_path "/home/$USER/sample_data/doc_stats/*/*.parquet" \
+    --analysis_out_path "/home/$USER/examples/output/analysis/*/*.parquet" \
+    --doc_stats_path "/home/$USER/examples/output/doc_stats/*/*.parquet" \
     --doc_removal_join_col "doc_id" \
     --doc_removal_samples_per_partition 1500 \
     --doc_removal_verbose False \
     --doc_removal_run_mode stage \
-    --filtered_docs_path "/home/$USER/sample_data/filtered_doc_stats/"
+    --filtered_docs_path "/home/$USER/examples/output/filtered_doc_stats/"
 ```

@@ -69,6 +69,8 @@ You can now directly create the conda environment from the environment.yaml file
 conda env create -f environment.yml
 ```
 
+- Refer the [packages](./packages.txt) text file for verification of libraries downloaded. Some libraries need to be downloaded utilizing pip.
+
 Make sure that Pyspark is working by running pyspark on the terminal
 ```bash
 pyspark
@@ -102,3 +104,7 @@ During the flagging and filtering stage, Setu applies filters based on the compu
 ## Deduplication Stage
 
 The deduplication stage of Setu performs fuzzy deduplication using MinHashLSH implemented in [text-dedup](https://github.com/ChenghaoMou/text-dedup). This stage helps in identifying and eliminating duplicate documents, enhancing data cleanliness and efficiency.
+
+# Usage
+
+For running the different stages in setu, You can refer to the [commands](./examples/commands.md) file and the also utilize the [demo](./examples/demo.ipynb) to understand the usage and output of the different stages. Make sure you configure the ```$USER``` and ```--master``` to point to your user folder and corresponding spark master URL. If you choose to store your datasets in a different location make sure you modify the different path arguments for the commands accordingly.

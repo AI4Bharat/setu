@@ -198,7 +198,7 @@ class JSON2ParquetStage(SetuStage):
             StructField("source", StringType(), True),
             StructField("language", StringType(), True),
             StructField("text", StringType(), True),
-            StructField("timestamp", StringType(), True)
+            StructField("timestamp", StringType(), True),
         ])
         df = spark.createDataFrame(parquet_rdd, schema=result_schema)
         df = self.salting(df, self.n_splits)
