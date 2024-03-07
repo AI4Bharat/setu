@@ -11,6 +11,7 @@ from pyspark.sql.types import (
 )
 import glob
 import trafilatura
+from bs4 import BeautifulSoup
 
 class ExtractTextStage(SetuStage):
 
@@ -153,8 +154,8 @@ class ExtractTextStage(SetuStage):
                     out += [row[col]]
                 print(f"Performing extraction on: {row['url']}")
                 try:
-                    if row['html']:
-                        res = trafilatura.bare_extraction(row['html'], include_images=False)
+                    if bool(BeautifulSoup(row["text"], "html.parser").find()):
+                        res = trafilatura.bare_extraction(row['text'], include_images=False)
                     else:
                         res = None
                 except Exception as e:
@@ -174,7 +175,7 @@ class ExtractTextStage(SetuStage):
                 yield out
 
         df = df.dropDuplicates(["doc_id"])
-        df = df.na.drop(subset=["html"])
+        df = df.na.drop(subset=["timestamp"])
         df = self.set_split_count_and_salt(df, docs_per_partition)
         te_rdd = df.rdd.mapPartitionsWithIndex(extract_text_trafilatura)
 

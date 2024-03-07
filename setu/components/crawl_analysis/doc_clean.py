@@ -168,7 +168,7 @@ class DocCleanStage(SetuStage):
             df.show(n=5)
             print("Completed `find_code_spans`....")
 
-        if self.config.remove_code:
+        if "remove_code" in self.config and self.config.remove_code:
 
             df = df.select("*", find_code_spans_udf(doc_id_col, text_col).alias("code_span_results")) \
                     .select(*curr_cols, "code_span_results.*")
@@ -212,11 +212,11 @@ class DocCleanStage(SetuStage):
             spans_df.show(n=5)
             print("Completed `doc2lines` via `\\n`....")
 
-        if self.config.remove_only_num_or_punc_chunks:
+        if "remove_only_num_or_punc_chunks" in self.config and self.config.remove_only_num_or_punc_chunks:
             spans_df = spans_df.withColumn("is_num_or_punc_only", is_num_or_punc_only_udf(text_col)) \
                                 .filter(col("is_num_or_punc_only") == False)
 
-        if self.config.repeated_chunk_filter:
+        if "repeated_chunk_filter" in self.config and self.config.repeated_chunk_filter:
             filtered_chunks = spans_df.groupBy("url", text_col) \
                                     .agg(count("*").alias("repetition_count")) \
                                     .filter(col("repetition_count") == 1)
@@ -228,11 +228,11 @@ class DocCleanStage(SetuStage):
 
         df = self.salting(df, self.n_splits)
         
-        if self.config.remove_terminal_invalid:
+        if "remove_terminal_invalid" in self.config and  self.config.remove_terminal_invalid:
             spans_df = spans_df.select("*", is_terminal_valid_udf(text_col).alias("is_terminal_valid")) \
                                 .filter(spans_df.is_terminal_valid == True)
 
-        if self.config.chunk_length_filter:
+        if "chunk_length_filter" in self.config and self.config.chunk_length_filter:
             spans_df = spans_df.withColumn("chunk_word_count", get_word_count_udf(text_col)) \
                                 .filter(col("chunk_word_count") > 1)
 
@@ -383,7 +383,7 @@ class DocCleanStage(SetuStage):
             
             for row in partition:
                 code_spans = find_code_spans(row[doc_id_col], row[text_col])
-                if self.config.remove_code:
+                if "remove_code" in self.config and self.config.remove_code:
                     text = remove_code(row[text_col], code_spans)
                 
                 if not len(text):
@@ -410,17 +410,17 @@ class DocCleanStage(SetuStage):
                     for i, chunk in enumerate(chunks):
                         
                         is_num_or_punc_valid = True
-                        if self.config.remove_only_num_or_punc_chunks:
+                        if "remove_only_num_or_punc_chunks" in self.config and self.config.remove_only_num_or_punc_chunks:
                             if is_num_or_punc_only(chunk):
                                 is_num_or_punc_valid = False
 
                         is_chunk_terminal_valid = True
-                        if self.config.remove_terminal_invalid:
+                        if "remove_terminal_invalid" in self.config and self.config.remove_terminal_invalid:
                             if not is_terminal_valid(chunk):
                                 is_chunk_terminal_valid = False
 
                         is_chunk_long_enough = True
-                        if self.config.chunk_length_filter:
+                        if "chunk_length_filter" in self.config and self.config.chunk_length_filter:
                             if get_word_count(chunk) <= 1:
                                 is_chunk_long_enough = False
                     
@@ -490,7 +490,7 @@ class DocCleanStage(SetuStage):
 
         cleaned_doc_df = self.salting(cleaned_doc_df, self.n_splits)
 
-        if self.config.repeated_chunk_filter:
+        if "repeated_chunk_filter" in self.config and self.config.repeated_chunk_filter:
 
             spans_df = self.chunk_handler.doc2lines(cleaned_doc_df, text_col, "\n")
 
