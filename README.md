@@ -1,4 +1,4 @@
-# Setu: Web, PDF, and Speech Data Cleaning Pipeline
+# Setu: A Comprehensive Pipeline for Data Cleaning, Filtering and Deduplication
 
 ![Overview of the Setu Pipeline](./setu.png)
 
@@ -104,7 +104,10 @@ During the flagging and filtering stage, Setu applies filters based on the compu
 ## Deduplication Stage
 
 The deduplication stage of Setu performs fuzzy deduplication using MinHashLSH implemented in [text-dedup](https://github.com/ChenghaoMou/text-dedup). This stage helps in identifying and eliminating duplicate documents, enhancing data cleanliness and efficiency.
+<<<<<<< HEAD
 
 # Usage
 
 For running the different stages in setu, You can refer to the [commands](./examples/commands.md) file and the also utilize the [demo](./examples/demo.ipynb) to understand the usage and output of the different stages. Make sure you configure the ```$USER``` and ```--master``` to point to your user folder and corresponding spark master URL. If you choose to store your datasets in a different location make sure you modify the different path arguments for the commands accordingly.
+=======
+>>>>>>> main
