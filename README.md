@@ -1,4 +1,4 @@
-# Setu: Web, PDF, and Speech Data Cleaning Pipeline
+# Setu: A Comprehensive Pipeline for Data Cleaning, Filtering and Deduplication
 
 ![Overview of the Setu Pipeline](./setu.png)
 
