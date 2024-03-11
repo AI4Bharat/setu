@@ -16,6 +16,14 @@ from components.ocr_postprocessing import OCRPostProcessingComponent
 from components.utility import UtilityComponent
 
 class Setu():
+    """
+    The main Setu class that executes the different stages of the data pipeline
+
+    Attributes:
+        config_file : Path to the configuration file for corresponding language and mode type
+        source_mode : The data mode that mentions what type the source input data are i.e. crawl (web) or ocr (pdf) 
+
+    """
 
     def __init__(self, config_file, source_mode="crawl"):
         
@@ -42,6 +50,12 @@ class Setu():
         }
         
     def get_component_list():
+        """
+        Retrieves the list of keys (names) of the components in the pipeline.
+
+        Returns:
+            A list containing the keys of all components present in the setu pipeline.
+        """
         return list(self.components.keys())
     
     @classmethod
