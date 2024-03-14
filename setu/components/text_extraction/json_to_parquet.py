@@ -180,7 +180,7 @@ class JSON2ParquetStage(SetuStage):
                 print(f"Performing extraction on: {json_path}")
                 with open(json_path, "r") as jf:
                     content = json.load(jf)
-                out = [content["doc_id"], content["url"], content["source"], lang, content["text"]]
+                out = [content["doc_id"], content["url"], content["source"], lang, content["html"] if "html" in content else content["text"],content["timestamp"]]
                 yield out
 
         save_parquets = partial(
@@ -198,6 +198,7 @@ class JSON2ParquetStage(SetuStage):
             StructField("source", StringType(), True),
             StructField("language", StringType(), True),
             StructField("text", StringType(), True),
+            StructField("timestamp", StringType(), True),
         ])
         df = spark.createDataFrame(parquet_rdd, schema=result_schema)
         df = self.salting(df, self.n_splits)
