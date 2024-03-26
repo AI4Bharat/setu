@@ -456,7 +456,15 @@ def get_num_lines(line_list:list)->int:
     """
     return len(line_list)
 
-def get_line_length_stats(line_lengths):
+def get_line_length_stats(line_lengths:list)->dict:
+    """get_line_length_stats Function that generates a dictionary of line length statistics.
+
+    Args:
+        line_lengths (list): List of all the line lengths.
+
+    Returns:
+        dict: Dictionary containing the line length statistics.
+    """
     return {
         "mean": statistics.mean(line_lengths),
         "median": statistics.median(line_lengths),
@@ -466,14 +474,28 @@ def get_line_length_stats(line_lengths):
     }
 
 def get_aggregate_stats(
-    line_stats_list,  
-    nsfw_count_key, 
-    words_count_key, 
-    char_count_key,
-    non_li_key, 
-    bytes_key, 
-    symbol_number_count_key,
-):
+    line_stats_list:list,  
+    nsfw_count_key:str, 
+    words_count_key:str, 
+    char_count_key:str,
+    non_li_key:str, 
+    bytes_key:str, 
+    symbol_number_count_key:str,
+)->dict:
+    """get_aggregate_stats Function that aggregates all the line statistics.
+
+    Args:
+        line_stats_list (list): List of all the line stats.
+        nsfw_count_key (str): Key for NSFW Count
+        words_count_key (str): Key for Word Count
+        char_count_key (str): Key for Character Count
+        non_li_key (str): Key for Non Latin-Indic Count
+        bytes_key (str): Key for bytes Count
+        symbol_number_count_key (str): Key for Symbol/Number Count
+
+    Returns:
+        dict: Dictionary containing all the aggregate statistics.
+    """
     aggregate_stats = {}
 
     for line_stat in line_stats_list:
@@ -486,7 +508,15 @@ def get_aggregate_stats(
 
     return aggregate_stats
 
-def restructure_nsfw_dists(arr):
+def restructure_nsfw_dists(arr:list)->dict:
+    """restructure_nsfw_dists Function to restructure the NSFW Dictionary.
+
+    Args:
+        arr (list): List containing language NSFW dictionaries
+
+    Returns:
+        dict: Restructured NSFW Dictionary
+    """
     arr_dict = {}
     for mapp in arr:
         for key, val in mapp.items():
