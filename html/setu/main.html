@@ -517,9 +517,12 @@
 
             <div class="docstring"><p>__init__ Method that initializes the Setu Class object given the configuration path and data source type.</p>
 
-<p>Args:
-    config_file (str): Path to the configuration file based on the language and data input type.
-    source_mode (str, optional): Type of the data input</p>
+<h6 id="arguments">Arguments:</h6>
+
+<ul>
+<li><strong>config_file (str):</strong>  Path to the configuration file based on the language and data input type.</li>
+<li><strong>source_mode (str, optional):</strong>  Type of the data input</li>
+</ul>
 </div>
 
 
@@ -625,8 +628,11 @@
 
             <div class="docstring"><p>get_component_list Method that fetches a list of all the component names in the pipeline.</p>
 
-<p>Returns:
-    list: A list of all the component names present as part of the pipeline.</p>
+<h6 id="returns">Returns:</h6>
+
+<blockquote>
+  <p>list: A list of all the component names present as part of the pipeline.</p>
+</blockquote>
 </div>
 
 
@@ -693,8 +699,11 @@
 
             <div class="docstring"><p>parse_args Method that parses the main and sub arguments required to execute the various stages and components.</p>
 
-<p>Returns:
-    Namespace: A Namespace object containing the required arguments for the pipeline.</p>
+<h6 id="returns">Returns:</h6>
+
+<blockquote>
+  <p>Namespace: A Namespace object containing the required arguments for the pipeline.</p>
+</blockquote>
 </div>
 
 
@@ -724,8 +733,11 @@
 
             <div class="docstring"><p>get_pipeline_name Method that returns the pipeline name.</p>
 
-<p>Returns:
-    str: Name of the pipeline.</p>
+<h6 id="returns">Returns:</h6>
+
+<blockquote>
+  <p>str: Name of the pipeline.</p>
+</blockquote>
 </div>
 
 
@@ -764,8 +776,11 @@
 
             <div class="docstring"><p>get_stage_component_mapping Method that returns the different stages mapped to their respective components.</p>
 
-<p>Returns:
-    dict: A dictionary containing the different components and their stages.</p>
+<h6 id="returns">Returns:</h6>
+
+<blockquote>
+  <p>dict: A dictionary containing the different components and their stages.</p>
+</blockquote>
 </div>
 
 
@@ -808,11 +823,17 @@
 
             <div class="docstring"><p>load_config Method that loads the configuration variable from the config file path.</p>
 
-<p>Args:
-    config_file (str): Path to the configuration file.</p>
+<h6 id="arguments">Arguments:</h6>
 
-<p>Returns:
-    Namespace: Configuration Namespace object.</p>
+<ul>
+<li><strong>config_file (str):</strong>  Path to the configuration file.</li>
+</ul>
+
+<h6 id="returns">Returns:</h6>
+
+<blockquote>
+  <p>Namespace: Configuration Namespace object.</p>
+</blockquote>
 </div>
 
 
@@ -844,12 +865,18 @@
 
             <div class="docstring"><p>run_component Method that executes the particular component given the spark context object</p>
 
-<p>Args:
-    spark (SparkSession): The current spark session object.
-    component (str): Name of the component to execute. Setu if execute whole pipeline.</p>
+<h6 id="arguments">Arguments:</h6>
 
-<p>Returns:
-    Callable: Returns the run function of the particular component</p>
+<ul>
+<li><strong>spark (SparkSession):</strong>  The current spark session object.</li>
+<li><strong>component (str):</strong>  Name of the component to execute. Setu if execute whole pipeline.</li>
+</ul>
+
+<h6 id="returns">Returns:</h6>
+
+<blockquote>
+  <p>Callable: Returns the run function of the particular component</p>
+</blockquote>
 </div>
 
 
@@ -885,12 +912,18 @@
 
             <div class="docstring"><p>run Method that executes the pipeline.</p>
 
-<p>Args:
-    spark (SparkSession): The current spark session object.
-    component (str): Name of the component to execute. Setu if execute whole pipeline.</p>
+<h6 id="arguments">Arguments:</h6>
 
-<p>Returns:
-    Callable: Returns the run_component function of the particular component</p>
+<ul>
+<li><strong>spark (SparkSession):</strong>  The current spark session object.</li>
+<li><strong>component (str):</strong>  Name of the component to execute. Setu if execute whole pipeline.</li>
+</ul>
+
+<h6 id="returns">Returns:</h6>
+
+<blockquote>
+  <p>Callable: Returns the run_component function of the particular component</p>
+</blockquote>
 </div>
 
 

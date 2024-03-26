@@ -939,8 +939,11 @@
 
             <div class="docstring"><p>SetuStage Base Class for the different stages in Setu Pipeline</p>
 
-<p>Args:
-    config (Namespace): The configuration file for the particular data type and language to be processed by the pipeline.</p>
+<h6 id="arguments">Arguments:</h6>
+
+<ul>
+<li><strong>config (Namespace):</strong>  The configuration file for the particular data type and language to be processed by the pipeline.</li>
+</ul>
 </div>
 
 
@@ -1078,8 +1081,11 @@
 
             <div class="docstring"><p>add_cmdline_args Abstract Method for adding command line arguments for the particular stage</p>
 
-<p>Args:
-    parser (ArgumentParser): The argument parser object to which the current stage arguments need to be added.</p>
+<h6 id="arguments">Arguments:</h6>
+
+<ul>
+<li><strong>parser (ArgumentParser):</strong>  The argument parser object to which the current stage arguments need to be added.</li>
+</ul>
 </div>
 
 
@@ -1313,14 +1319,23 @@
 
             <div class="docstring"><p>run_spark Method which triggers spark execution of the particular stage.</p>
 
-<p>Args:
-    parallel_mode (str, optional): The mode in which spark should execute, either data or stage parallel. Defaults to "stage".</p>
+<h6 id="arguments">Arguments:</h6>
 
-<p>Raises:
-    Exception: Throws an exception when unknown value is provided for parallel_mode.</p>
+<ul>
+<li><strong>parallel_mode (str, optional):</strong>  The mode in which spark should execute, either data or stage parallel. Defaults to "stage".</li>
+</ul>
 
-<p>Returns:
-    Callable | Exception: Exception that indicates the user has provided an incorrect value for parallel_mode.</p>
+<h6 id="raises">Raises:</h6>
+
+<ul>
+<li><strong>Exception:</strong>  Throws an exception when unknown value is provided for parallel_mode.</li>
+</ul>
+
+<h6 id="returns">Returns:</h6>
+
+<blockquote>
+  <p>Callable | Exception: Exception that indicates the user has provided an incorrect value for parallel_mode.</p>
+</blockquote>
 </div>
 
 
@@ -1346,11 +1361,17 @@
 
             <div class="docstring"><p>run Method that triggers stage execution based on values of parallel_mode and if spark should be used.</p>
 
-<p>Args:
-    parallel_mode (str, optional): _description_. Defaults to "stage".</p>
+<h6 id="arguments">Arguments:</h6>
 
-<p>Returns:
-    Callable: _description_</p>
+<ul>
+<li><strong>parallel_mode (str, optional):</strong>  _description_. Defaults to "stage".</li>
+</ul>
+
+<h6 id="returns">Returns:</h6>
+
+<blockquote>
+  <p>Callable: _description_</p>
+</blockquote>
 </div>
 
 
@@ -1564,8 +1585,11 @@
 
             <div class="docstring"><p>SetuStage Base Class for the different stages in Setu Pipeline</p>
 
-<p>Args:
-    config (Namespace): The configuration file for the particular data type and language to be processed by the pipeline.</p>
+<h6 id="arguments">Arguments:</h6>
+
+<ul>
+<li><strong>config (Namespace):</strong>  The configuration file for the particular data type and language to be processed by the pipeline.</li>
+</ul>
 </div>
 
 
@@ -1657,8 +1681,11 @@
 
             <div class="docstring"><p>add_cmdline_args Abstract Method for adding command line arguments for the particular stage</p>
 
-<p>Args:
-    parser (ArgumentParser): The argument parser object to which the current stage arguments need to be added.</p>
+<h6 id="arguments">Arguments:</h6>
+
+<ul>
+<li><strong>parser (ArgumentParser):</strong>  The argument parser object to which the current stage arguments need to be added.</li>
+</ul>
 </div>
 
 
@@ -1782,14 +1809,23 @@
 
             <div class="docstring"><p>run_spark Method which triggers spark execution of the particular stage.</p>
 
-<p>Args:
-    parallel_mode (str, optional): The mode in which spark should execute, either data or stage parallel. Defaults to "stage".</p>
+<h6 id="arguments">Arguments:</h6>
 
-<p>Raises:
-    Exception: Throws an exception when unknown value is provided for parallel_mode.</p>
+<ul>
+<li><strong>parallel_mode (str, optional):</strong>  The mode in which spark should execute, either data or stage parallel. Defaults to "stage".</li>
+</ul>
 
-<p>Returns:
-    Callable | Exception: Exception that indicates the user has provided an incorrect value for parallel_mode.</p>
+<h6 id="raises">Raises:</h6>
+
+<ul>
+<li><strong>Exception:</strong>  Throws an exception when unknown value is provided for parallel_mode.</li>
+</ul>
+
+<h6 id="returns">Returns:</h6>
+
+<blockquote>
+  <p>Callable | Exception: Exception that indicates the user has provided an incorrect value for parallel_mode.</p>
+</blockquote>
 </div>
 
 
@@ -1815,11 +1851,17 @@
 
             <div class="docstring"><p>run Method that triggers stage execution based on values of parallel_mode and if spark should be used.</p>
 
-<p>Args:
-    parallel_mode (str, optional): _description_. Defaults to "stage".</p>
+<h6 id="arguments">Arguments:</h6>
 
-<p>Returns:
-    Callable: _description_</p>
+<ul>
+<li><strong>parallel_mode (str, optional):</strong>  _description_. Defaults to "stage".</li>
+</ul>
+
+<h6 id="returns">Returns:</h6>
+
+<blockquote>
+  <p>Callable: _description_</p>
+</blockquote>
 </div>
 
 
@@ -1934,8 +1976,11 @@
 
             <div class="docstring"><p>SetuComponent Base Class for the different components in Setu Pipeline</p>
 
-<p>Args:
-    config (Namespace): The configuration file for the particular data type and language to be processed by the pipeline.</p>
+<h6 id="arguments">Arguments:</h6>
+
+<ul>
+<li><strong>config (Namespace):</strong>  The configuration file for the particular data type and language to be processed by the pipeline.</li>
+</ul>
 </div>
 
 
@@ -2033,8 +2078,11 @@
 
             <div class="docstring"><p>add_cmdline_args Abstract Method for adding command line arguments for the particular component</p>
 
-<p>Args:
-    parser (ArgumentParser): The argument parser object to which the current stage arguments need to be added.</p>
+<h6 id="arguments">Arguments:</h6>
+
+<ul>
+<li><strong>parser (ArgumentParser):</strong>  The argument parser object to which the current stage arguments need to be added.</li>
+</ul>
 </div>
 
 
@@ -2063,8 +2111,11 @@
 
             <div class="docstring"><p>get_stage_mapping Method the provides the a dictionary mapping of the stage names as keys and their corresponding stage objects as values.</p>
 
-<p>Returns:
-    dict: Dictionary containing the different stage names and objects as key/value pairs.</p>
+<h6 id="returns">Returns:</h6>
+
+<blockquote>
+  <p>dict: Dictionary containing the different stage names and objects as key/value pairs.</p>
+</blockquote>
 </div>
 
 

@@ -14,9 +14,16 @@ from pyspark.sql.types import (
 import statistics
 from unicodedata import normalize
 import regex
+from typing import Callable
 
-def get_symbol_ratio(s, char_count, for_spark=True):
+def get_symbol_ratio(s:str, char_count:int, for_spark:bool=True):
+    """get_symbol_ratio Returns the ratio of invalid characters, the number of invalid characters and the invalid characters.
 
+    Args:
+        s (str): Line that needs to be processed.
+        char_count (int): Number of characters in the the line.
+        for_spark (bool, optional): If computation required as part of spark pipeline. Defaults to True.
+    """
     def is_valid_char(character):
         # Unicode ranges:
         # Latin (English): U+0041 - U+005A and U+0061 - U+007A
@@ -88,8 +95,16 @@ def get_symbol_ratio(s, char_count, for_spark=True):
         return invalid_characters_count/char_count if char_count else None, invalid_characters_count
     return invalid_characters_count/char_count, invalid_characters_count, invalid_chars_found
 
-def is_num_or_punc_only(s, threshold=0.4):
-    
+def is_num_or_punc_only(s:str, threshold:float=0.4)->bool:
+    """is_num_or_punc_only Function that checks if a line is either numbers or punctuation only
+
+    Args:
+        s (str): Line to be processed
+        threshold (float, optional): Threshold value for checking number of numeric/punctuation characters in the line. Defaults to 0.4.
+
+    Returns:
+        bool: Boolean Value that indicates if the string had numeric or punctuation only as majority content.
+    """
     if s.isnumeric():
         return True
     
@@ -182,8 +197,18 @@ patterns = [
         # CSS
         (re.compile(r'(?s)\..*?\{.*?\}'), 'CSS'),
     ]
+"""The various patterns to identify if the text is HTML, JS or CSS content."""
 
-def find_code_spans_spark(doc_id, text):
+def find_code_spans_spark(doc_id:str, text:str)->Row:
+    """find_code_spans_spark Returns a Pyspark Row that contains the code content in the given text
+
+    Args:
+        doc_id (str): The document ID
+        text (str): The text containing the code spans/lines.
+
+    Returns:
+        Row: A Pyspark Row object containing the code spans and if present.
+    """
     spans = []
     try:
         for pattern, lang in patterns:
@@ -193,19 +218,46 @@ def find_code_spans_spark(doc_id, text):
     except:
         return Row("code_spans", "code_spans_success")(None, False)
 
-def find_code_spans(doc_id, text):
+def find_code_spans(doc_id:str, text:str)->list|None:
+    """find_code_spans Returns a list that contains the code content in the given text
+
+    Args:
+        doc_id (str): The document ID
+        text (str): The text containing the code spans/lines.
+
+    Returns:
+        list|None: List of code spans in the given text.
+    """
     spans = []
     for pattern, lang in patterns:
         for match in pattern.finditer(text):
             spans.append([match.start(), match.end()])
     return spans if len(spans) else None
 
-def is_terminal_valid(text):
+def is_terminal_valid(text:str)->bool:
+    """is_terminal_valid Check if the line terminal is a valid value.
+
+    Args:
+        text (str): The text to be checked.
+
+    Returns:
+        bool: Boolean value indicating if the line has a valid terminal value.
+    """
     if text.endswith(CONSTANTS.TERMINAL_PUNCTUATIONS_EXCEPTION):
         return False
     return text.endswith(CONSTANTS.TERMINAL_PUNCTUATIONS)
     
-def remove_non_terminal_punc_span(chunk, is_term_valid, chunk_len_threshold):
+def remove_non_terminal_punc_span(chunk:str, is_term_valid:bool, chunk_len_threshold:float)->str|None:
+    """remove_non_terminal_punc_span Function that removes non terminal punctuation spans.
+
+    Args:
+        chunk (str): The text chunk to be processed.
+        is_term_valid (bool): Boolean value if terminal is valid.
+        chunk_len_threshold (float): Value representing the minimum chunk length
+
+    Returns:
+        str|None: Return the text chunk after removing non terminal punctuation spans.
+    """
     if is_term_valid:
         return chunk
     
@@ -228,18 +280,46 @@ def remove_non_terminal_punc_span(chunk, is_term_valid, chunk_len_threshold):
     else:
         return None
 
-def __get_lang_code(lang, lang_code):
+def __get_lang_code(lang:str, lang_code:str)->tuple:
+    """__get_lang_code Functions that returns a tuple containing language and it's ISO Code.
+
+    Args:
+        lang (str): Language Name.
+        lang_code (str): Language ISO Code.
+
+    Returns:
+        tuple: Tuple containing Language, ISO Code.
+    """
     return ("urdu", "ur") if lang == "urdu" and lang_code == "urd" else (lang, lang_code)
 
-def split_at_terminal_punc(text, lang, lang_code):
+def split_at_terminal_punc(text:str, lang:str, lang_code:str)->Callable:
+    """split_at_terminal_punc Split text at the terminal punctuation for the corresponding language
+
+    Args:
+        text (str): The text string.
+        lang (str): Language for the text.
+        lang_code (str): Language ISO Code.
+
+    Returns:
+        Callable: Returns the sentence_split for the text and language code.
+    """
     _, lang_code = __get_lang_code(lang, lang_code)
     return sentence_split(text, lang_code)
 
 def split_with_delimiter(
-    text,
+    text:str,
     # delimiter_pattern=r'[.?!।॥:,؟۔](?:\n+)?'
-    delimiter_pattern=r'[.?!।|॥؟۔](?:\n+)?'
-):
+    delimiter_pattern:str=r'[.?!।|॥؟۔](?:\n+)?'
+)->list:
+    """split_with_delimiter Function that splits the given text based on the delimitter pattern provided
+
+    Args:
+        text (str): The text to be split.
+        delimiter_pattern (str, optional): The delimitter regex pattern for splitting.
+
+    Returns:
+        list: List of the lines split based on delimitter pattern.
+    """
     lines = re.split(f'({delimiter_pattern})', text)
     if len(lines) % 2 == 0:
         iter_range = range(0, len(lines), 2)
@@ -249,12 +329,29 @@ def split_with_delimiter(
         out = [lines[i]+lines[i+1] for i in iter_range] + [lines[-1]]
     return out
 
-def has_code(code_spans):
+def has_code(code_spans:list)->bool:
+    """has_code Check if the code_spans value is a list
+
+    Args:
+        code_spans (list): The code_spans variable
+
+    Returns:
+        bool: Boolean Value representing if the code_spans is a non-null object.
+    """
     if code_spans:
         return True
     return False
 
-def remove_code(text, code_spans):
+def remove_code(text:str, code_spans:list)->str:
+    """remove_code Functions that removes the provided code spans from the text.
+
+    Args:
+        text (str): The text string.
+        code_spans (list): list of code spans that need to be removed.
+
+    Returns:
+        str: Returns the text string after removing code spans.
+    """
     if not code_spans:
         return text
     
@@ -270,7 +367,12 @@ def remove_code(text, code_spans):
 
     return result
 
-def terminal_punc_filter(text):
+def terminal_punc_filter(text:str):
+    """terminal_punc_filter Function that filters out punctuations from the text provided.
+
+    Args:
+        text (str): The text string.
+    """
     total_chunks_flagged = 0
     chunks = text.split("\n")
     cleaned_chunks = []
@@ -284,13 +386,26 @@ def terminal_punc_filter(text):
     return "\n".join(cleaned_chunks), total_chunks_flagged
 
 def normalize_text(
-    text, 
-    lang,
-    remove_nuktas=False,
-    nasals_mode='do_nothing',
-    do_normalize_chandras=False,
-    do_normalize_vowel_ending=False
-):
+    text:str, 
+    lang:str,
+    remove_nuktas:bool=False,
+    nasals_mode:str='do_nothing',
+    do_normalize_chandras:bool=False,
+    do_normalize_vowel_ending:bool=False
+)->Callable:
+    """normalize_text Function that normalizes the given text utilizing the IndicNormalizerFactory.
+
+    Args:
+        text (str): The text string.
+        lang (str): The text language.
+        remove_nuktas (bool, optional): Whether to remove nuktas. Defaults to False.
+        nasals_mode (str, optional): Not Defined. Defaults to 'do_nothing'.
+        do_normalize_chandras (bool, optional): Whether to normalize chandras. Defaults to False.
+        do_normalize_vowel_ending (bool, optional): Whether to normalize vowel endings. Defaults to False.
+
+    Returns:
+        Callable: Return Normalize Function call on the text given the language value.
+    """
     normalizer_lang = {
         "assamese": "as",
         "bengali": "bn",
@@ -330,7 +445,15 @@ def normalize_text(
     else:
         return normalize('NFKC', text)
 
-def get_num_lines(line_list):
+def get_num_lines(line_list:list)->int:
+    """get_num_lines Returns the number of lines in the line list.
+
+    Args:
+        line_list (list): List of lines.
+
+    Returns:
+        int: Value representing the number of lines in the line list.
+    """
     return len(line_list)
 
 def get_line_length_stats(line_lengths):

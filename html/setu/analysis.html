@@ -573,29 +573,53 @@
 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">split_with_delimiter_udf</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">text</span>, </span><span class="param"><span class="n">delimiter_pattern</span><span class="o">=</span><span class="s1">&#39;[.?!।|॥؟۔](?:</span><span class="se">\\</span><span class="s1">n+)?&#39;</span></span><span class="return-annotation">):</span></span>
+        <span class="name">split_with_delimiter_udf</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">text</span><span class="p">:</span> <span class="nb">str</span>, </span><span class="param"><span class="n">delimiter_pattern</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;[.?!।|॥؟۔](?:</span><span class="se">\\</span><span class="s1">n+)?&#39;</span></span><span class="return-annotation">) -> <span class="nb">list</span>:</span></span>
 
                 <label class="view-source-button" for="split_with_delimiter_udf-view-source"><span>View Source</span></label>
 
     </div>
     <a class="headerlink" href="#split_with_delimiter_udf"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="split_with_delimiter_udf-239"><a href="#split_with_delimiter_udf-239"><span class="linenos">239</span></a><span class="k">def</span> <span class="nf">split_with_delimiter</span><span class="p">(</span>
-</span><span id="split_with_delimiter_udf-240"><a href="#split_with_delimiter_udf-240"><span class="linenos">240</span></a>    <span class="n">text</span><span class="p">,</span>
-</span><span id="split_with_delimiter_udf-241"><a href="#split_with_delimiter_udf-241"><span class="linenos">241</span></a>    <span class="c1"># delimiter_pattern=r&#39;[.?!।॥:,؟۔](?:\n+)?&#39;</span>
-</span><span id="split_with_delimiter_udf-242"><a href="#split_with_delimiter_udf-242"><span class="linenos">242</span></a>    <span class="n">delimiter_pattern</span><span class="o">=</span><span class="sa">r</span><span class="s1">&#39;[.?!।|॥؟۔](?:\n+)?&#39;</span>
-</span><span id="split_with_delimiter_udf-243"><a href="#split_with_delimiter_udf-243"><span class="linenos">243</span></a><span class="p">):</span>
-</span><span id="split_with_delimiter_udf-244"><a href="#split_with_delimiter_udf-244"><span class="linenos">244</span></a>    <span class="n">lines</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;(</span><span class="si">{</span><span class="n">delimiter_pattern</span><span class="si">}</span><span class="s1">)&#39;</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
-</span><span id="split_with_delimiter_udf-245"><a href="#split_with_delimiter_udf-245"><span class="linenos">245</span></a>    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-</span><span id="split_with_delimiter_udf-246"><a href="#split_with_delimiter_udf-246"><span class="linenos">246</span></a>        <span class="n">iter_range</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">lines</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span>
-</span><span id="split_with_delimiter_udf-247"><a href="#split_with_delimiter_udf-247"><span class="linenos">247</span></a>        <span class="n">out</span> <span class="o">=</span> <span class="p">[</span><span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">+</span><span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">iter_range</span><span class="p">]</span>
-</span><span id="split_with_delimiter_udf-248"><a href="#split_with_delimiter_udf-248"><span class="linenos">248</span></a>    <span class="k">else</span><span class="p">:</span>
-</span><span id="split_with_delimiter_udf-249"><a href="#split_with_delimiter_udf-249"><span class="linenos">249</span></a>        <span class="n">iter_range</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
-</span><span id="split_with_delimiter_udf-250"><a href="#split_with_delimiter_udf-250"><span class="linenos">250</span></a>        <span class="n">out</span> <span class="o">=</span> <span class="p">[</span><span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">+</span><span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">iter_range</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">lines</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span>
-</span><span id="split_with_delimiter_udf-251"><a href="#split_with_delimiter_udf-251"><span class="linenos">251</span></a>    <span class="k">return</span> <span class="n">out</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="split_with_delimiter_udf-310"><a href="#split_with_delimiter_udf-310"><span class="linenos">310</span></a><span class="k">def</span> <span class="nf">split_with_delimiter</span><span class="p">(</span>
+</span><span id="split_with_delimiter_udf-311"><a href="#split_with_delimiter_udf-311"><span class="linenos">311</span></a>    <span class="n">text</span><span class="p">:</span><span class="nb">str</span><span class="p">,</span>
+</span><span id="split_with_delimiter_udf-312"><a href="#split_with_delimiter_udf-312"><span class="linenos">312</span></a>    <span class="c1"># delimiter_pattern=r&#39;[.?!।॥:,؟۔](?:\n+)?&#39;</span>
+</span><span id="split_with_delimiter_udf-313"><a href="#split_with_delimiter_udf-313"><span class="linenos">313</span></a>    <span class="n">delimiter_pattern</span><span class="p">:</span><span class="nb">str</span><span class="o">=</span><span class="sa">r</span><span class="s1">&#39;[.?!।|॥؟۔](?:\n+)?&#39;</span>
+</span><span id="split_with_delimiter_udf-314"><a href="#split_with_delimiter_udf-314"><span class="linenos">314</span></a><span class="p">)</span><span class="o">-&gt;</span><span class="nb">list</span><span class="p">:</span>
+</span><span id="split_with_delimiter_udf-315"><a href="#split_with_delimiter_udf-315"><span class="linenos">315</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;split_with_delimiter Function that splits the given text based on the delimitter pattern provided</span>
+</span><span id="split_with_delimiter_udf-316"><a href="#split_with_delimiter_udf-316"><span class="linenos">316</span></a>
+</span><span id="split_with_delimiter_udf-317"><a href="#split_with_delimiter_udf-317"><span class="linenos">317</span></a><span class="sd">    Args:</span>
+</span><span id="split_with_delimiter_udf-318"><a href="#split_with_delimiter_udf-318"><span class="linenos">318</span></a><span class="sd">        text (str): The text to be split.</span>
+</span><span id="split_with_delimiter_udf-319"><a href="#split_with_delimiter_udf-319"><span class="linenos">319</span></a><span class="sd">        delimiter_pattern (str, optional): The delimitter regex pattern for splitting.</span>
+</span><span id="split_with_delimiter_udf-320"><a href="#split_with_delimiter_udf-320"><span class="linenos">320</span></a>
+</span><span id="split_with_delimiter_udf-321"><a href="#split_with_delimiter_udf-321"><span class="linenos">321</span></a><span class="sd">    Returns:</span>
+</span><span id="split_with_delimiter_udf-322"><a href="#split_with_delimiter_udf-322"><span class="linenos">322</span></a><span class="sd">        list: List of the lines split based on delimitter pattern.</span>
+</span><span id="split_with_delimiter_udf-323"><a href="#split_with_delimiter_udf-323"><span class="linenos">323</span></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="split_with_delimiter_udf-324"><a href="#split_with_delimiter_udf-324"><span class="linenos">324</span></a>    <span class="n">lines</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;(</span><span class="si">{</span><span class="n">delimiter_pattern</span><span class="si">}</span><span class="s1">)&#39;</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
+</span><span id="split_with_delimiter_udf-325"><a href="#split_with_delimiter_udf-325"><span class="linenos">325</span></a>    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+</span><span id="split_with_delimiter_udf-326"><a href="#split_with_delimiter_udf-326"><span class="linenos">326</span></a>        <span class="n">iter_range</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">lines</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span>
+</span><span id="split_with_delimiter_udf-327"><a href="#split_with_delimiter_udf-327"><span class="linenos">327</span></a>        <span class="n">out</span> <span class="o">=</span> <span class="p">[</span><span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">+</span><span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">iter_range</span><span class="p">]</span>
+</span><span id="split_with_delimiter_udf-328"><a href="#split_with_delimiter_udf-328"><span class="linenos">328</span></a>    <span class="k">else</span><span class="p">:</span>
+</span><span id="split_with_delimiter_udf-329"><a href="#split_with_delimiter_udf-329"><span class="linenos">329</span></a>        <span class="n">iter_range</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+</span><span id="split_with_delimiter_udf-330"><a href="#split_with_delimiter_udf-330"><span class="linenos">330</span></a>        <span class="n">out</span> <span class="o">=</span> <span class="p">[</span><span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">+</span><span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">iter_range</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">lines</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span>
+</span><span id="split_with_delimiter_udf-331"><a href="#split_with_delimiter_udf-331"><span class="linenos">331</span></a>    <span class="k">return</span> <span class="n">out</span>
 </span></pre></div>
 
 
-    
+            <div class="docstring"><p>split_with_delimiter Function that splits the given text based on the delimitter pattern provided</p>
+
+<h6 id="arguments">Arguments:</h6>
+
+<ul>
+<li><strong>text (str):</strong>  The text to be split.</li>
+<li><strong>delimiter_pattern (str, optional):</strong>  The delimitter regex pattern for splitting.</li>
+</ul>
+
+<h6 id="returns">Returns:</h6>
+
+<blockquote>
+  <p>list: List of the lines split based on delimitter pattern.</p>
+</blockquote>
+</div>
+
 
                 </section>
                 <section id="get_nsfw_word_dist_udf">
@@ -609,12 +633,12 @@
 
     </div>
     <a class="headerlink" href="#get_nsfw_word_dist_udf"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="get_nsfw_word_dist_udf-607"><a href="#get_nsfw_word_dist_udf-607"><span class="linenos">607</span></a><span class="k">def</span> <span class="nf">get_nsfw_word_dist</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">lang</span><span class="p">):</span>
-</span><span id="get_nsfw_word_dist_udf-608"><a href="#get_nsfw_word_dist_udf-608"><span class="linenos">608</span></a>    <span class="n">nsfw_dist</span> <span class="o">=</span> <span class="p">{}</span>
-</span><span id="get_nsfw_word_dist_udf-609"><a href="#get_nsfw_word_dist_udf-609"><span class="linenos">609</span></a>    <span class="n">nsfw_spans</span> <span class="o">=</span> <span class="n">get_nsfw_words_pos</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">lang</span><span class="p">,</span> <span class="n">for_spark</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-</span><span id="get_nsfw_word_dist_udf-610"><a href="#get_nsfw_word_dist_udf-610"><span class="linenos">610</span></a>    <span class="k">for</span> <span class="n">word</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">nsfw_spans</span><span class="p">:</span>
-</span><span id="get_nsfw_word_dist_udf-611"><a href="#get_nsfw_word_dist_udf-611"><span class="linenos">611</span></a>        <span class="n">nsfw_dist</span><span class="p">[</span><span class="n">word</span><span class="p">]</span> <span class="o">=</span> <span class="n">nsfw_dist</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">word</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
-</span><span id="get_nsfw_word_dist_udf-612"><a href="#get_nsfw_word_dist_udf-612"><span class="linenos">612</span></a>    <span class="k">return</span> <span class="n">nsfw_dist</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="get_nsfw_word_dist_udf-730"><a href="#get_nsfw_word_dist_udf-730"><span class="linenos">730</span></a><span class="k">def</span> <span class="nf">get_nsfw_word_dist</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">lang</span><span class="p">):</span>
+</span><span id="get_nsfw_word_dist_udf-731"><a href="#get_nsfw_word_dist_udf-731"><span class="linenos">731</span></a>    <span class="n">nsfw_dist</span> <span class="o">=</span> <span class="p">{}</span>
+</span><span id="get_nsfw_word_dist_udf-732"><a href="#get_nsfw_word_dist_udf-732"><span class="linenos">732</span></a>    <span class="n">nsfw_spans</span> <span class="o">=</span> <span class="n">get_nsfw_words_pos</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">lang</span><span class="p">,</span> <span class="n">for_spark</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</span><span id="get_nsfw_word_dist_udf-733"><a href="#get_nsfw_word_dist_udf-733"><span class="linenos">733</span></a>    <span class="k">for</span> <span class="n">word</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">nsfw_spans</span><span class="p">:</span>
+</span><span id="get_nsfw_word_dist_udf-734"><a href="#get_nsfw_word_dist_udf-734"><span class="linenos">734</span></a>        <span class="n">nsfw_dist</span><span class="p">[</span><span class="n">word</span><span class="p">]</span> <span class="o">=</span> <span class="n">nsfw_dist</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">word</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+</span><span id="get_nsfw_word_dist_udf-735"><a href="#get_nsfw_word_dist_udf-735"><span class="linenos">735</span></a>    <span class="k">return</span> <span class="n">nsfw_dist</span>
 </span></pre></div>
 
 
@@ -632,9 +656,9 @@
 
     </div>
     <a class="headerlink" href="#non_li_chars_total_count_udf"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="non_li_chars_total_count_udf-614"><a href="#non_li_chars_total_count_udf-614"><span class="linenos">614</span></a><span class="k">def</span> <span class="nf">non_li_chars_total_count</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
-</span><span id="non_li_chars_total_count_udf-615"><a href="#non_li_chars_total_count_udf-615"><span class="linenos">615</span></a>    <span class="n">non_latin_indic</span> <span class="o">=</span> <span class="n">regex</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">CONSTANTS</span><span class="o">.</span><span class="n">non_indic_non_latin_re_pattern</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
-</span><span id="non_li_chars_total_count_udf-616"><a href="#non_li_chars_total_count_udf-616"><span class="linenos">616</span></a>    <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">non_latin_indic</span><span class="p">)</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="non_li_chars_total_count_udf-737"><a href="#non_li_chars_total_count_udf-737"><span class="linenos">737</span></a><span class="k">def</span> <span class="nf">non_li_chars_total_count</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
+</span><span id="non_li_chars_total_count_udf-738"><a href="#non_li_chars_total_count_udf-738"><span class="linenos">738</span></a>    <span class="n">non_latin_indic</span> <span class="o">=</span> <span class="n">regex</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">CONSTANTS</span><span class="o">.</span><span class="n">non_indic_non_latin_re_pattern</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
+</span><span id="non_li_chars_total_count_udf-739"><a href="#non_li_chars_total_count_udf-739"><span class="linenos">739</span></a>    <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">non_latin_indic</span><span class="p">)</span>
 </span></pre></div>
 
 
@@ -652,8 +676,8 @@
 
     </div>
     <a class="headerlink" href="#get_word_count_udf"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="get_word_count_udf-619"><a href="#get_word_count_udf-619"><span class="linenos">619</span></a><span class="k">def</span> <span class="nf">get_word_count</span><span class="p">(</span><span class="n">line</span><span class="p">):</span>
-</span><span id="get_word_count_udf-620"><a href="#get_word_count_udf-620"><span class="linenos">620</span></a>    <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">))</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="get_word_count_udf-742"><a href="#get_word_count_udf-742"><span class="linenos">742</span></a><span class="k">def</span> <span class="nf">get_word_count</span><span class="p">(</span><span class="n">line</span><span class="p">):</span>
+</span><span id="get_word_count_udf-743"><a href="#get_word_count_udf-743"><span class="linenos">743</span></a>    <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">))</span>
 </span></pre></div>
 
 
@@ -671,8 +695,8 @@
 
     </div>
     <a class="headerlink" href="#get_char_count_udf"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="get_char_count_udf-622"><a href="#get_char_count_udf-622"><span class="linenos">622</span></a><span class="k">def</span> <span class="nf">get_char_count</span><span class="p">(</span><span class="n">line</span><span class="p">):</span>
-</span><span id="get_char_count_udf-623"><a href="#get_char_count_udf-623"><span class="linenos">623</span></a>    <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="get_char_count_udf-745"><a href="#get_char_count_udf-745"><span class="linenos">745</span></a><span class="k">def</span> <span class="nf">get_char_count</span><span class="p">(</span><span class="n">line</span><span class="p">):</span>
+</span><span id="get_char_count_udf-746"><a href="#get_char_count_udf-746"><span class="linenos">746</span></a>    <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
 </span></pre></div>
 
 
@@ -690,8 +714,8 @@
 
     </div>
     <a class="headerlink" href="#get_bytes_udf"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="get_bytes_udf-625"><a href="#get_bytes_udf-625"><span class="linenos">625</span></a><span class="k">def</span> <span class="nf">get_bytes</span><span class="p">(</span><span class="n">line</span><span class="p">):</span>
-</span><span id="get_bytes_udf-626"><a href="#get_bytes_udf-626"><span class="linenos">626</span></a>    <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span>    
+            <div class="pdoc-code codehilite"><pre><span></span><span id="get_bytes_udf-748"><a href="#get_bytes_udf-748"><span class="linenos">748</span></a><span class="k">def</span> <span class="nf">get_bytes</span><span class="p">(</span><span class="n">line</span><span class="p">):</span>
+</span><span id="get_bytes_udf-749"><a href="#get_bytes_udf-749"><span class="linenos">749</span></a>    <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span>    
 </span></pre></div>
 
 
@@ -709,8 +733,8 @@
 
     </div>
     <a class="headerlink" href="#get_nsfw_words_total_count_udf"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="get_nsfw_words_total_count_udf-628"><a href="#get_nsfw_words_total_count_udf-628"><span class="linenos">628</span></a><span class="k">def</span> <span class="nf">get_nsfw_words_total_count</span><span class="p">(</span><span class="n">nsfw_words_dist</span><span class="p">):</span>
-</span><span id="get_nsfw_words_total_count_udf-629"><a href="#get_nsfw_words_total_count_udf-629"><span class="linenos">629</span></a>    <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">nsfw_words_dist</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="get_nsfw_words_total_count_udf-751"><a href="#get_nsfw_words_total_count_udf-751"><span class="linenos">751</span></a><span class="k">def</span> <span class="nf">get_nsfw_words_total_count</span><span class="p">(</span><span class="n">nsfw_words_dist</span><span class="p">):</span>
+</span><span id="get_nsfw_words_total_count_udf-752"><a href="#get_nsfw_words_total_count_udf-752"><span class="linenos">752</span></a>    <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">nsfw_words_dist</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
 </span></pre></div>
 
 
@@ -728,8 +752,8 @@
 
     </div>
     <a class="headerlink" href="#is_numbers_udf"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="is_numbers_udf-632"><a href="#is_numbers_udf-632"><span class="linenos">632</span></a><span class="k">def</span> <span class="nf">is_numbers</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">lang</span><span class="p">):</span>
-</span><span id="is_numbers_udf-633"><a href="#is_numbers_udf-633"><span class="linenos">633</span></a>    <span class="k">return</span> <span class="n">line</span><span class="o">.</span><span class="n">isdigit</span><span class="p">()</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="is_numbers_udf-755"><a href="#is_numbers_udf-755"><span class="linenos">755</span></a><span class="k">def</span> <span class="nf">is_numbers</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">lang</span><span class="p">):</span>
+</span><span id="is_numbers_udf-756"><a href="#is_numbers_udf-756"><span class="linenos">756</span></a>    <span class="k">return</span> <span class="n">line</span><span class="o">.</span><span class="n">isdigit</span><span class="p">()</span>
 </span></pre></div>
 
 
@@ -740,7 +764,7 @@
                     <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">normalize_text_udf</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="n">text</span>,</span><span class="param">	<span class="n">lang</span>,</span><span class="param">	<span class="o">*</span>,</span><span class="param">	<span class="n">remove_nuktas</span><span class="o">=</span><span class="kc">False</span>,</span><span class="param">	<span class="n">nasals_mode</span><span class="o">=</span><span class="s1">&#39;do_nothing&#39;</span>,</span><span class="param">	<span class="n">do_normalize_chandras</span><span class="o">=</span><span class="kc">False</span>,</span><span class="param">	<span class="n">do_normalize_vowel_ending</span><span class="o">=</span><span class="kc">False</span></span><span class="return-annotation">):</span></span>
+        <span class="name">normalize_text_udf</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="n">text</span><span class="p">:</span> <span class="nb">str</span>,</span><span class="param">	<span class="n">lang</span><span class="p">:</span> <span class="nb">str</span>,</span><span class="param">	<span class="o">*</span>,</span><span class="param">	<span class="n">remove_nuktas</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>,</span><span class="param">	<span class="n">nasals_mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;do_nothing&#39;</span>,</span><span class="param">	<span class="n">do_normalize_chandras</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>,</span><span class="param">	<span class="n">do_normalize_vowel_ending</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span></span><span class="return-annotation">) -> <span class="n">Callable</span>:</span></span>
 
         
     </div>
@@ -1161,8 +1185,11 @@ of the given arguments and keywords.</p>
 
             <div class="docstring"><p>SetuStage Base Class for the different stages in Setu Pipeline</p>
 
-<p>Args:
-    config (Namespace): The configuration file for the particular data type and language to be processed by the pipeline.</p>
+<h6 id="arguments">Arguments:</h6>
+
+<ul>
+<li><strong>config (Namespace):</strong>  The configuration file for the particular data type and language to be processed by the pipeline.</li>
+</ul>
 </div>
 
 
@@ -1307,8 +1334,11 @@ of the given arguments and keywords.</p>
 
             <div class="docstring"><p>add_cmdline_args Abstract Method for adding command line arguments for the particular stage</p>
 
-<p>Args:
-    parser (ArgumentParser): The argument parser object to which the current stage arguments need to be added.</p>
+<h6 id="arguments">Arguments:</h6>
+
+<ul>
+<li><strong>parser (ArgumentParser):</strong>  The argument parser object to which the current stage arguments need to be added.</li>
+</ul>
 </div>
 
 
@@ -1720,14 +1750,23 @@ of the given arguments and keywords.</p>
 
             <div class="docstring"><p>run_spark Method which triggers spark execution of the particular stage.</p>
 
-<p>Args:
-    parallel_mode (str, optional): The mode in which spark should execute, either data or stage parallel. Defaults to "stage".</p>
+<h6 id="arguments">Arguments:</h6>
 
-<p>Raises:
-    Exception: Throws an exception when unknown value is provided for parallel_mode.</p>
+<ul>
+<li><strong>parallel_mode (str, optional):</strong>  The mode in which spark should execute, either data or stage parallel. Defaults to "stage".</li>
+</ul>
 
-<p>Returns:
-    Callable | Exception: Exception that indicates the user has provided an incorrect value for parallel_mode.</p>
+<h6 id="raises">Raises:</h6>
+
+<ul>
+<li><strong>Exception:</strong>  Throws an exception when unknown value is provided for parallel_mode.</li>
+</ul>
+
+<h6 id="returns">Returns:</h6>
+
+<blockquote>
+  <p>Callable | Exception: Exception that indicates the user has provided an incorrect value for parallel_mode.</p>
+</blockquote>
 </div>
 
 
@@ -1753,11 +1792,17 @@ of the given arguments and keywords.</p>
 
             <div class="docstring"><p>run Method that triggers stage execution based on values of parallel_mode and if spark should be used.</p>
 
-<p>Args:
-    parallel_mode (str, optional): _description_. Defaults to "stage".</p>
+<h6 id="arguments">Arguments:</h6>
 
-<p>Returns:
-    Callable: _description_</p>
+<ul>
+<li><strong>parallel_mode (str, optional):</strong>  _description_. Defaults to "stage".</li>
+</ul>
+
+<h6 id="returns">Returns:</h6>
+
+<blockquote>
+  <p>Callable: _description_</p>
+</blockquote>
 </div>
 
 
