@@ -40,6 +40,7 @@ from filters import (
 import pyarrow as pa
 import pyarrow.parquet as pq
 import os
+from typing import Callable,Iterable
 
 find_code_spans_udf = udf(
     find_code_spans_spark, 
@@ -326,18 +327,35 @@ class DocCleanStage(SetuStage):
 
     def run_stage_parallelized(
         self,
-        df,
-        additional_cols_to_use,
-        doc_id_col,
-        text_col,   
-        docs_per_partition,
-        use_symbol_filter,
-        save_symbol_heavy_docs,
-        symbol_filter_output_path,
-        cleaned_doc_output_path,
+        df: DataFrame,
+        additional_cols_to_use: list,
+        doc_id_col: str,
+        text_col: str,
+        docs_per_partition: int,
+        use_symbol_filter: bool,
+        save_symbol_heavy_docs: bool,
+        symbol_filter_output_path: str,
+        cleaned_doc_output_path: str,
         verbose: bool = True,
-    ):
+        ) -> None:
+        """
+    run_stage_parallelized Runs a stage in parallelized mode.
 
+    Args:
+        df (Dataframe): The DataFrame containing the data to be processed.
+        additional_cols_to_use (list): List of additional columns to use from the DataFrame.
+        doc_id_col (str): The name of the column containing document IDs.
+        text_col (str): The name of the column containing text data.
+        docs_per_partition (int): Number of documents per partition for processing.
+        use_symbol_filter (bool): Whether to use a symbol filter for processing.
+        save_symbol_heavy_docs (bool): Whether to save symbol-heavy documents.
+        symbol_filter_output_path (str): The output path for symbol filter results.
+        cleaned_doc_output_path (str): The output path for cleaned documents.
+        verbose (bool, optional): Whether to display verbose output. Defaults to True.
+
+    Returns:
+        None
+    """
         df = self.run_preprocessing(
             df=df,
             additional_cols_to_use=additional_cols_to_use,
