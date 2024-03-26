@@ -1587,8 +1587,10 @@ of the given arguments and keywords.</p>
 </span></pre></div>
 
 
-            <div class="docstring"><p>Helper class that provides a standard way to create an ABC using
-inheritance.</p>
+            <div class="docstring"><p>SetuStage Base Class for the different stages in Setu Pipeline</p>
+
+<p>Args:
+    config (Namespace): The configuration file for the particular data type and language to be processed by the pipeline.</p>
 </div>
 
 
@@ -1706,7 +1708,12 @@ inheritance.</p>
 </span></pre></div>
 
 
-    
+            <div class="docstring"><p>add_cmdline_args Abstract Method for adding command line arguments for the particular stage</p>
+
+<p>Args:
+    parser (ArgumentParser): The argument parser object to which the current stage arguments need to be added.</p>
+</div>
+
 
                             </div>
                             <div id="DocCleanStage.doc_clean_stage" class="classattr">
@@ -1925,7 +1932,9 @@ inheritance.</p>
 </span></pre></div>
 
 
-    
+            <div class="docstring"><p>run_stage_parallelized Abstract method for running the stage in parallel mode.</p>
+</div>
+
 
                             </div>
                             <div id="DocCleanStage.run_data_parallelized" class="classattr">
@@ -2126,7 +2135,9 @@ inheritance.</p>
 </span></pre></div>
 
 
-    
+            <div class="docstring"><p>run_data_parallelized Abstract method for running the stage in data parallel mode.</p>
+</div>
+
 
                             </div>
                             <div id="DocCleanStage.run_spark" class="classattr">
@@ -2203,7 +2214,18 @@ inheritance.</p>
 </span></pre></div>
 
 
-    
+            <div class="docstring"><p>run_spark Method which triggers spark execution of the particular stage.</p>
+
+<p>Args:
+    parallel_mode (str, optional): The mode in which spark should execute, either data or stage parallel. Defaults to "stage".</p>
+
+<p>Raises:
+    Exception: Throws an exception when unknown value is provided for parallel_mode.</p>
+
+<p>Returns:
+    Callable | Exception: Exception that indicates the user has provided an incorrect value for parallel_mode.</p>
+</div>
+
 
                             </div>
                             <div id="DocCleanStage.run" class="classattr">
@@ -2225,7 +2247,15 @@ inheritance.</p>
 </span></pre></div>
 
 
-    
+            <div class="docstring"><p>run Method that triggers stage execution based on values of parallel_mode and if spark should be used.</p>
+
+<p>Args:
+    parallel_mode (str, optional): _description_. Defaults to "stage".</p>
+
+<p>Returns:
+    Callable: _description_</p>
+</div>
+
 
                             </div>
                             <div id="DocCleanStage.run_normal" class="classattr">
@@ -2257,7 +2287,9 @@ inheritance.</p>
 </span></pre></div>
 
 
-    
+            <div class="docstring"><p>run_normal Method for executing the stage in normal without Spark Utilization</p>
+</div>
+
 
                             </div>
                             <div class="inherited">
@@ -2346,8 +2378,10 @@ inheritance.</p>
 </span></pre></div>
 
 
-            <div class="docstring"><p>Helper class that provides a standard way to create an ABC using
-inheritance.</p>
+            <div class="docstring"><p>SetuComponent Base Class for the different components in Setu Pipeline</p>
+
+<p>Args:
+    config (Namespace): The configuration file for the particular data type and language to be processed by the pipeline.</p>
 </div>
 
 
@@ -2461,7 +2495,12 @@ inheritance.</p>
 </span></pre></div>
 
 
-    
+            <div class="docstring"><p>add_cmdline_args Abstract Method for adding command line arguments for the particular component</p>
+
+<p>Args:
+    parser (ArgumentParser): The argument parser object to which the current stage arguments need to be added.</p>
+</div>
+
 
                             </div>
                             <div id="CleanAnalysisComponent.get_stage_mapping" class="classattr">
@@ -2488,7 +2527,12 @@ inheritance.</p>
 </span></pre></div>
 
 
-    
+            <div class="docstring"><p>get_stage_mapping Method the provides the a dictionary mapping of the stage names as keys and their corresponding stage objects as values.</p>
+
+<p>Returns:
+    dict: Dictionary containing the different stage names and objects as key/value pairs.</p>
+</div>
+
 
                             </div>
                             <div id="CleanAnalysisComponent.run_stage" class="classattr">
@@ -2507,7 +2551,9 @@ inheritance.</p>
 </span></pre></div>
 
 
-    
+            <div class="docstring"><p>run_stage Method the triggers the execution of a particular stage/omponent if the stage/component name is provided.</p>
+</div>
+
 
                             </div>
                             <div id="CleanAnalysisComponent.run" class="classattr">
@@ -2530,7 +2576,9 @@ inheritance.</p>
 </span></pre></div>
 
 
-    
+            <div class="docstring"><p>run Method that triggers the execution of the component.</p>
+</div>
+
 
                             </div>
                             <div class="inherited">

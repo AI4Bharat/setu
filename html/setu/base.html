@@ -128,104 +128,197 @@
 </span><span id="L-6"><a href="#L-6"><span class="linenos">  6</span></a><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span>
 </span><span id="L-7"><a href="#L-7"><span class="linenos">  7</span></a>
 </span><span id="L-8"><a href="#L-8"><span class="linenos">  8</span></a><span class="k">class</span> <span class="nc">SetuStage</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
-</span><span id="L-9"><a href="#L-9"><span class="linenos">  9</span></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">config</span><span class="p">:</span><span class="n">Namespace</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="L-10"><a href="#L-10"><span class="linenos"> 10</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
-</span><span id="L-11"><a href="#L-11"><span class="linenos"> 11</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_stage_name</span><span class="p">()</span>
-</span><span id="L-12"><a href="#L-12"><span class="linenos"> 12</span></a>        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">use_spark</span><span class="p">:</span>
-</span><span id="L-13"><a href="#L-13"><span class="linenos"> 13</span></a>            <span class="bp">self</span><span class="o">.</span><span class="n">spark_present</span> <span class="o">=</span> <span class="kc">True</span>
-</span><span id="L-14"><a href="#L-14"><span class="linenos"> 14</span></a>            <span class="k">try</span><span class="p">:</span>
-</span><span id="L-15"><a href="#L-15"><span class="linenos"> 15</span></a>                <span class="kn">import</span> <span class="nn">pyspark</span>
-</span><span id="L-16"><a href="#L-16"><span class="linenos"> 16</span></a>                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;PySpark Installed. Going forward with spark execution for </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="L-17"><a href="#L-17"><span class="linenos"> 17</span></a>            <span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-</span><span id="L-18"><a href="#L-18"><span class="linenos"> 18</span></a>                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;PySpark not present. Falling back to normal execution for </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="L-19"><a href="#L-19"><span class="linenos"> 19</span></a>                <span class="bp">self</span><span class="o">.</span><span class="n">spark_present</span> <span class="o">=</span> <span class="kc">False</span>
-</span><span id="L-20"><a href="#L-20"><span class="linenos"> 20</span></a>        
-</span><span id="L-21"><a href="#L-21"><span class="linenos"> 21</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">df_total_rows</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span id="L-22"><a href="#L-22"><span class="linenos"> 22</span></a>    
-</span><span id="L-23"><a href="#L-23"><span class="linenos"> 23</span></a>    <span class="nd">@staticmethod</span>
-</span><span id="L-24"><a href="#L-24"><span class="linenos"> 24</span></a>    <span class="nd">@abstractmethod</span>
-</span><span id="L-25"><a href="#L-25"><span class="linenos"> 25</span></a>    <span class="k">def</span> <span class="nf">add_cmdline_args</span><span class="p">(</span><span class="n">parser</span><span class="p">:</span><span class="n">ArgumentParser</span><span class="p">):</span>
-</span><span id="L-26"><a href="#L-26"><span class="linenos"> 26</span></a>        <span class="k">pass</span>
-</span><span id="L-27"><a href="#L-27"><span class="linenos"> 27</span></a>
-</span><span id="L-28"><a href="#L-28"><span class="linenos"> 28</span></a>    <span class="nd">@classmethod</span>
-</span><span id="L-29"><a href="#L-29"><span class="linenos"> 29</span></a>    <span class="k">def</span> <span class="nf">get_stage_name</span><span class="p">(</span><span class="bp">cls</span><span class="p">:</span><span class="n">ABC</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span id="L-30"><a href="#L-30"><span class="linenos"> 30</span></a>        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span>
-</span><span id="L-31"><a href="#L-31"><span class="linenos"> 31</span></a>    
-</span><span id="L-32"><a href="#L-32"><span class="linenos"> 32</span></a>    <span class="k">def</span> <span class="nf">salting</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">df</span><span class="p">:</span><span class="n">DataFrame</span><span class="p">,</span><span class="n">n_splits</span><span class="p">:</span><span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataFrame</span><span class="p">:</span>
-</span><span id="L-33"><a href="#L-33"><span class="linenos"> 33</span></a>        <span class="n">num_buckets</span> <span class="o">=</span> <span class="n">n_splits</span>
-</span><span id="L-34"><a href="#L-34"><span class="linenos"> 34</span></a>
-</span><span id="L-35"><a href="#L-35"><span class="linenos"> 35</span></a>        <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s2">&quot;salt&quot;</span><span class="p">,(</span><span class="n">rand</span><span class="p">()</span><span class="o">*</span><span class="n">num_buckets</span><span class="p">)</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="s2">&quot;int&quot;</span><span class="p">))</span>
-</span><span id="L-36"><a href="#L-36"><span class="linenos"> 36</span></a>
-</span><span id="L-37"><a href="#L-37"><span class="linenos"> 37</span></a>        <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">repartition</span><span class="p">(</span><span class="n">n_splits</span><span class="p">,</span><span class="s2">&quot;salt&quot;</span><span class="p">)</span>
-</span><span id="L-38"><a href="#L-38"><span class="linenos"> 38</span></a>
-</span><span id="L-39"><a href="#L-39"><span class="linenos"> 39</span></a>        <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s2">&quot;salt&quot;</span><span class="p">)</span>
+</span><span id="L-9"><a href="#L-9"><span class="linenos">  9</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;SetuStage Base Class for the different stages in Setu Pipeline</span>
+</span><span id="L-10"><a href="#L-10"><span class="linenos"> 10</span></a>
+</span><span id="L-11"><a href="#L-11"><span class="linenos"> 11</span></a><span class="sd">    Args:</span>
+</span><span id="L-12"><a href="#L-12"><span class="linenos"> 12</span></a><span class="sd">        config (Namespace): The configuration file for the particular data type and language to be processed by the pipeline.</span>
+</span><span id="L-13"><a href="#L-13"><span class="linenos"> 13</span></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="L-14"><a href="#L-14"><span class="linenos"> 14</span></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">config</span><span class="p">:</span><span class="n">Namespace</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="L-15"><a href="#L-15"><span class="linenos"> 15</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+</span><span id="L-16"><a href="#L-16"><span class="linenos"> 16</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Configuration Namespace object for the particular stage.&quot;&quot;&quot;</span>
+</span><span id="L-17"><a href="#L-17"><span class="linenos"> 17</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_stage_name</span><span class="p">()</span>
+</span><span id="L-18"><a href="#L-18"><span class="linenos"> 18</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Name of the particular stage.&quot;&quot;&quot;</span>
+</span><span id="L-19"><a href="#L-19"><span class="linenos"> 19</span></a>        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">use_spark</span><span class="p">:</span>
+</span><span id="L-20"><a href="#L-20"><span class="linenos"> 20</span></a>            <span class="bp">self</span><span class="o">.</span><span class="n">spark_present</span> <span class="o">=</span> <span class="kc">True</span>
+</span><span id="L-21"><a href="#L-21"><span class="linenos"> 21</span></a>            <span class="k">try</span><span class="p">:</span>
+</span><span id="L-22"><a href="#L-22"><span class="linenos"> 22</span></a>                <span class="kn">import</span> <span class="nn">pyspark</span>
+</span><span id="L-23"><a href="#L-23"><span class="linenos"> 23</span></a>                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;PySpark Installed. Going forward with spark execution for </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="L-24"><a href="#L-24"><span class="linenos"> 24</span></a>            <span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span><span id="L-25"><a href="#L-25"><span class="linenos"> 25</span></a>                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;PySpark not present. Falling back to normal execution for </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="L-26"><a href="#L-26"><span class="linenos"> 26</span></a>                <span class="bp">self</span><span class="o">.</span><span class="n">spark_present</span> <span class="o">=</span> <span class="kc">False</span>
+</span><span id="L-27"><a href="#L-27"><span class="linenos"> 27</span></a>        
+</span><span id="L-28"><a href="#L-28"><span class="linenos"> 28</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">df_total_rows</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="L-29"><a href="#L-29"><span class="linenos"> 29</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Total number of rows in the given Dataframe Object.&quot;&quot;&quot;</span>
+</span><span id="L-30"><a href="#L-30"><span class="linenos"> 30</span></a>    
+</span><span id="L-31"><a href="#L-31"><span class="linenos"> 31</span></a>    <span class="nd">@staticmethod</span>
+</span><span id="L-32"><a href="#L-32"><span class="linenos"> 32</span></a>    <span class="nd">@abstractmethod</span>
+</span><span id="L-33"><a href="#L-33"><span class="linenos"> 33</span></a>    <span class="k">def</span> <span class="nf">add_cmdline_args</span><span class="p">(</span><span class="n">parser</span><span class="p">:</span><span class="n">ArgumentParser</span><span class="p">):</span>
+</span><span id="L-34"><a href="#L-34"><span class="linenos"> 34</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;add_cmdline_args Abstract Method for adding command line arguments for the particular stage</span>
+</span><span id="L-35"><a href="#L-35"><span class="linenos"> 35</span></a>
+</span><span id="L-36"><a href="#L-36"><span class="linenos"> 36</span></a><span class="sd">        Args:</span>
+</span><span id="L-37"><a href="#L-37"><span class="linenos"> 37</span></a><span class="sd">            parser (ArgumentParser): The argument parser object to which the current stage arguments need to be added.</span>
+</span><span id="L-38"><a href="#L-38"><span class="linenos"> 38</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="L-39"><a href="#L-39"><span class="linenos"> 39</span></a>        <span class="k">pass</span>
 </span><span id="L-40"><a href="#L-40"><span class="linenos"> 40</span></a>
-</span><span id="L-41"><a href="#L-41"><span class="linenos"> 41</span></a>        <span class="k">return</span> <span class="n">df</span>
-</span><span id="L-42"><a href="#L-42"><span class="linenos"> 42</span></a>    
-</span><span id="L-43"><a href="#L-43"><span class="linenos"> 43</span></a>    <span class="k">def</span> <span class="nf">set_split_count_and_salt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">df</span><span class="p">:</span><span class="n">DataFrame</span><span class="p">,</span><span class="n">docs_per_partition</span><span class="p">:</span><span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataFrame</span><span class="p">:</span>
-</span><span id="L-44"><a href="#L-44"><span class="linenos"> 44</span></a>        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_total_rows</span><span class="p">:</span>
-</span><span id="L-45"><a href="#L-45"><span class="linenos"> 45</span></a>            <span class="bp">self</span><span class="o">.</span><span class="n">df_total_rows</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
-</span><span id="L-46"><a href="#L-46"><span class="linenos"> 46</span></a>
-</span><span id="L-47"><a href="#L-47"><span class="linenos"> 47</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">n_splits</span> <span class="o">=</span> <span class="n">ceil</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">df_total_rows</span><span class="o">/</span><span class="n">docs_per_partition</span><span class="p">)</span>
-</span><span id="L-48"><a href="#L-48"><span class="linenos"> 48</span></a>
-</span><span id="L-49"><a href="#L-49"><span class="linenos"> 49</span></a>        <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">salting</span><span class="p">(</span><span class="n">df</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">n_splits</span><span class="p">)</span>
-</span><span id="L-50"><a href="#L-50"><span class="linenos"> 50</span></a>
-</span><span id="L-51"><a href="#L-51"><span class="linenos"> 51</span></a>        <span class="k">return</span> <span class="n">df</span>
+</span><span id="L-41"><a href="#L-41"><span class="linenos"> 41</span></a>    <span class="nd">@classmethod</span>
+</span><span id="L-42"><a href="#L-42"><span class="linenos"> 42</span></a>    <span class="k">def</span> <span class="nf">get_stage_name</span><span class="p">(</span><span class="bp">cls</span><span class="p">:</span><span class="n">ABC</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span id="L-43"><a href="#L-43"><span class="linenos"> 43</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;get_stage_name Method to fetch the particular stage name</span>
+</span><span id="L-44"><a href="#L-44"><span class="linenos"> 44</span></a>
+</span><span id="L-45"><a href="#L-45"><span class="linenos"> 45</span></a><span class="sd">        Args:</span>
+</span><span id="L-46"><a href="#L-46"><span class="linenos"> 46</span></a><span class="sd">            cls (ABC): The self cls of which the name should be returned</span>
+</span><span id="L-47"><a href="#L-47"><span class="linenos"> 47</span></a>
+</span><span id="L-48"><a href="#L-48"><span class="linenos"> 48</span></a><span class="sd">        Returns:</span>
+</span><span id="L-49"><a href="#L-49"><span class="linenos"> 49</span></a><span class="sd">            str: Name of the stage</span>
+</span><span id="L-50"><a href="#L-50"><span class="linenos"> 50</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="L-51"><a href="#L-51"><span class="linenos"> 51</span></a>        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span>
 </span><span id="L-52"><a href="#L-52"><span class="linenos"> 52</span></a>    
-</span><span id="L-53"><a href="#L-53"><span class="linenos"> 53</span></a>    <span class="nd">@abstractmethod</span>
-</span><span id="L-54"><a href="#L-54"><span class="linenos"> 54</span></a>    <span class="k">def</span> <span class="nf">run_stage_parallelized</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="L-55"><a href="#L-55"><span class="linenos"> 55</span></a>        <span class="k">pass</span>
-</span><span id="L-56"><a href="#L-56"><span class="linenos"> 56</span></a>
-</span><span id="L-57"><a href="#L-57"><span class="linenos"> 57</span></a>    <span class="nd">@abstractmethod</span>
-</span><span id="L-58"><a href="#L-58"><span class="linenos"> 58</span></a>    <span class="k">def</span> <span class="nf">run_data_parallelized</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="L-59"><a href="#L-59"><span class="linenos"> 59</span></a>        <span class="k">pass</span>
-</span><span id="L-60"><a href="#L-60"><span class="linenos"> 60</span></a>
-</span><span id="L-61"><a href="#L-61"><span class="linenos"> 61</span></a>    <span class="nd">@abstractmethod</span>
-</span><span id="L-62"><a href="#L-62"><span class="linenos"> 62</span></a>    <span class="k">def</span> <span class="nf">run_spark</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parallel_mode</span><span class="o">=</span><span class="s2">&quot;stage&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span> <span class="o">|</span> <span class="ne">Exception</span><span class="p">:</span>
-</span><span id="L-63"><a href="#L-63"><span class="linenos"> 63</span></a>        <span class="k">if</span> <span class="n">parallel_mode</span> <span class="o">==</span> <span class="s2">&quot;stage&quot;</span><span class="p">:</span>
-</span><span id="L-64"><a href="#L-64"><span class="linenos"> 64</span></a>            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_stage_parallelized</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</span><span id="L-65"><a href="#L-65"><span class="linenos"> 65</span></a>        <span class="k">elif</span> <span class="n">parallel_mode</span> <span class="o">==</span> <span class="s2">&quot;data&quot;</span><span class="p">:</span>
-</span><span id="L-66"><a href="#L-66"><span class="linenos"> 66</span></a>            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_data_parallelized</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</span><span id="L-67"><a href="#L-67"><span class="linenos"> 67</span></a>        <span class="k">else</span><span class="p">:</span>
-</span><span id="L-68"><a href="#L-68"><span class="linenos"> 68</span></a>            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Incorrect input for `parallel_mode`. `parallel_mode` only supports 2 types: `stage` &amp; `data`.&quot;</span><span class="p">)</span>
-</span><span id="L-69"><a href="#L-69"><span class="linenos"> 69</span></a>
-</span><span id="L-70"><a href="#L-70"><span class="linenos"> 70</span></a>    <span class="nd">@abstractmethod</span>
-</span><span id="L-71"><a href="#L-71"><span class="linenos"> 71</span></a>    <span class="k">def</span> <span class="nf">run_normal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="L-72"><a href="#L-72"><span class="linenos"> 72</span></a>        <span class="k">pass</span>
-</span><span id="L-73"><a href="#L-73"><span class="linenos"> 73</span></a>
-</span><span id="L-74"><a href="#L-74"><span class="linenos"> 74</span></a>    <span class="nd">@abstractmethod</span>
-</span><span id="L-75"><a href="#L-75"><span class="linenos"> 75</span></a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parallel_mode</span><span class="o">=</span><span class="s2">&quot;stage&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
-</span><span id="L-76"><a href="#L-76"><span class="linenos"> 76</span></a>        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">use_spark</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">spark_present</span><span class="p">:</span>
-</span><span id="L-77"><a href="#L-77"><span class="linenos"> 77</span></a>            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_spark</span><span class="p">(</span><span class="n">parallel_mode</span><span class="o">=</span><span class="n">parallel_mode</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</span><span id="L-78"><a href="#L-78"><span class="linenos"> 78</span></a>        <span class="k">else</span><span class="p">:</span>
-</span><span id="L-79"><a href="#L-79"><span class="linenos"> 79</span></a>            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_normal</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</span><span id="L-80"><a href="#L-80"><span class="linenos"> 80</span></a>    
-</span><span id="L-81"><a href="#L-81"><span class="linenos"> 81</span></a><span class="k">class</span> <span class="nc">SetuComponent</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
-</span><span id="L-82"><a href="#L-82"><span class="linenos"> 82</span></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">config</span><span class="p">:</span><span class="n">Namespace</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="L-83"><a href="#L-83"><span class="linenos"> 83</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
-</span><span id="L-84"><a href="#L-84"><span class="linenos"> 84</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_component_name</span><span class="p">()</span>
+</span><span id="L-53"><a href="#L-53"><span class="linenos"> 53</span></a>    <span class="k">def</span> <span class="nf">salting</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">df</span><span class="p">:</span><span class="n">DataFrame</span><span class="p">,</span><span class="n">n_splits</span><span class="p">:</span><span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataFrame</span><span class="p">:</span>
+</span><span id="L-54"><a href="#L-54"><span class="linenos"> 54</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;salting Method which performs salting on the particular dataframe object to handle data skewness.</span>
+</span><span id="L-55"><a href="#L-55"><span class="linenos"> 55</span></a>
+</span><span id="L-56"><a href="#L-56"><span class="linenos"> 56</span></a><span class="sd">        Args:</span>
+</span><span id="L-57"><a href="#L-57"><span class="linenos"> 57</span></a><span class="sd">            df (DataFrame): The dataframe object that is processed by the stage.</span>
+</span><span id="L-58"><a href="#L-58"><span class="linenos"> 58</span></a><span class="sd">            n_splits (int): Number of splits for salting</span>
+</span><span id="L-59"><a href="#L-59"><span class="linenos"> 59</span></a>
+</span><span id="L-60"><a href="#L-60"><span class="linenos"> 60</span></a><span class="sd">        Returns:</span>
+</span><span id="L-61"><a href="#L-61"><span class="linenos"> 61</span></a><span class="sd">            DataFrame: Returns the dataframe object after performing salting</span>
+</span><span id="L-62"><a href="#L-62"><span class="linenos"> 62</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="L-63"><a href="#L-63"><span class="linenos"> 63</span></a>        <span class="n">num_buckets</span> <span class="o">=</span> <span class="n">n_splits</span>
+</span><span id="L-64"><a href="#L-64"><span class="linenos"> 64</span></a>
+</span><span id="L-65"><a href="#L-65"><span class="linenos"> 65</span></a>        <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s2">&quot;salt&quot;</span><span class="p">,(</span><span class="n">rand</span><span class="p">()</span><span class="o">*</span><span class="n">num_buckets</span><span class="p">)</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="s2">&quot;int&quot;</span><span class="p">))</span>
+</span><span id="L-66"><a href="#L-66"><span class="linenos"> 66</span></a>
+</span><span id="L-67"><a href="#L-67"><span class="linenos"> 67</span></a>        <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">repartition</span><span class="p">(</span><span class="n">n_splits</span><span class="p">,</span><span class="s2">&quot;salt&quot;</span><span class="p">)</span>
+</span><span id="L-68"><a href="#L-68"><span class="linenos"> 68</span></a>
+</span><span id="L-69"><a href="#L-69"><span class="linenos"> 69</span></a>        <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s2">&quot;salt&quot;</span><span class="p">)</span>
+</span><span id="L-70"><a href="#L-70"><span class="linenos"> 70</span></a>
+</span><span id="L-71"><a href="#L-71"><span class="linenos"> 71</span></a>        <span class="k">return</span> <span class="n">df</span>
+</span><span id="L-72"><a href="#L-72"><span class="linenos"> 72</span></a>    
+</span><span id="L-73"><a href="#L-73"><span class="linenos"> 73</span></a>    <span class="k">def</span> <span class="nf">set_split_count_and_salt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">df</span><span class="p">:</span><span class="n">DataFrame</span><span class="p">,</span><span class="n">docs_per_partition</span><span class="p">:</span><span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataFrame</span><span class="p">:</span>
+</span><span id="L-74"><a href="#L-74"><span class="linenos"> 74</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;set_split_count_and_salt Method to calculate the number of splits and salting given the dataframe and number of documents per partition.</span>
+</span><span id="L-75"><a href="#L-75"><span class="linenos"> 75</span></a>
+</span><span id="L-76"><a href="#L-76"><span class="linenos"> 76</span></a><span class="sd">        Args:</span>
+</span><span id="L-77"><a href="#L-77"><span class="linenos"> 77</span></a><span class="sd">            df (DataFrame): The dataframe object that is processed by the stage.</span>
+</span><span id="L-78"><a href="#L-78"><span class="linenos"> 78</span></a><span class="sd">            docs_per_partition (int): Number of documents that each spark partition should handle.</span>
+</span><span id="L-79"><a href="#L-79"><span class="linenos"> 79</span></a>
+</span><span id="L-80"><a href="#L-80"><span class="linenos"> 80</span></a><span class="sd">        Returns:</span>
+</span><span id="L-81"><a href="#L-81"><span class="linenos"> 81</span></a><span class="sd">            DataFrame: Returns the dataframe object after performing salting</span>
+</span><span id="L-82"><a href="#L-82"><span class="linenos"> 82</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="L-83"><a href="#L-83"><span class="linenos"> 83</span></a>        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_total_rows</span><span class="p">:</span>
+</span><span id="L-84"><a href="#L-84"><span class="linenos"> 84</span></a>            <span class="bp">self</span><span class="o">.</span><span class="n">df_total_rows</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
 </span><span id="L-85"><a href="#L-85"><span class="linenos"> 85</span></a>
-</span><span id="L-86"><a href="#L-86"><span class="linenos"> 86</span></a>    <span class="nd">@classmethod</span>
-</span><span id="L-87"><a href="#L-87"><span class="linenos"> 87</span></a>    <span class="nd">@abstractmethod</span>
-</span><span id="L-88"><a href="#L-88"><span class="linenos"> 88</span></a>    <span class="k">def</span> <span class="nf">add_cmdline_args</span><span class="p">(</span><span class="n">parser</span><span class="p">:</span><span class="n">ArgumentParser</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="L-89"><a href="#L-89"><span class="linenos"> 89</span></a>        <span class="k">pass</span>
-</span><span id="L-90"><a href="#L-90"><span class="linenos"> 90</span></a>    
-</span><span id="L-91"><a href="#L-91"><span class="linenos"> 91</span></a>    <span class="nd">@classmethod</span>
-</span><span id="L-92"><a href="#L-92"><span class="linenos"> 92</span></a>    <span class="k">def</span> <span class="nf">get_component_name</span><span class="p">(</span><span class="bp">cls</span><span class="p">:</span><span class="n">ABC</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span id="L-93"><a href="#L-93"><span class="linenos"> 93</span></a>        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span>
-</span><span id="L-94"><a href="#L-94"><span class="linenos"> 94</span></a>
-</span><span id="L-95"><a href="#L-95"><span class="linenos"> 95</span></a>    <span class="nd">@classmethod</span>
-</span><span id="L-96"><a href="#L-96"><span class="linenos"> 96</span></a>    <span class="nd">@abstractmethod</span>
-</span><span id="L-97"><a href="#L-97"><span class="linenos"> 97</span></a>    <span class="k">def</span> <span class="nf">get_stage_mapping</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-</span><span id="L-98"><a href="#L-98"><span class="linenos"> 98</span></a>        <span class="k">pass</span>
-</span><span id="L-99"><a href="#L-99"><span class="linenos"> 99</span></a>
-</span><span id="L-100"><a href="#L-100"><span class="linenos">100</span></a>    <span class="nd">@abstractmethod</span>
-</span><span id="L-101"><a href="#L-101"><span class="linenos">101</span></a>    <span class="k">def</span> <span class="nf">run_stage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="L-86"><a href="#L-86"><span class="linenos"> 86</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">n_splits</span> <span class="o">=</span> <span class="n">ceil</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">df_total_rows</span><span class="o">/</span><span class="n">docs_per_partition</span><span class="p">)</span>
+</span><span id="L-87"><a href="#L-87"><span class="linenos"> 87</span></a>
+</span><span id="L-88"><a href="#L-88"><span class="linenos"> 88</span></a>        <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">salting</span><span class="p">(</span><span class="n">df</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">n_splits</span><span class="p">)</span>
+</span><span id="L-89"><a href="#L-89"><span class="linenos"> 89</span></a>
+</span><span id="L-90"><a href="#L-90"><span class="linenos"> 90</span></a>        <span class="k">return</span> <span class="n">df</span>
+</span><span id="L-91"><a href="#L-91"><span class="linenos"> 91</span></a>    
+</span><span id="L-92"><a href="#L-92"><span class="linenos"> 92</span></a>    <span class="nd">@abstractmethod</span>
+</span><span id="L-93"><a href="#L-93"><span class="linenos"> 93</span></a>    <span class="k">def</span> <span class="nf">run_stage_parallelized</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="L-94"><a href="#L-94"><span class="linenos"> 94</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;run_stage_parallelized Abstract method for running the stage in parallel mode.</span>
+</span><span id="L-95"><a href="#L-95"><span class="linenos"> 95</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="L-96"><a href="#L-96"><span class="linenos"> 96</span></a>        <span class="k">pass</span>
+</span><span id="L-97"><a href="#L-97"><span class="linenos"> 97</span></a>
+</span><span id="L-98"><a href="#L-98"><span class="linenos"> 98</span></a>    <span class="nd">@abstractmethod</span>
+</span><span id="L-99"><a href="#L-99"><span class="linenos"> 99</span></a>    <span class="k">def</span> <span class="nf">run_data_parallelized</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="L-100"><a href="#L-100"><span class="linenos">100</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;run_data_parallelized Abstract method for running the stage in data parallel mode.</span>
+</span><span id="L-101"><a href="#L-101"><span class="linenos">101</span></a><span class="sd">        &quot;&quot;&quot;</span>
 </span><span id="L-102"><a href="#L-102"><span class="linenos">102</span></a>        <span class="k">pass</span>
 </span><span id="L-103"><a href="#L-103"><span class="linenos">103</span></a>
 </span><span id="L-104"><a href="#L-104"><span class="linenos">104</span></a>    <span class="nd">@abstractmethod</span>
-</span><span id="L-105"><a href="#L-105"><span class="linenos">105</span></a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="L-106"><a href="#L-106"><span class="linenos">106</span></a>        <span class="k">pass</span>
+</span><span id="L-105"><a href="#L-105"><span class="linenos">105</span></a>    <span class="k">def</span> <span class="nf">run_spark</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parallel_mode</span><span class="o">=</span><span class="s2">&quot;stage&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span> <span class="o">|</span> <span class="ne">Exception</span><span class="p">:</span>
+</span><span id="L-106"><a href="#L-106"><span class="linenos">106</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;run_spark Method which triggers spark execution of the particular stage.</span>
+</span><span id="L-107"><a href="#L-107"><span class="linenos">107</span></a>
+</span><span id="L-108"><a href="#L-108"><span class="linenos">108</span></a><span class="sd">        Args:</span>
+</span><span id="L-109"><a href="#L-109"><span class="linenos">109</span></a><span class="sd">            parallel_mode (str, optional): The mode in which spark should execute, either data or stage parallel. Defaults to &quot;stage&quot;.</span>
+</span><span id="L-110"><a href="#L-110"><span class="linenos">110</span></a>
+</span><span id="L-111"><a href="#L-111"><span class="linenos">111</span></a><span class="sd">        Raises:</span>
+</span><span id="L-112"><a href="#L-112"><span class="linenos">112</span></a><span class="sd">            Exception: Throws an exception when unknown value is provided for parallel_mode.</span>
+</span><span id="L-113"><a href="#L-113"><span class="linenos">113</span></a>
+</span><span id="L-114"><a href="#L-114"><span class="linenos">114</span></a><span class="sd">        Returns:</span>
+</span><span id="L-115"><a href="#L-115"><span class="linenos">115</span></a><span class="sd">            Callable | Exception: Exception that indicates the user has provided an incorrect value for parallel_mode.</span>
+</span><span id="L-116"><a href="#L-116"><span class="linenos">116</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="L-117"><a href="#L-117"><span class="linenos">117</span></a>        <span class="k">if</span> <span class="n">parallel_mode</span> <span class="o">==</span> <span class="s2">&quot;stage&quot;</span><span class="p">:</span>
+</span><span id="L-118"><a href="#L-118"><span class="linenos">118</span></a>            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_stage_parallelized</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span id="L-119"><a href="#L-119"><span class="linenos">119</span></a>        <span class="k">elif</span> <span class="n">parallel_mode</span> <span class="o">==</span> <span class="s2">&quot;data&quot;</span><span class="p">:</span>
+</span><span id="L-120"><a href="#L-120"><span class="linenos">120</span></a>            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_data_parallelized</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span id="L-121"><a href="#L-121"><span class="linenos">121</span></a>        <span class="k">else</span><span class="p">:</span>
+</span><span id="L-122"><a href="#L-122"><span class="linenos">122</span></a>            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Incorrect input for `parallel_mode`. `parallel_mode` only supports 2 types: `stage` &amp; `data`.&quot;</span><span class="p">)</span>
+</span><span id="L-123"><a href="#L-123"><span class="linenos">123</span></a>
+</span><span id="L-124"><a href="#L-124"><span class="linenos">124</span></a>    <span class="nd">@abstractmethod</span>
+</span><span id="L-125"><a href="#L-125"><span class="linenos">125</span></a>    <span class="k">def</span> <span class="nf">run_normal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="L-126"><a href="#L-126"><span class="linenos">126</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;run_normal Method for executing the stage in normal without Spark Utilization</span>
+</span><span id="L-127"><a href="#L-127"><span class="linenos">127</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="L-128"><a href="#L-128"><span class="linenos">128</span></a>        <span class="k">pass</span>
+</span><span id="L-129"><a href="#L-129"><span class="linenos">129</span></a>
+</span><span id="L-130"><a href="#L-130"><span class="linenos">130</span></a>    <span class="nd">@abstractmethod</span>
+</span><span id="L-131"><a href="#L-131"><span class="linenos">131</span></a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parallel_mode</span><span class="o">=</span><span class="s2">&quot;stage&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
+</span><span id="L-132"><a href="#L-132"><span class="linenos">132</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;run Method that triggers stage execution based on values of parallel_mode and if spark should be used.</span>
+</span><span id="L-133"><a href="#L-133"><span class="linenos">133</span></a>
+</span><span id="L-134"><a href="#L-134"><span class="linenos">134</span></a><span class="sd">        Args:</span>
+</span><span id="L-135"><a href="#L-135"><span class="linenos">135</span></a><span class="sd">            parallel_mode (str, optional): _description_. Defaults to &quot;stage&quot;.</span>
+</span><span id="L-136"><a href="#L-136"><span class="linenos">136</span></a>
+</span><span id="L-137"><a href="#L-137"><span class="linenos">137</span></a><span class="sd">        Returns:</span>
+</span><span id="L-138"><a href="#L-138"><span class="linenos">138</span></a><span class="sd">            Callable: _description_</span>
+</span><span id="L-139"><a href="#L-139"><span class="linenos">139</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="L-140"><a href="#L-140"><span class="linenos">140</span></a>        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">use_spark</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">spark_present</span><span class="p">:</span>
+</span><span id="L-141"><a href="#L-141"><span class="linenos">141</span></a>            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_spark</span><span class="p">(</span><span class="n">parallel_mode</span><span class="o">=</span><span class="n">parallel_mode</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span id="L-142"><a href="#L-142"><span class="linenos">142</span></a>        <span class="k">else</span><span class="p">:</span>
+</span><span id="L-143"><a href="#L-143"><span class="linenos">143</span></a>            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_normal</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span id="L-144"><a href="#L-144"><span class="linenos">144</span></a>    
+</span><span id="L-145"><a href="#L-145"><span class="linenos">145</span></a><span class="k">class</span> <span class="nc">SetuComponent</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+</span><span id="L-146"><a href="#L-146"><span class="linenos">146</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;SetuComponent Base Class for the different components in Setu Pipeline</span>
+</span><span id="L-147"><a href="#L-147"><span class="linenos">147</span></a>
+</span><span id="L-148"><a href="#L-148"><span class="linenos">148</span></a><span class="sd">    Args:</span>
+</span><span id="L-149"><a href="#L-149"><span class="linenos">149</span></a><span class="sd">        config (Namespace): The configuration file for the particular data type and language to be processed by the pipeline.</span>
+</span><span id="L-150"><a href="#L-150"><span class="linenos">150</span></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="L-151"><a href="#L-151"><span class="linenos">151</span></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">config</span><span class="p">:</span><span class="n">Namespace</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="L-152"><a href="#L-152"><span class="linenos">152</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+</span><span id="L-153"><a href="#L-153"><span class="linenos">153</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Configuration Namespace object for the particular component.&quot;&quot;&quot;</span>
+</span><span id="L-154"><a href="#L-154"><span class="linenos">154</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_component_name</span><span class="p">()</span>
+</span><span id="L-155"><a href="#L-155"><span class="linenos">155</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Name of the particular component.&quot;&quot;&quot;</span>
+</span><span id="L-156"><a href="#L-156"><span class="linenos">156</span></a>
+</span><span id="L-157"><a href="#L-157"><span class="linenos">157</span></a>    <span class="nd">@classmethod</span>
+</span><span id="L-158"><a href="#L-158"><span class="linenos">158</span></a>    <span class="nd">@abstractmethod</span>
+</span><span id="L-159"><a href="#L-159"><span class="linenos">159</span></a>    <span class="k">def</span> <span class="nf">add_cmdline_args</span><span class="p">(</span><span class="n">parser</span><span class="p">:</span><span class="n">ArgumentParser</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="L-160"><a href="#L-160"><span class="linenos">160</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;add_cmdline_args Abstract Method for adding command line arguments for the particular component</span>
+</span><span id="L-161"><a href="#L-161"><span class="linenos">161</span></a>
+</span><span id="L-162"><a href="#L-162"><span class="linenos">162</span></a><span class="sd">        Args:</span>
+</span><span id="L-163"><a href="#L-163"><span class="linenos">163</span></a><span class="sd">            parser (ArgumentParser): The argument parser object to which the current stage arguments need to be added.</span>
+</span><span id="L-164"><a href="#L-164"><span class="linenos">164</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="L-165"><a href="#L-165"><span class="linenos">165</span></a>        <span class="k">pass</span>
+</span><span id="L-166"><a href="#L-166"><span class="linenos">166</span></a>    
+</span><span id="L-167"><a href="#L-167"><span class="linenos">167</span></a>    <span class="nd">@classmethod</span>
+</span><span id="L-168"><a href="#L-168"><span class="linenos">168</span></a>    <span class="k">def</span> <span class="nf">get_component_name</span><span class="p">(</span><span class="bp">cls</span><span class="p">:</span><span class="n">ABC</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span id="L-169"><a href="#L-169"><span class="linenos">169</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;get_component_name Method to fetch the particular component name</span>
+</span><span id="L-170"><a href="#L-170"><span class="linenos">170</span></a>
+</span><span id="L-171"><a href="#L-171"><span class="linenos">171</span></a><span class="sd">        Args:</span>
+</span><span id="L-172"><a href="#L-172"><span class="linenos">172</span></a><span class="sd">            cls (ABC): The self cls of which the name should be returned</span>
+</span><span id="L-173"><a href="#L-173"><span class="linenos">173</span></a>
+</span><span id="L-174"><a href="#L-174"><span class="linenos">174</span></a><span class="sd">        Returns:</span>
+</span><span id="L-175"><a href="#L-175"><span class="linenos">175</span></a><span class="sd">            str: Name of the component</span>
+</span><span id="L-176"><a href="#L-176"><span class="linenos">176</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="L-177"><a href="#L-177"><span class="linenos">177</span></a>        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span>
+</span><span id="L-178"><a href="#L-178"><span class="linenos">178</span></a>
+</span><span id="L-179"><a href="#L-179"><span class="linenos">179</span></a>    <span class="nd">@classmethod</span>
+</span><span id="L-180"><a href="#L-180"><span class="linenos">180</span></a>    <span class="nd">@abstractmethod</span>
+</span><span id="L-181"><a href="#L-181"><span class="linenos">181</span></a>    <span class="k">def</span> <span class="nf">get_stage_mapping</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span id="L-182"><a href="#L-182"><span class="linenos">182</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;get_stage_mapping Method the provides the a dictionary mapping of the stage names as keys and their corresponding stage objects as values.</span>
+</span><span id="L-183"><a href="#L-183"><span class="linenos">183</span></a>
+</span><span id="L-184"><a href="#L-184"><span class="linenos">184</span></a><span class="sd">        Returns:</span>
+</span><span id="L-185"><a href="#L-185"><span class="linenos">185</span></a><span class="sd">            dict: Dictionary containing the different stage names and objects as key/value pairs.</span>
+</span><span id="L-186"><a href="#L-186"><span class="linenos">186</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="L-187"><a href="#L-187"><span class="linenos">187</span></a>        <span class="k">pass</span>
+</span><span id="L-188"><a href="#L-188"><span class="linenos">188</span></a>
+</span><span id="L-189"><a href="#L-189"><span class="linenos">189</span></a>    <span class="nd">@abstractmethod</span>
+</span><span id="L-190"><a href="#L-190"><span class="linenos">190</span></a>    <span class="k">def</span> <span class="nf">run_stage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="L-191"><a href="#L-191"><span class="linenos">191</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;run_stage Method the triggers the execution of a particular stage/omponent if the stage/component name is provided.</span>
+</span><span id="L-192"><a href="#L-192"><span class="linenos">192</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="L-193"><a href="#L-193"><span class="linenos">193</span></a>        <span class="k">pass</span>
+</span><span id="L-194"><a href="#L-194"><span class="linenos">194</span></a>
+</span><span id="L-195"><a href="#L-195"><span class="linenos">195</span></a>    <span class="nd">@abstractmethod</span>
+</span><span id="L-196"><a href="#L-196"><span class="linenos">196</span></a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="L-197"><a href="#L-197"><span class="linenos">197</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;run Method that triggers the execution of the component.</span>
+</span><span id="L-198"><a href="#L-198"><span class="linenos">198</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="L-199"><a href="#L-199"><span class="linenos">199</span></a>        <span class="k">pass</span>
 </span></pre></div>
 
 
@@ -241,83 +334,149 @@
 
     </div>
     <a class="headerlink" href="#SetuStage"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="SetuStage-9"><a href="#SetuStage-9"><span class="linenos"> 9</span></a><span class="k">class</span> <span class="nc">SetuStage</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
-</span><span id="SetuStage-10"><a href="#SetuStage-10"><span class="linenos">10</span></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">config</span><span class="p">:</span><span class="n">Namespace</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="SetuStage-11"><a href="#SetuStage-11"><span class="linenos">11</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
-</span><span id="SetuStage-12"><a href="#SetuStage-12"><span class="linenos">12</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_stage_name</span><span class="p">()</span>
-</span><span id="SetuStage-13"><a href="#SetuStage-13"><span class="linenos">13</span></a>        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">use_spark</span><span class="p">:</span>
-</span><span id="SetuStage-14"><a href="#SetuStage-14"><span class="linenos">14</span></a>            <span class="bp">self</span><span class="o">.</span><span class="n">spark_present</span> <span class="o">=</span> <span class="kc">True</span>
-</span><span id="SetuStage-15"><a href="#SetuStage-15"><span class="linenos">15</span></a>            <span class="k">try</span><span class="p">:</span>
-</span><span id="SetuStage-16"><a href="#SetuStage-16"><span class="linenos">16</span></a>                <span class="kn">import</span> <span class="nn">pyspark</span>
-</span><span id="SetuStage-17"><a href="#SetuStage-17"><span class="linenos">17</span></a>                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;PySpark Installed. Going forward with spark execution for </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="SetuStage-18"><a href="#SetuStage-18"><span class="linenos">18</span></a>            <span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-</span><span id="SetuStage-19"><a href="#SetuStage-19"><span class="linenos">19</span></a>                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;PySpark not present. Falling back to normal execution for </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="SetuStage-20"><a href="#SetuStage-20"><span class="linenos">20</span></a>                <span class="bp">self</span><span class="o">.</span><span class="n">spark_present</span> <span class="o">=</span> <span class="kc">False</span>
-</span><span id="SetuStage-21"><a href="#SetuStage-21"><span class="linenos">21</span></a>        
-</span><span id="SetuStage-22"><a href="#SetuStage-22"><span class="linenos">22</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">df_total_rows</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span id="SetuStage-23"><a href="#SetuStage-23"><span class="linenos">23</span></a>    
-</span><span id="SetuStage-24"><a href="#SetuStage-24"><span class="linenos">24</span></a>    <span class="nd">@staticmethod</span>
-</span><span id="SetuStage-25"><a href="#SetuStage-25"><span class="linenos">25</span></a>    <span class="nd">@abstractmethod</span>
-</span><span id="SetuStage-26"><a href="#SetuStage-26"><span class="linenos">26</span></a>    <span class="k">def</span> <span class="nf">add_cmdline_args</span><span class="p">(</span><span class="n">parser</span><span class="p">:</span><span class="n">ArgumentParser</span><span class="p">):</span>
-</span><span id="SetuStage-27"><a href="#SetuStage-27"><span class="linenos">27</span></a>        <span class="k">pass</span>
-</span><span id="SetuStage-28"><a href="#SetuStage-28"><span class="linenos">28</span></a>
-</span><span id="SetuStage-29"><a href="#SetuStage-29"><span class="linenos">29</span></a>    <span class="nd">@classmethod</span>
-</span><span id="SetuStage-30"><a href="#SetuStage-30"><span class="linenos">30</span></a>    <span class="k">def</span> <span class="nf">get_stage_name</span><span class="p">(</span><span class="bp">cls</span><span class="p">:</span><span class="n">ABC</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span id="SetuStage-31"><a href="#SetuStage-31"><span class="linenos">31</span></a>        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span>
-</span><span id="SetuStage-32"><a href="#SetuStage-32"><span class="linenos">32</span></a>    
-</span><span id="SetuStage-33"><a href="#SetuStage-33"><span class="linenos">33</span></a>    <span class="k">def</span> <span class="nf">salting</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">df</span><span class="p">:</span><span class="n">DataFrame</span><span class="p">,</span><span class="n">n_splits</span><span class="p">:</span><span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataFrame</span><span class="p">:</span>
-</span><span id="SetuStage-34"><a href="#SetuStage-34"><span class="linenos">34</span></a>        <span class="n">num_buckets</span> <span class="o">=</span> <span class="n">n_splits</span>
-</span><span id="SetuStage-35"><a href="#SetuStage-35"><span class="linenos">35</span></a>
-</span><span id="SetuStage-36"><a href="#SetuStage-36"><span class="linenos">36</span></a>        <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s2">&quot;salt&quot;</span><span class="p">,(</span><span class="n">rand</span><span class="p">()</span><span class="o">*</span><span class="n">num_buckets</span><span class="p">)</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="s2">&quot;int&quot;</span><span class="p">))</span>
-</span><span id="SetuStage-37"><a href="#SetuStage-37"><span class="linenos">37</span></a>
-</span><span id="SetuStage-38"><a href="#SetuStage-38"><span class="linenos">38</span></a>        <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">repartition</span><span class="p">(</span><span class="n">n_splits</span><span class="p">,</span><span class="s2">&quot;salt&quot;</span><span class="p">)</span>
-</span><span id="SetuStage-39"><a href="#SetuStage-39"><span class="linenos">39</span></a>
-</span><span id="SetuStage-40"><a href="#SetuStage-40"><span class="linenos">40</span></a>        <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s2">&quot;salt&quot;</span><span class="p">)</span>
-</span><span id="SetuStage-41"><a href="#SetuStage-41"><span class="linenos">41</span></a>
-</span><span id="SetuStage-42"><a href="#SetuStage-42"><span class="linenos">42</span></a>        <span class="k">return</span> <span class="n">df</span>
-</span><span id="SetuStage-43"><a href="#SetuStage-43"><span class="linenos">43</span></a>    
-</span><span id="SetuStage-44"><a href="#SetuStage-44"><span class="linenos">44</span></a>    <span class="k">def</span> <span class="nf">set_split_count_and_salt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">df</span><span class="p">:</span><span class="n">DataFrame</span><span class="p">,</span><span class="n">docs_per_partition</span><span class="p">:</span><span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataFrame</span><span class="p">:</span>
-</span><span id="SetuStage-45"><a href="#SetuStage-45"><span class="linenos">45</span></a>        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_total_rows</span><span class="p">:</span>
-</span><span id="SetuStage-46"><a href="#SetuStage-46"><span class="linenos">46</span></a>            <span class="bp">self</span><span class="o">.</span><span class="n">df_total_rows</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
-</span><span id="SetuStage-47"><a href="#SetuStage-47"><span class="linenos">47</span></a>
-</span><span id="SetuStage-48"><a href="#SetuStage-48"><span class="linenos">48</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">n_splits</span> <span class="o">=</span> <span class="n">ceil</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">df_total_rows</span><span class="o">/</span><span class="n">docs_per_partition</span><span class="p">)</span>
-</span><span id="SetuStage-49"><a href="#SetuStage-49"><span class="linenos">49</span></a>
-</span><span id="SetuStage-50"><a href="#SetuStage-50"><span class="linenos">50</span></a>        <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">salting</span><span class="p">(</span><span class="n">df</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">n_splits</span><span class="p">)</span>
-</span><span id="SetuStage-51"><a href="#SetuStage-51"><span class="linenos">51</span></a>
-</span><span id="SetuStage-52"><a href="#SetuStage-52"><span class="linenos">52</span></a>        <span class="k">return</span> <span class="n">df</span>
-</span><span id="SetuStage-53"><a href="#SetuStage-53"><span class="linenos">53</span></a>    
-</span><span id="SetuStage-54"><a href="#SetuStage-54"><span class="linenos">54</span></a>    <span class="nd">@abstractmethod</span>
-</span><span id="SetuStage-55"><a href="#SetuStage-55"><span class="linenos">55</span></a>    <span class="k">def</span> <span class="nf">run_stage_parallelized</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="SetuStage-56"><a href="#SetuStage-56"><span class="linenos">56</span></a>        <span class="k">pass</span>
-</span><span id="SetuStage-57"><a href="#SetuStage-57"><span class="linenos">57</span></a>
-</span><span id="SetuStage-58"><a href="#SetuStage-58"><span class="linenos">58</span></a>    <span class="nd">@abstractmethod</span>
-</span><span id="SetuStage-59"><a href="#SetuStage-59"><span class="linenos">59</span></a>    <span class="k">def</span> <span class="nf">run_data_parallelized</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="SetuStage-60"><a href="#SetuStage-60"><span class="linenos">60</span></a>        <span class="k">pass</span>
-</span><span id="SetuStage-61"><a href="#SetuStage-61"><span class="linenos">61</span></a>
-</span><span id="SetuStage-62"><a href="#SetuStage-62"><span class="linenos">62</span></a>    <span class="nd">@abstractmethod</span>
-</span><span id="SetuStage-63"><a href="#SetuStage-63"><span class="linenos">63</span></a>    <span class="k">def</span> <span class="nf">run_spark</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parallel_mode</span><span class="o">=</span><span class="s2">&quot;stage&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span> <span class="o">|</span> <span class="ne">Exception</span><span class="p">:</span>
-</span><span id="SetuStage-64"><a href="#SetuStage-64"><span class="linenos">64</span></a>        <span class="k">if</span> <span class="n">parallel_mode</span> <span class="o">==</span> <span class="s2">&quot;stage&quot;</span><span class="p">:</span>
-</span><span id="SetuStage-65"><a href="#SetuStage-65"><span class="linenos">65</span></a>            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_stage_parallelized</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</span><span id="SetuStage-66"><a href="#SetuStage-66"><span class="linenos">66</span></a>        <span class="k">elif</span> <span class="n">parallel_mode</span> <span class="o">==</span> <span class="s2">&quot;data&quot;</span><span class="p">:</span>
-</span><span id="SetuStage-67"><a href="#SetuStage-67"><span class="linenos">67</span></a>            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_data_parallelized</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</span><span id="SetuStage-68"><a href="#SetuStage-68"><span class="linenos">68</span></a>        <span class="k">else</span><span class="p">:</span>
-</span><span id="SetuStage-69"><a href="#SetuStage-69"><span class="linenos">69</span></a>            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Incorrect input for `parallel_mode`. `parallel_mode` only supports 2 types: `stage` &amp; `data`.&quot;</span><span class="p">)</span>
-</span><span id="SetuStage-70"><a href="#SetuStage-70"><span class="linenos">70</span></a>
-</span><span id="SetuStage-71"><a href="#SetuStage-71"><span class="linenos">71</span></a>    <span class="nd">@abstractmethod</span>
-</span><span id="SetuStage-72"><a href="#SetuStage-72"><span class="linenos">72</span></a>    <span class="k">def</span> <span class="nf">run_normal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="SetuStage-73"><a href="#SetuStage-73"><span class="linenos">73</span></a>        <span class="k">pass</span>
-</span><span id="SetuStage-74"><a href="#SetuStage-74"><span class="linenos">74</span></a>
-</span><span id="SetuStage-75"><a href="#SetuStage-75"><span class="linenos">75</span></a>    <span class="nd">@abstractmethod</span>
-</span><span id="SetuStage-76"><a href="#SetuStage-76"><span class="linenos">76</span></a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parallel_mode</span><span class="o">=</span><span class="s2">&quot;stage&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
-</span><span id="SetuStage-77"><a href="#SetuStage-77"><span class="linenos">77</span></a>        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">use_spark</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">spark_present</span><span class="p">:</span>
-</span><span id="SetuStage-78"><a href="#SetuStage-78"><span class="linenos">78</span></a>            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_spark</span><span class="p">(</span><span class="n">parallel_mode</span><span class="o">=</span><span class="n">parallel_mode</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</span><span id="SetuStage-79"><a href="#SetuStage-79"><span class="linenos">79</span></a>        <span class="k">else</span><span class="p">:</span>
-</span><span id="SetuStage-80"><a href="#SetuStage-80"><span class="linenos">80</span></a>            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_normal</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="SetuStage-9"><a href="#SetuStage-9"><span class="linenos">  9</span></a><span class="k">class</span> <span class="nc">SetuStage</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+</span><span id="SetuStage-10"><a href="#SetuStage-10"><span class="linenos"> 10</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;SetuStage Base Class for the different stages in Setu Pipeline</span>
+</span><span id="SetuStage-11"><a href="#SetuStage-11"><span class="linenos"> 11</span></a>
+</span><span id="SetuStage-12"><a href="#SetuStage-12"><span class="linenos"> 12</span></a><span class="sd">    Args:</span>
+</span><span id="SetuStage-13"><a href="#SetuStage-13"><span class="linenos"> 13</span></a><span class="sd">        config (Namespace): The configuration file for the particular data type and language to be processed by the pipeline.</span>
+</span><span id="SetuStage-14"><a href="#SetuStage-14"><span class="linenos"> 14</span></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="SetuStage-15"><a href="#SetuStage-15"><span class="linenos"> 15</span></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">config</span><span class="p">:</span><span class="n">Namespace</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="SetuStage-16"><a href="#SetuStage-16"><span class="linenos"> 16</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+</span><span id="SetuStage-17"><a href="#SetuStage-17"><span class="linenos"> 17</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Configuration Namespace object for the particular stage.&quot;&quot;&quot;</span>
+</span><span id="SetuStage-18"><a href="#SetuStage-18"><span class="linenos"> 18</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_stage_name</span><span class="p">()</span>
+</span><span id="SetuStage-19"><a href="#SetuStage-19"><span class="linenos"> 19</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Name of the particular stage.&quot;&quot;&quot;</span>
+</span><span id="SetuStage-20"><a href="#SetuStage-20"><span class="linenos"> 20</span></a>        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">use_spark</span><span class="p">:</span>
+</span><span id="SetuStage-21"><a href="#SetuStage-21"><span class="linenos"> 21</span></a>            <span class="bp">self</span><span class="o">.</span><span class="n">spark_present</span> <span class="o">=</span> <span class="kc">True</span>
+</span><span id="SetuStage-22"><a href="#SetuStage-22"><span class="linenos"> 22</span></a>            <span class="k">try</span><span class="p">:</span>
+</span><span id="SetuStage-23"><a href="#SetuStage-23"><span class="linenos"> 23</span></a>                <span class="kn">import</span> <span class="nn">pyspark</span>
+</span><span id="SetuStage-24"><a href="#SetuStage-24"><span class="linenos"> 24</span></a>                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;PySpark Installed. Going forward with spark execution for </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="SetuStage-25"><a href="#SetuStage-25"><span class="linenos"> 25</span></a>            <span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span><span id="SetuStage-26"><a href="#SetuStage-26"><span class="linenos"> 26</span></a>                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;PySpark not present. Falling back to normal execution for </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="SetuStage-27"><a href="#SetuStage-27"><span class="linenos"> 27</span></a>                <span class="bp">self</span><span class="o">.</span><span class="n">spark_present</span> <span class="o">=</span> <span class="kc">False</span>
+</span><span id="SetuStage-28"><a href="#SetuStage-28"><span class="linenos"> 28</span></a>        
+</span><span id="SetuStage-29"><a href="#SetuStage-29"><span class="linenos"> 29</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">df_total_rows</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="SetuStage-30"><a href="#SetuStage-30"><span class="linenos"> 30</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Total number of rows in the given Dataframe Object.&quot;&quot;&quot;</span>
+</span><span id="SetuStage-31"><a href="#SetuStage-31"><span class="linenos"> 31</span></a>    
+</span><span id="SetuStage-32"><a href="#SetuStage-32"><span class="linenos"> 32</span></a>    <span class="nd">@staticmethod</span>
+</span><span id="SetuStage-33"><a href="#SetuStage-33"><span class="linenos"> 33</span></a>    <span class="nd">@abstractmethod</span>
+</span><span id="SetuStage-34"><a href="#SetuStage-34"><span class="linenos"> 34</span></a>    <span class="k">def</span> <span class="nf">add_cmdline_args</span><span class="p">(</span><span class="n">parser</span><span class="p">:</span><span class="n">ArgumentParser</span><span class="p">):</span>
+</span><span id="SetuStage-35"><a href="#SetuStage-35"><span class="linenos"> 35</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;add_cmdline_args Abstract Method for adding command line arguments for the particular stage</span>
+</span><span id="SetuStage-36"><a href="#SetuStage-36"><span class="linenos"> 36</span></a>
+</span><span id="SetuStage-37"><a href="#SetuStage-37"><span class="linenos"> 37</span></a><span class="sd">        Args:</span>
+</span><span id="SetuStage-38"><a href="#SetuStage-38"><span class="linenos"> 38</span></a><span class="sd">            parser (ArgumentParser): The argument parser object to which the current stage arguments need to be added.</span>
+</span><span id="SetuStage-39"><a href="#SetuStage-39"><span class="linenos"> 39</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="SetuStage-40"><a href="#SetuStage-40"><span class="linenos"> 40</span></a>        <span class="k">pass</span>
+</span><span id="SetuStage-41"><a href="#SetuStage-41"><span class="linenos"> 41</span></a>
+</span><span id="SetuStage-42"><a href="#SetuStage-42"><span class="linenos"> 42</span></a>    <span class="nd">@classmethod</span>
+</span><span id="SetuStage-43"><a href="#SetuStage-43"><span class="linenos"> 43</span></a>    <span class="k">def</span> <span class="nf">get_stage_name</span><span class="p">(</span><span class="bp">cls</span><span class="p">:</span><span class="n">ABC</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span id="SetuStage-44"><a href="#SetuStage-44"><span class="linenos"> 44</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;get_stage_name Method to fetch the particular stage name</span>
+</span><span id="SetuStage-45"><a href="#SetuStage-45"><span class="linenos"> 45</span></a>
+</span><span id="SetuStage-46"><a href="#SetuStage-46"><span class="linenos"> 46</span></a><span class="sd">        Args:</span>
+</span><span id="SetuStage-47"><a href="#SetuStage-47"><span class="linenos"> 47</span></a><span class="sd">            cls (ABC): The self cls of which the name should be returned</span>
+</span><span id="SetuStage-48"><a href="#SetuStage-48"><span class="linenos"> 48</span></a>
+</span><span id="SetuStage-49"><a href="#SetuStage-49"><span class="linenos"> 49</span></a><span class="sd">        Returns:</span>
+</span><span id="SetuStage-50"><a href="#SetuStage-50"><span class="linenos"> 50</span></a><span class="sd">            str: Name of the stage</span>
+</span><span id="SetuStage-51"><a href="#SetuStage-51"><span class="linenos"> 51</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="SetuStage-52"><a href="#SetuStage-52"><span class="linenos"> 52</span></a>        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span>
+</span><span id="SetuStage-53"><a href="#SetuStage-53"><span class="linenos"> 53</span></a>    
+</span><span id="SetuStage-54"><a href="#SetuStage-54"><span class="linenos"> 54</span></a>    <span class="k">def</span> <span class="nf">salting</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">df</span><span class="p">:</span><span class="n">DataFrame</span><span class="p">,</span><span class="n">n_splits</span><span class="p">:</span><span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataFrame</span><span class="p">:</span>
+</span><span id="SetuStage-55"><a href="#SetuStage-55"><span class="linenos"> 55</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;salting Method which performs salting on the particular dataframe object to handle data skewness.</span>
+</span><span id="SetuStage-56"><a href="#SetuStage-56"><span class="linenos"> 56</span></a>
+</span><span id="SetuStage-57"><a href="#SetuStage-57"><span class="linenos"> 57</span></a><span class="sd">        Args:</span>
+</span><span id="SetuStage-58"><a href="#SetuStage-58"><span class="linenos"> 58</span></a><span class="sd">            df (DataFrame): The dataframe object that is processed by the stage.</span>
+</span><span id="SetuStage-59"><a href="#SetuStage-59"><span class="linenos"> 59</span></a><span class="sd">            n_splits (int): Number of splits for salting</span>
+</span><span id="SetuStage-60"><a href="#SetuStage-60"><span class="linenos"> 60</span></a>
+</span><span id="SetuStage-61"><a href="#SetuStage-61"><span class="linenos"> 61</span></a><span class="sd">        Returns:</span>
+</span><span id="SetuStage-62"><a href="#SetuStage-62"><span class="linenos"> 62</span></a><span class="sd">            DataFrame: Returns the dataframe object after performing salting</span>
+</span><span id="SetuStage-63"><a href="#SetuStage-63"><span class="linenos"> 63</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="SetuStage-64"><a href="#SetuStage-64"><span class="linenos"> 64</span></a>        <span class="n">num_buckets</span> <span class="o">=</span> <span class="n">n_splits</span>
+</span><span id="SetuStage-65"><a href="#SetuStage-65"><span class="linenos"> 65</span></a>
+</span><span id="SetuStage-66"><a href="#SetuStage-66"><span class="linenos"> 66</span></a>        <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s2">&quot;salt&quot;</span><span class="p">,(</span><span class="n">rand</span><span class="p">()</span><span class="o">*</span><span class="n">num_buckets</span><span class="p">)</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="s2">&quot;int&quot;</span><span class="p">))</span>
+</span><span id="SetuStage-67"><a href="#SetuStage-67"><span class="linenos"> 67</span></a>
+</span><span id="SetuStage-68"><a href="#SetuStage-68"><span class="linenos"> 68</span></a>        <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">repartition</span><span class="p">(</span><span class="n">n_splits</span><span class="p">,</span><span class="s2">&quot;salt&quot;</span><span class="p">)</span>
+</span><span id="SetuStage-69"><a href="#SetuStage-69"><span class="linenos"> 69</span></a>
+</span><span id="SetuStage-70"><a href="#SetuStage-70"><span class="linenos"> 70</span></a>        <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s2">&quot;salt&quot;</span><span class="p">)</span>
+</span><span id="SetuStage-71"><a href="#SetuStage-71"><span class="linenos"> 71</span></a>
+</span><span id="SetuStage-72"><a href="#SetuStage-72"><span class="linenos"> 72</span></a>        <span class="k">return</span> <span class="n">df</span>
+</span><span id="SetuStage-73"><a href="#SetuStage-73"><span class="linenos"> 73</span></a>    
+</span><span id="SetuStage-74"><a href="#SetuStage-74"><span class="linenos"> 74</span></a>    <span class="k">def</span> <span class="nf">set_split_count_and_salt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">df</span><span class="p">:</span><span class="n">DataFrame</span><span class="p">,</span><span class="n">docs_per_partition</span><span class="p">:</span><span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataFrame</span><span class="p">:</span>
+</span><span id="SetuStage-75"><a href="#SetuStage-75"><span class="linenos"> 75</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;set_split_count_and_salt Method to calculate the number of splits and salting given the dataframe and number of documents per partition.</span>
+</span><span id="SetuStage-76"><a href="#SetuStage-76"><span class="linenos"> 76</span></a>
+</span><span id="SetuStage-77"><a href="#SetuStage-77"><span class="linenos"> 77</span></a><span class="sd">        Args:</span>
+</span><span id="SetuStage-78"><a href="#SetuStage-78"><span class="linenos"> 78</span></a><span class="sd">            df (DataFrame): The dataframe object that is processed by the stage.</span>
+</span><span id="SetuStage-79"><a href="#SetuStage-79"><span class="linenos"> 79</span></a><span class="sd">            docs_per_partition (int): Number of documents that each spark partition should handle.</span>
+</span><span id="SetuStage-80"><a href="#SetuStage-80"><span class="linenos"> 80</span></a>
+</span><span id="SetuStage-81"><a href="#SetuStage-81"><span class="linenos"> 81</span></a><span class="sd">        Returns:</span>
+</span><span id="SetuStage-82"><a href="#SetuStage-82"><span class="linenos"> 82</span></a><span class="sd">            DataFrame: Returns the dataframe object after performing salting</span>
+</span><span id="SetuStage-83"><a href="#SetuStage-83"><span class="linenos"> 83</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="SetuStage-84"><a href="#SetuStage-84"><span class="linenos"> 84</span></a>        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_total_rows</span><span class="p">:</span>
+</span><span id="SetuStage-85"><a href="#SetuStage-85"><span class="linenos"> 85</span></a>            <span class="bp">self</span><span class="o">.</span><span class="n">df_total_rows</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
+</span><span id="SetuStage-86"><a href="#SetuStage-86"><span class="linenos"> 86</span></a>
+</span><span id="SetuStage-87"><a href="#SetuStage-87"><span class="linenos"> 87</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">n_splits</span> <span class="o">=</span> <span class="n">ceil</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">df_total_rows</span><span class="o">/</span><span class="n">docs_per_partition</span><span class="p">)</span>
+</span><span id="SetuStage-88"><a href="#SetuStage-88"><span class="linenos"> 88</span></a>
+</span><span id="SetuStage-89"><a href="#SetuStage-89"><span class="linenos"> 89</span></a>        <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">salting</span><span class="p">(</span><span class="n">df</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">n_splits</span><span class="p">)</span>
+</span><span id="SetuStage-90"><a href="#SetuStage-90"><span class="linenos"> 90</span></a>
+</span><span id="SetuStage-91"><a href="#SetuStage-91"><span class="linenos"> 91</span></a>        <span class="k">return</span> <span class="n">df</span>
+</span><span id="SetuStage-92"><a href="#SetuStage-92"><span class="linenos"> 92</span></a>    
+</span><span id="SetuStage-93"><a href="#SetuStage-93"><span class="linenos"> 93</span></a>    <span class="nd">@abstractmethod</span>
+</span><span id="SetuStage-94"><a href="#SetuStage-94"><span class="linenos"> 94</span></a>    <span class="k">def</span> <span class="nf">run_stage_parallelized</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="SetuStage-95"><a href="#SetuStage-95"><span class="linenos"> 95</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;run_stage_parallelized Abstract method for running the stage in parallel mode.</span>
+</span><span id="SetuStage-96"><a href="#SetuStage-96"><span class="linenos"> 96</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="SetuStage-97"><a href="#SetuStage-97"><span class="linenos"> 97</span></a>        <span class="k">pass</span>
+</span><span id="SetuStage-98"><a href="#SetuStage-98"><span class="linenos"> 98</span></a>
+</span><span id="SetuStage-99"><a href="#SetuStage-99"><span class="linenos"> 99</span></a>    <span class="nd">@abstractmethod</span>
+</span><span id="SetuStage-100"><a href="#SetuStage-100"><span class="linenos">100</span></a>    <span class="k">def</span> <span class="nf">run_data_parallelized</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="SetuStage-101"><a href="#SetuStage-101"><span class="linenos">101</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;run_data_parallelized Abstract method for running the stage in data parallel mode.</span>
+</span><span id="SetuStage-102"><a href="#SetuStage-102"><span class="linenos">102</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="SetuStage-103"><a href="#SetuStage-103"><span class="linenos">103</span></a>        <span class="k">pass</span>
+</span><span id="SetuStage-104"><a href="#SetuStage-104"><span class="linenos">104</span></a>
+</span><span id="SetuStage-105"><a href="#SetuStage-105"><span class="linenos">105</span></a>    <span class="nd">@abstractmethod</span>
+</span><span id="SetuStage-106"><a href="#SetuStage-106"><span class="linenos">106</span></a>    <span class="k">def</span> <span class="nf">run_spark</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parallel_mode</span><span class="o">=</span><span class="s2">&quot;stage&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span> <span class="o">|</span> <span class="ne">Exception</span><span class="p">:</span>
+</span><span id="SetuStage-107"><a href="#SetuStage-107"><span class="linenos">107</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;run_spark Method which triggers spark execution of the particular stage.</span>
+</span><span id="SetuStage-108"><a href="#SetuStage-108"><span class="linenos">108</span></a>
+</span><span id="SetuStage-109"><a href="#SetuStage-109"><span class="linenos">109</span></a><span class="sd">        Args:</span>
+</span><span id="SetuStage-110"><a href="#SetuStage-110"><span class="linenos">110</span></a><span class="sd">            parallel_mode (str, optional): The mode in which spark should execute, either data or stage parallel. Defaults to &quot;stage&quot;.</span>
+</span><span id="SetuStage-111"><a href="#SetuStage-111"><span class="linenos">111</span></a>
+</span><span id="SetuStage-112"><a href="#SetuStage-112"><span class="linenos">112</span></a><span class="sd">        Raises:</span>
+</span><span id="SetuStage-113"><a href="#SetuStage-113"><span class="linenos">113</span></a><span class="sd">            Exception: Throws an exception when unknown value is provided for parallel_mode.</span>
+</span><span id="SetuStage-114"><a href="#SetuStage-114"><span class="linenos">114</span></a>
+</span><span id="SetuStage-115"><a href="#SetuStage-115"><span class="linenos">115</span></a><span class="sd">        Returns:</span>
+</span><span id="SetuStage-116"><a href="#SetuStage-116"><span class="linenos">116</span></a><span class="sd">            Callable | Exception: Exception that indicates the user has provided an incorrect value for parallel_mode.</span>
+</span><span id="SetuStage-117"><a href="#SetuStage-117"><span class="linenos">117</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="SetuStage-118"><a href="#SetuStage-118"><span class="linenos">118</span></a>        <span class="k">if</span> <span class="n">parallel_mode</span> <span class="o">==</span> <span class="s2">&quot;stage&quot;</span><span class="p">:</span>
+</span><span id="SetuStage-119"><a href="#SetuStage-119"><span class="linenos">119</span></a>            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_stage_parallelized</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span id="SetuStage-120"><a href="#SetuStage-120"><span class="linenos">120</span></a>        <span class="k">elif</span> <span class="n">parallel_mode</span> <span class="o">==</span> <span class="s2">&quot;data&quot;</span><span class="p">:</span>
+</span><span id="SetuStage-121"><a href="#SetuStage-121"><span class="linenos">121</span></a>            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_data_parallelized</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span id="SetuStage-122"><a href="#SetuStage-122"><span class="linenos">122</span></a>        <span class="k">else</span><span class="p">:</span>
+</span><span id="SetuStage-123"><a href="#SetuStage-123"><span class="linenos">123</span></a>            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Incorrect input for `parallel_mode`. `parallel_mode` only supports 2 types: `stage` &amp; `data`.&quot;</span><span class="p">)</span>
+</span><span id="SetuStage-124"><a href="#SetuStage-124"><span class="linenos">124</span></a>
+</span><span id="SetuStage-125"><a href="#SetuStage-125"><span class="linenos">125</span></a>    <span class="nd">@abstractmethod</span>
+</span><span id="SetuStage-126"><a href="#SetuStage-126"><span class="linenos">126</span></a>    <span class="k">def</span> <span class="nf">run_normal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="SetuStage-127"><a href="#SetuStage-127"><span class="linenos">127</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;run_normal Method for executing the stage in normal without Spark Utilization</span>
+</span><span id="SetuStage-128"><a href="#SetuStage-128"><span class="linenos">128</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="SetuStage-129"><a href="#SetuStage-129"><span class="linenos">129</span></a>        <span class="k">pass</span>
+</span><span id="SetuStage-130"><a href="#SetuStage-130"><span class="linenos">130</span></a>
+</span><span id="SetuStage-131"><a href="#SetuStage-131"><span class="linenos">131</span></a>    <span class="nd">@abstractmethod</span>
+</span><span id="SetuStage-132"><a href="#SetuStage-132"><span class="linenos">132</span></a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parallel_mode</span><span class="o">=</span><span class="s2">&quot;stage&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
+</span><span id="SetuStage-133"><a href="#SetuStage-133"><span class="linenos">133</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;run Method that triggers stage execution based on values of parallel_mode and if spark should be used.</span>
+</span><span id="SetuStage-134"><a href="#SetuStage-134"><span class="linenos">134</span></a>
+</span><span id="SetuStage-135"><a href="#SetuStage-135"><span class="linenos">135</span></a><span class="sd">        Args:</span>
+</span><span id="SetuStage-136"><a href="#SetuStage-136"><span class="linenos">136</span></a><span class="sd">            parallel_mode (str, optional): _description_. Defaults to &quot;stage&quot;.</span>
+</span><span id="SetuStage-137"><a href="#SetuStage-137"><span class="linenos">137</span></a>
+</span><span id="SetuStage-138"><a href="#SetuStage-138"><span class="linenos">138</span></a><span class="sd">        Returns:</span>
+</span><span id="SetuStage-139"><a href="#SetuStage-139"><span class="linenos">139</span></a><span class="sd">            Callable: _description_</span>
+</span><span id="SetuStage-140"><a href="#SetuStage-140"><span class="linenos">140</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="SetuStage-141"><a href="#SetuStage-141"><span class="linenos">141</span></a>        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">use_spark</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">spark_present</span><span class="p">:</span>
+</span><span id="SetuStage-142"><a href="#SetuStage-142"><span class="linenos">142</span></a>            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_spark</span><span class="p">(</span><span class="n">parallel_mode</span><span class="o">=</span><span class="n">parallel_mode</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span id="SetuStage-143"><a href="#SetuStage-143"><span class="linenos">143</span></a>        <span class="k">else</span><span class="p">:</span>
+</span><span id="SetuStage-144"><a href="#SetuStage-144"><span class="linenos">144</span></a>            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_normal</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </span></pre></div>
 
 
-            <div class="docstring"><p>Helper class that provides a standard way to create an ABC using
-inheritance.</p>
+            <div class="docstring"><p>SetuStage Base Class for the different stages in Setu Pipeline</p>
+
+<p>Args:
+    config (Namespace): The configuration file for the particular data type and language to be processed by the pipeline.</p>
 </div>
 
 
@@ -329,7 +488,9 @@ inheritance.</p>
     </div>
     <a class="headerlink" href="#SetuStage.config"></a>
     
-    
+            <div class="docstring"><p>Configuration Namespace object for the particular stage.</p>
+</div>
+
 
                             </div>
                             <div id="SetuStage.name" class="classattr">
@@ -340,7 +501,9 @@ inheritance.</p>
     </div>
     <a class="headerlink" href="#SetuStage.name"></a>
     
-    
+            <div class="docstring"><p>Name of the particular stage.</p>
+</div>
+
 
                             </div>
                             <div id="SetuStage.df_total_rows" class="classattr">
@@ -351,7 +514,9 @@ inheritance.</p>
     </div>
     <a class="headerlink" href="#SetuStage.df_total_rows"></a>
     
-    
+            <div class="docstring"><p>Total number of rows in the given Dataframe Object.</p>
+</div>
+
 
                             </div>
                             <div id="SetuStage.add_cmdline_args" class="classattr">
@@ -367,14 +532,24 @@ inheritance.</p>
 
     </div>
     <a class="headerlink" href="#SetuStage.add_cmdline_args"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="SetuStage.add_cmdline_args-24"><a href="#SetuStage.add_cmdline_args-24"><span class="linenos">24</span></a>    <span class="nd">@staticmethod</span>
-</span><span id="SetuStage.add_cmdline_args-25"><a href="#SetuStage.add_cmdline_args-25"><span class="linenos">25</span></a>    <span class="nd">@abstractmethod</span>
-</span><span id="SetuStage.add_cmdline_args-26"><a href="#SetuStage.add_cmdline_args-26"><span class="linenos">26</span></a>    <span class="k">def</span> <span class="nf">add_cmdline_args</span><span class="p">(</span><span class="n">parser</span><span class="p">:</span><span class="n">ArgumentParser</span><span class="p">):</span>
-</span><span id="SetuStage.add_cmdline_args-27"><a href="#SetuStage.add_cmdline_args-27"><span class="linenos">27</span></a>        <span class="k">pass</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="SetuStage.add_cmdline_args-32"><a href="#SetuStage.add_cmdline_args-32"><span class="linenos">32</span></a>    <span class="nd">@staticmethod</span>
+</span><span id="SetuStage.add_cmdline_args-33"><a href="#SetuStage.add_cmdline_args-33"><span class="linenos">33</span></a>    <span class="nd">@abstractmethod</span>
+</span><span id="SetuStage.add_cmdline_args-34"><a href="#SetuStage.add_cmdline_args-34"><span class="linenos">34</span></a>    <span class="k">def</span> <span class="nf">add_cmdline_args</span><span class="p">(</span><span class="n">parser</span><span class="p">:</span><span class="n">ArgumentParser</span><span class="p">):</span>
+</span><span id="SetuStage.add_cmdline_args-35"><a href="#SetuStage.add_cmdline_args-35"><span class="linenos">35</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;add_cmdline_args Abstract Method for adding command line arguments for the particular stage</span>
+</span><span id="SetuStage.add_cmdline_args-36"><a href="#SetuStage.add_cmdline_args-36"><span class="linenos">36</span></a>
+</span><span id="SetuStage.add_cmdline_args-37"><a href="#SetuStage.add_cmdline_args-37"><span class="linenos">37</span></a><span class="sd">        Args:</span>
+</span><span id="SetuStage.add_cmdline_args-38"><a href="#SetuStage.add_cmdline_args-38"><span class="linenos">38</span></a><span class="sd">            parser (ArgumentParser): The argument parser object to which the current stage arguments need to be added.</span>
+</span><span id="SetuStage.add_cmdline_args-39"><a href="#SetuStage.add_cmdline_args-39"><span class="linenos">39</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="SetuStage.add_cmdline_args-40"><a href="#SetuStage.add_cmdline_args-40"><span class="linenos">40</span></a>        <span class="k">pass</span>
 </span></pre></div>
 
 
-    
+            <div class="docstring"><p>add_cmdline_args Abstract Method for adding command line arguments for the particular stage</p>
+
+<p>Args:
+    parser (ArgumentParser): The argument parser object to which the current stage arguments need to be added.</p>
+</div>
+
 
                             </div>
                             <div id="SetuStage.get_stage_name" class="classattr">
@@ -389,13 +564,29 @@ inheritance.</p>
 
     </div>
     <a class="headerlink" href="#SetuStage.get_stage_name"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="SetuStage.get_stage_name-29"><a href="#SetuStage.get_stage_name-29"><span class="linenos">29</span></a>    <span class="nd">@classmethod</span>
-</span><span id="SetuStage.get_stage_name-30"><a href="#SetuStage.get_stage_name-30"><span class="linenos">30</span></a>    <span class="k">def</span> <span class="nf">get_stage_name</span><span class="p">(</span><span class="bp">cls</span><span class="p">:</span><span class="n">ABC</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span id="SetuStage.get_stage_name-31"><a href="#SetuStage.get_stage_name-31"><span class="linenos">31</span></a>        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="SetuStage.get_stage_name-42"><a href="#SetuStage.get_stage_name-42"><span class="linenos">42</span></a>    <span class="nd">@classmethod</span>
+</span><span id="SetuStage.get_stage_name-43"><a href="#SetuStage.get_stage_name-43"><span class="linenos">43</span></a>    <span class="k">def</span> <span class="nf">get_stage_name</span><span class="p">(</span><span class="bp">cls</span><span class="p">:</span><span class="n">ABC</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span id="SetuStage.get_stage_name-44"><a href="#SetuStage.get_stage_name-44"><span class="linenos">44</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;get_stage_name Method to fetch the particular stage name</span>
+</span><span id="SetuStage.get_stage_name-45"><a href="#SetuStage.get_stage_name-45"><span class="linenos">45</span></a>
+</span><span id="SetuStage.get_stage_name-46"><a href="#SetuStage.get_stage_name-46"><span class="linenos">46</span></a><span class="sd">        Args:</span>
+</span><span id="SetuStage.get_stage_name-47"><a href="#SetuStage.get_stage_name-47"><span class="linenos">47</span></a><span class="sd">            cls (ABC): The self cls of which the name should be returned</span>
+</span><span id="SetuStage.get_stage_name-48"><a href="#SetuStage.get_stage_name-48"><span class="linenos">48</span></a>
+</span><span id="SetuStage.get_stage_name-49"><a href="#SetuStage.get_stage_name-49"><span class="linenos">49</span></a><span class="sd">        Returns:</span>
+</span><span id="SetuStage.get_stage_name-50"><a href="#SetuStage.get_stage_name-50"><span class="linenos">50</span></a><span class="sd">            str: Name of the stage</span>
+</span><span id="SetuStage.get_stage_name-51"><a href="#SetuStage.get_stage_name-51"><span class="linenos">51</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="SetuStage.get_stage_name-52"><a href="#SetuStage.get_stage_name-52"><span class="linenos">52</span></a>        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span>
 </span></pre></div>
 
 
-    
+            <div class="docstring"><p>get_stage_name Method to fetch the particular stage name</p>
+
+<p>Args:
+    cls (ABC): The self cls of which the name should be returned</p>
+
+<p>Returns:
+    str: Name of the stage</p>
+</div>
+
 
                             </div>
                             <div id="SetuStage.salting" class="classattr">
@@ -409,20 +600,38 @@ inheritance.</p>
 
     </div>
     <a class="headerlink" href="#SetuStage.salting"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="SetuStage.salting-33"><a href="#SetuStage.salting-33"><span class="linenos">33</span></a>    <span class="k">def</span> <span class="nf">salting</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">df</span><span class="p">:</span><span class="n">DataFrame</span><span class="p">,</span><span class="n">n_splits</span><span class="p">:</span><span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataFrame</span><span class="p">:</span>
-</span><span id="SetuStage.salting-34"><a href="#SetuStage.salting-34"><span class="linenos">34</span></a>        <span class="n">num_buckets</span> <span class="o">=</span> <span class="n">n_splits</span>
-</span><span id="SetuStage.salting-35"><a href="#SetuStage.salting-35"><span class="linenos">35</span></a>
-</span><span id="SetuStage.salting-36"><a href="#SetuStage.salting-36"><span class="linenos">36</span></a>        <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s2">&quot;salt&quot;</span><span class="p">,(</span><span class="n">rand</span><span class="p">()</span><span class="o">*</span><span class="n">num_buckets</span><span class="p">)</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="s2">&quot;int&quot;</span><span class="p">))</span>
-</span><span id="SetuStage.salting-37"><a href="#SetuStage.salting-37"><span class="linenos">37</span></a>
-</span><span id="SetuStage.salting-38"><a href="#SetuStage.salting-38"><span class="linenos">38</span></a>        <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">repartition</span><span class="p">(</span><span class="n">n_splits</span><span class="p">,</span><span class="s2">&quot;salt&quot;</span><span class="p">)</span>
-</span><span id="SetuStage.salting-39"><a href="#SetuStage.salting-39"><span class="linenos">39</span></a>
-</span><span id="SetuStage.salting-40"><a href="#SetuStage.salting-40"><span class="linenos">40</span></a>        <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s2">&quot;salt&quot;</span><span class="p">)</span>
-</span><span id="SetuStage.salting-41"><a href="#SetuStage.salting-41"><span class="linenos">41</span></a>
-</span><span id="SetuStage.salting-42"><a href="#SetuStage.salting-42"><span class="linenos">42</span></a>        <span class="k">return</span> <span class="n">df</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="SetuStage.salting-54"><a href="#SetuStage.salting-54"><span class="linenos">54</span></a>    <span class="k">def</span> <span class="nf">salting</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">df</span><span class="p">:</span><span class="n">DataFrame</span><span class="p">,</span><span class="n">n_splits</span><span class="p">:</span><span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataFrame</span><span class="p">:</span>
+</span><span id="SetuStage.salting-55"><a href="#SetuStage.salting-55"><span class="linenos">55</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;salting Method which performs salting on the particular dataframe object to handle data skewness.</span>
+</span><span id="SetuStage.salting-56"><a href="#SetuStage.salting-56"><span class="linenos">56</span></a>
+</span><span id="SetuStage.salting-57"><a href="#SetuStage.salting-57"><span class="linenos">57</span></a><span class="sd">        Args:</span>
+</span><span id="SetuStage.salting-58"><a href="#SetuStage.salting-58"><span class="linenos">58</span></a><span class="sd">            df (DataFrame): The dataframe object that is processed by the stage.</span>
+</span><span id="SetuStage.salting-59"><a href="#SetuStage.salting-59"><span class="linenos">59</span></a><span class="sd">            n_splits (int): Number of splits for salting</span>
+</span><span id="SetuStage.salting-60"><a href="#SetuStage.salting-60"><span class="linenos">60</span></a>
+</span><span id="SetuStage.salting-61"><a href="#SetuStage.salting-61"><span class="linenos">61</span></a><span class="sd">        Returns:</span>
+</span><span id="SetuStage.salting-62"><a href="#SetuStage.salting-62"><span class="linenos">62</span></a><span class="sd">            DataFrame: Returns the dataframe object after performing salting</span>
+</span><span id="SetuStage.salting-63"><a href="#SetuStage.salting-63"><span class="linenos">63</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="SetuStage.salting-64"><a href="#SetuStage.salting-64"><span class="linenos">64</span></a>        <span class="n">num_buckets</span> <span class="o">=</span> <span class="n">n_splits</span>
+</span><span id="SetuStage.salting-65"><a href="#SetuStage.salting-65"><span class="linenos">65</span></a>
+</span><span id="SetuStage.salting-66"><a href="#SetuStage.salting-66"><span class="linenos">66</span></a>        <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s2">&quot;salt&quot;</span><span class="p">,(</span><span class="n">rand</span><span class="p">()</span><span class="o">*</span><span class="n">num_buckets</span><span class="p">)</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="s2">&quot;int&quot;</span><span class="p">))</span>
+</span><span id="SetuStage.salting-67"><a href="#SetuStage.salting-67"><span class="linenos">67</span></a>
+</span><span id="SetuStage.salting-68"><a href="#SetuStage.salting-68"><span class="linenos">68</span></a>        <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">repartition</span><span class="p">(</span><span class="n">n_splits</span><span class="p">,</span><span class="s2">&quot;salt&quot;</span><span class="p">)</span>
+</span><span id="SetuStage.salting-69"><a href="#SetuStage.salting-69"><span class="linenos">69</span></a>
+</span><span id="SetuStage.salting-70"><a href="#SetuStage.salting-70"><span class="linenos">70</span></a>        <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s2">&quot;salt&quot;</span><span class="p">)</span>
+</span><span id="SetuStage.salting-71"><a href="#SetuStage.salting-71"><span class="linenos">71</span></a>
+</span><span id="SetuStage.salting-72"><a href="#SetuStage.salting-72"><span class="linenos">72</span></a>        <span class="k">return</span> <span class="n">df</span>
 </span></pre></div>
 
 
-    
+            <div class="docstring"><p>salting Method which performs salting on the particular dataframe object to handle data skewness.</p>
+
+<p>Args:
+    df (DataFrame): The dataframe object that is processed by the stage.
+    n_splits (int): Number of splits for salting</p>
+
+<p>Returns:
+    DataFrame: Returns the dataframe object after performing salting</p>
+</div>
+
 
                             </div>
                             <div id="SetuStage.set_split_count_and_salt" class="classattr">
@@ -436,19 +645,37 @@ inheritance.</p>
 
     </div>
     <a class="headerlink" href="#SetuStage.set_split_count_and_salt"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="SetuStage.set_split_count_and_salt-44"><a href="#SetuStage.set_split_count_and_salt-44"><span class="linenos">44</span></a>    <span class="k">def</span> <span class="nf">set_split_count_and_salt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">df</span><span class="p">:</span><span class="n">DataFrame</span><span class="p">,</span><span class="n">docs_per_partition</span><span class="p">:</span><span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataFrame</span><span class="p">:</span>
-</span><span id="SetuStage.set_split_count_and_salt-45"><a href="#SetuStage.set_split_count_and_salt-45"><span class="linenos">45</span></a>        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_total_rows</span><span class="p">:</span>
-</span><span id="SetuStage.set_split_count_and_salt-46"><a href="#SetuStage.set_split_count_and_salt-46"><span class="linenos">46</span></a>            <span class="bp">self</span><span class="o">.</span><span class="n">df_total_rows</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
-</span><span id="SetuStage.set_split_count_and_salt-47"><a href="#SetuStage.set_split_count_and_salt-47"><span class="linenos">47</span></a>
-</span><span id="SetuStage.set_split_count_and_salt-48"><a href="#SetuStage.set_split_count_and_salt-48"><span class="linenos">48</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">n_splits</span> <span class="o">=</span> <span class="n">ceil</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">df_total_rows</span><span class="o">/</span><span class="n">docs_per_partition</span><span class="p">)</span>
-</span><span id="SetuStage.set_split_count_and_salt-49"><a href="#SetuStage.set_split_count_and_salt-49"><span class="linenos">49</span></a>
-</span><span id="SetuStage.set_split_count_and_salt-50"><a href="#SetuStage.set_split_count_and_salt-50"><span class="linenos">50</span></a>        <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">salting</span><span class="p">(</span><span class="n">df</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">n_splits</span><span class="p">)</span>
-</span><span id="SetuStage.set_split_count_and_salt-51"><a href="#SetuStage.set_split_count_and_salt-51"><span class="linenos">51</span></a>
-</span><span id="SetuStage.set_split_count_and_salt-52"><a href="#SetuStage.set_split_count_and_salt-52"><span class="linenos">52</span></a>        <span class="k">return</span> <span class="n">df</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="SetuStage.set_split_count_and_salt-74"><a href="#SetuStage.set_split_count_and_salt-74"><span class="linenos">74</span></a>    <span class="k">def</span> <span class="nf">set_split_count_and_salt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">df</span><span class="p">:</span><span class="n">DataFrame</span><span class="p">,</span><span class="n">docs_per_partition</span><span class="p">:</span><span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataFrame</span><span class="p">:</span>
+</span><span id="SetuStage.set_split_count_and_salt-75"><a href="#SetuStage.set_split_count_and_salt-75"><span class="linenos">75</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;set_split_count_and_salt Method to calculate the number of splits and salting given the dataframe and number of documents per partition.</span>
+</span><span id="SetuStage.set_split_count_and_salt-76"><a href="#SetuStage.set_split_count_and_salt-76"><span class="linenos">76</span></a>
+</span><span id="SetuStage.set_split_count_and_salt-77"><a href="#SetuStage.set_split_count_and_salt-77"><span class="linenos">77</span></a><span class="sd">        Args:</span>
+</span><span id="SetuStage.set_split_count_and_salt-78"><a href="#SetuStage.set_split_count_and_salt-78"><span class="linenos">78</span></a><span class="sd">            df (DataFrame): The dataframe object that is processed by the stage.</span>
+</span><span id="SetuStage.set_split_count_and_salt-79"><a href="#SetuStage.set_split_count_and_salt-79"><span class="linenos">79</span></a><span class="sd">            docs_per_partition (int): Number of documents that each spark partition should handle.</span>
+</span><span id="SetuStage.set_split_count_and_salt-80"><a href="#SetuStage.set_split_count_and_salt-80"><span class="linenos">80</span></a>
+</span><span id="SetuStage.set_split_count_and_salt-81"><a href="#SetuStage.set_split_count_and_salt-81"><span class="linenos">81</span></a><span class="sd">        Returns:</span>
+</span><span id="SetuStage.set_split_count_and_salt-82"><a href="#SetuStage.set_split_count_and_salt-82"><span class="linenos">82</span></a><span class="sd">            DataFrame: Returns the dataframe object after performing salting</span>
+</span><span id="SetuStage.set_split_count_and_salt-83"><a href="#SetuStage.set_split_count_and_salt-83"><span class="linenos">83</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="SetuStage.set_split_count_and_salt-84"><a href="#SetuStage.set_split_count_and_salt-84"><span class="linenos">84</span></a>        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_total_rows</span><span class="p">:</span>
+</span><span id="SetuStage.set_split_count_and_salt-85"><a href="#SetuStage.set_split_count_and_salt-85"><span class="linenos">85</span></a>            <span class="bp">self</span><span class="o">.</span><span class="n">df_total_rows</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
+</span><span id="SetuStage.set_split_count_and_salt-86"><a href="#SetuStage.set_split_count_and_salt-86"><span class="linenos">86</span></a>
+</span><span id="SetuStage.set_split_count_and_salt-87"><a href="#SetuStage.set_split_count_and_salt-87"><span class="linenos">87</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">n_splits</span> <span class="o">=</span> <span class="n">ceil</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">df_total_rows</span><span class="o">/</span><span class="n">docs_per_partition</span><span class="p">)</span>
+</span><span id="SetuStage.set_split_count_and_salt-88"><a href="#SetuStage.set_split_count_and_salt-88"><span class="linenos">88</span></a>
+</span><span id="SetuStage.set_split_count_and_salt-89"><a href="#SetuStage.set_split_count_and_salt-89"><span class="linenos">89</span></a>        <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">salting</span><span class="p">(</span><span class="n">df</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">n_splits</span><span class="p">)</span>
+</span><span id="SetuStage.set_split_count_and_salt-90"><a href="#SetuStage.set_split_count_and_salt-90"><span class="linenos">90</span></a>
+</span><span id="SetuStage.set_split_count_and_salt-91"><a href="#SetuStage.set_split_count_and_salt-91"><span class="linenos">91</span></a>        <span class="k">return</span> <span class="n">df</span>
 </span></pre></div>
 
 
-    
+            <div class="docstring"><p>set_split_count_and_salt Method to calculate the number of splits and salting given the dataframe and number of documents per partition.</p>
+
+<p>Args:
+    df (DataFrame): The dataframe object that is processed by the stage.
+    docs_per_partition (int): Number of documents that each spark partition should handle.</p>
+
+<p>Returns:
+    DataFrame: Returns the dataframe object after performing salting</p>
+</div>
+
 
                             </div>
                             <div id="SetuStage.run_stage_parallelized" class="classattr">
@@ -463,13 +690,17 @@ inheritance.</p>
 
     </div>
     <a class="headerlink" href="#SetuStage.run_stage_parallelized"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="SetuStage.run_stage_parallelized-54"><a href="#SetuStage.run_stage_parallelized-54"><span class="linenos">54</span></a>    <span class="nd">@abstractmethod</span>
-</span><span id="SetuStage.run_stage_parallelized-55"><a href="#SetuStage.run_stage_parallelized-55"><span class="linenos">55</span></a>    <span class="k">def</span> <span class="nf">run_stage_parallelized</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="SetuStage.run_stage_parallelized-56"><a href="#SetuStage.run_stage_parallelized-56"><span class="linenos">56</span></a>        <span class="k">pass</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="SetuStage.run_stage_parallelized-93"><a href="#SetuStage.run_stage_parallelized-93"><span class="linenos">93</span></a>    <span class="nd">@abstractmethod</span>
+</span><span id="SetuStage.run_stage_parallelized-94"><a href="#SetuStage.run_stage_parallelized-94"><span class="linenos">94</span></a>    <span class="k">def</span> <span class="nf">run_stage_parallelized</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="SetuStage.run_stage_parallelized-95"><a href="#SetuStage.run_stage_parallelized-95"><span class="linenos">95</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;run_stage_parallelized Abstract method for running the stage in parallel mode.</span>
+</span><span id="SetuStage.run_stage_parallelized-96"><a href="#SetuStage.run_stage_parallelized-96"><span class="linenos">96</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="SetuStage.run_stage_parallelized-97"><a href="#SetuStage.run_stage_parallelized-97"><span class="linenos">97</span></a>        <span class="k">pass</span>
 </span></pre></div>
 
 
-    
+            <div class="docstring"><p>run_stage_parallelized Abstract method for running the stage in parallel mode.</p>
+</div>
+
 
                             </div>
                             <div id="SetuStage.run_data_parallelized" class="classattr">
@@ -484,13 +715,17 @@ inheritance.</p>
 
     </div>
     <a class="headerlink" href="#SetuStage.run_data_parallelized"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="SetuStage.run_data_parallelized-58"><a href="#SetuStage.run_data_parallelized-58"><span class="linenos">58</span></a>    <span class="nd">@abstractmethod</span>
-</span><span id="SetuStage.run_data_parallelized-59"><a href="#SetuStage.run_data_parallelized-59"><span class="linenos">59</span></a>    <span class="k">def</span> <span class="nf">run_data_parallelized</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="SetuStage.run_data_parallelized-60"><a href="#SetuStage.run_data_parallelized-60"><span class="linenos">60</span></a>        <span class="k">pass</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="SetuStage.run_data_parallelized-99"><a href="#SetuStage.run_data_parallelized-99"><span class="linenos"> 99</span></a>    <span class="nd">@abstractmethod</span>
+</span><span id="SetuStage.run_data_parallelized-100"><a href="#SetuStage.run_data_parallelized-100"><span class="linenos">100</span></a>    <span class="k">def</span> <span class="nf">run_data_parallelized</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="SetuStage.run_data_parallelized-101"><a href="#SetuStage.run_data_parallelized-101"><span class="linenos">101</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;run_data_parallelized Abstract method for running the stage in data parallel mode.</span>
+</span><span id="SetuStage.run_data_parallelized-102"><a href="#SetuStage.run_data_parallelized-102"><span class="linenos">102</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="SetuStage.run_data_parallelized-103"><a href="#SetuStage.run_data_parallelized-103"><span class="linenos">103</span></a>        <span class="k">pass</span>
 </span></pre></div>
 
 
-    
+            <div class="docstring"><p>run_data_parallelized Abstract method for running the stage in data parallel mode.</p>
+</div>
+
 
                             </div>
                             <div id="SetuStage.run_spark" class="classattr">
@@ -505,18 +740,40 @@ inheritance.</p>
 
     </div>
     <a class="headerlink" href="#SetuStage.run_spark"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="SetuStage.run_spark-62"><a href="#SetuStage.run_spark-62"><span class="linenos">62</span></a>    <span class="nd">@abstractmethod</span>
-</span><span id="SetuStage.run_spark-63"><a href="#SetuStage.run_spark-63"><span class="linenos">63</span></a>    <span class="k">def</span> <span class="nf">run_spark</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parallel_mode</span><span class="o">=</span><span class="s2">&quot;stage&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span> <span class="o">|</span> <span class="ne">Exception</span><span class="p">:</span>
-</span><span id="SetuStage.run_spark-64"><a href="#SetuStage.run_spark-64"><span class="linenos">64</span></a>        <span class="k">if</span> <span class="n">parallel_mode</span> <span class="o">==</span> <span class="s2">&quot;stage&quot;</span><span class="p">:</span>
-</span><span id="SetuStage.run_spark-65"><a href="#SetuStage.run_spark-65"><span class="linenos">65</span></a>            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_stage_parallelized</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</span><span id="SetuStage.run_spark-66"><a href="#SetuStage.run_spark-66"><span class="linenos">66</span></a>        <span class="k">elif</span> <span class="n">parallel_mode</span> <span class="o">==</span> <span class="s2">&quot;data&quot;</span><span class="p">:</span>
-</span><span id="SetuStage.run_spark-67"><a href="#SetuStage.run_spark-67"><span class="linenos">67</span></a>            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_data_parallelized</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</span><span id="SetuStage.run_spark-68"><a href="#SetuStage.run_spark-68"><span class="linenos">68</span></a>        <span class="k">else</span><span class="p">:</span>
-</span><span id="SetuStage.run_spark-69"><a href="#SetuStage.run_spark-69"><span class="linenos">69</span></a>            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Incorrect input for `parallel_mode`. `parallel_mode` only supports 2 types: `stage` &amp; `data`.&quot;</span><span class="p">)</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="SetuStage.run_spark-105"><a href="#SetuStage.run_spark-105"><span class="linenos">105</span></a>    <span class="nd">@abstractmethod</span>
+</span><span id="SetuStage.run_spark-106"><a href="#SetuStage.run_spark-106"><span class="linenos">106</span></a>    <span class="k">def</span> <span class="nf">run_spark</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parallel_mode</span><span class="o">=</span><span class="s2">&quot;stage&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span> <span class="o">|</span> <span class="ne">Exception</span><span class="p">:</span>
+</span><span id="SetuStage.run_spark-107"><a href="#SetuStage.run_spark-107"><span class="linenos">107</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;run_spark Method which triggers spark execution of the particular stage.</span>
+</span><span id="SetuStage.run_spark-108"><a href="#SetuStage.run_spark-108"><span class="linenos">108</span></a>
+</span><span id="SetuStage.run_spark-109"><a href="#SetuStage.run_spark-109"><span class="linenos">109</span></a><span class="sd">        Args:</span>
+</span><span id="SetuStage.run_spark-110"><a href="#SetuStage.run_spark-110"><span class="linenos">110</span></a><span class="sd">            parallel_mode (str, optional): The mode in which spark should execute, either data or stage parallel. Defaults to &quot;stage&quot;.</span>
+</span><span id="SetuStage.run_spark-111"><a href="#SetuStage.run_spark-111"><span class="linenos">111</span></a>
+</span><span id="SetuStage.run_spark-112"><a href="#SetuStage.run_spark-112"><span class="linenos">112</span></a><span class="sd">        Raises:</span>
+</span><span id="SetuStage.run_spark-113"><a href="#SetuStage.run_spark-113"><span class="linenos">113</span></a><span class="sd">            Exception: Throws an exception when unknown value is provided for parallel_mode.</span>
+</span><span id="SetuStage.run_spark-114"><a href="#SetuStage.run_spark-114"><span class="linenos">114</span></a>
+</span><span id="SetuStage.run_spark-115"><a href="#SetuStage.run_spark-115"><span class="linenos">115</span></a><span class="sd">        Returns:</span>
+</span><span id="SetuStage.run_spark-116"><a href="#SetuStage.run_spark-116"><span class="linenos">116</span></a><span class="sd">            Callable | Exception: Exception that indicates the user has provided an incorrect value for parallel_mode.</span>
+</span><span id="SetuStage.run_spark-117"><a href="#SetuStage.run_spark-117"><span class="linenos">117</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="SetuStage.run_spark-118"><a href="#SetuStage.run_spark-118"><span class="linenos">118</span></a>        <span class="k">if</span> <span class="n">parallel_mode</span> <span class="o">==</span> <span class="s2">&quot;stage&quot;</span><span class="p">:</span>
+</span><span id="SetuStage.run_spark-119"><a href="#SetuStage.run_spark-119"><span class="linenos">119</span></a>            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_stage_parallelized</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span id="SetuStage.run_spark-120"><a href="#SetuStage.run_spark-120"><span class="linenos">120</span></a>        <span class="k">elif</span> <span class="n">parallel_mode</span> <span class="o">==</span> <span class="s2">&quot;data&quot;</span><span class="p">:</span>
+</span><span id="SetuStage.run_spark-121"><a href="#SetuStage.run_spark-121"><span class="linenos">121</span></a>            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_data_parallelized</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span id="SetuStage.run_spark-122"><a href="#SetuStage.run_spark-122"><span class="linenos">122</span></a>        <span class="k">else</span><span class="p">:</span>
+</span><span id="SetuStage.run_spark-123"><a href="#SetuStage.run_spark-123"><span class="linenos">123</span></a>            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Incorrect input for `parallel_mode`. `parallel_mode` only supports 2 types: `stage` &amp; `data`.&quot;</span><span class="p">)</span>
 </span></pre></div>
 
 
-    
+            <div class="docstring"><p>run_spark Method which triggers spark execution of the particular stage.</p>
+
+<p>Args:
+    parallel_mode (str, optional): The mode in which spark should execute, either data or stage parallel. Defaults to "stage".</p>
+
+<p>Raises:
+    Exception: Throws an exception when unknown value is provided for parallel_mode.</p>
+
+<p>Returns:
+    Callable | Exception: Exception that indicates the user has provided an incorrect value for parallel_mode.</p>
+</div>
+
 
                             </div>
                             <div id="SetuStage.run_normal" class="classattr">
@@ -531,13 +788,17 @@ inheritance.</p>
 
     </div>
     <a class="headerlink" href="#SetuStage.run_normal"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="SetuStage.run_normal-71"><a href="#SetuStage.run_normal-71"><span class="linenos">71</span></a>    <span class="nd">@abstractmethod</span>
-</span><span id="SetuStage.run_normal-72"><a href="#SetuStage.run_normal-72"><span class="linenos">72</span></a>    <span class="k">def</span> <span class="nf">run_normal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="SetuStage.run_normal-73"><a href="#SetuStage.run_normal-73"><span class="linenos">73</span></a>        <span class="k">pass</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="SetuStage.run_normal-125"><a href="#SetuStage.run_normal-125"><span class="linenos">125</span></a>    <span class="nd">@abstractmethod</span>
+</span><span id="SetuStage.run_normal-126"><a href="#SetuStage.run_normal-126"><span class="linenos">126</span></a>    <span class="k">def</span> <span class="nf">run_normal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="SetuStage.run_normal-127"><a href="#SetuStage.run_normal-127"><span class="linenos">127</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;run_normal Method for executing the stage in normal without Spark Utilization</span>
+</span><span id="SetuStage.run_normal-128"><a href="#SetuStage.run_normal-128"><span class="linenos">128</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="SetuStage.run_normal-129"><a href="#SetuStage.run_normal-129"><span class="linenos">129</span></a>        <span class="k">pass</span>
 </span></pre></div>
 
 
-    
+            <div class="docstring"><p>run_normal Method for executing the stage in normal without Spark Utilization</p>
+</div>
+
 
                             </div>
                             <div id="SetuStage.run" class="classattr">
@@ -552,16 +813,32 @@ inheritance.</p>
 
     </div>
     <a class="headerlink" href="#SetuStage.run"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="SetuStage.run-75"><a href="#SetuStage.run-75"><span class="linenos">75</span></a>    <span class="nd">@abstractmethod</span>
-</span><span id="SetuStage.run-76"><a href="#SetuStage.run-76"><span class="linenos">76</span></a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parallel_mode</span><span class="o">=</span><span class="s2">&quot;stage&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
-</span><span id="SetuStage.run-77"><a href="#SetuStage.run-77"><span class="linenos">77</span></a>        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">use_spark</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">spark_present</span><span class="p">:</span>
-</span><span id="SetuStage.run-78"><a href="#SetuStage.run-78"><span class="linenos">78</span></a>            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_spark</span><span class="p">(</span><span class="n">parallel_mode</span><span class="o">=</span><span class="n">parallel_mode</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</span><span id="SetuStage.run-79"><a href="#SetuStage.run-79"><span class="linenos">79</span></a>        <span class="k">else</span><span class="p">:</span>
-</span><span id="SetuStage.run-80"><a href="#SetuStage.run-80"><span class="linenos">80</span></a>            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_normal</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="SetuStage.run-131"><a href="#SetuStage.run-131"><span class="linenos">131</span></a>    <span class="nd">@abstractmethod</span>
+</span><span id="SetuStage.run-132"><a href="#SetuStage.run-132"><span class="linenos">132</span></a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parallel_mode</span><span class="o">=</span><span class="s2">&quot;stage&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
+</span><span id="SetuStage.run-133"><a href="#SetuStage.run-133"><span class="linenos">133</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;run Method that triggers stage execution based on values of parallel_mode and if spark should be used.</span>
+</span><span id="SetuStage.run-134"><a href="#SetuStage.run-134"><span class="linenos">134</span></a>
+</span><span id="SetuStage.run-135"><a href="#SetuStage.run-135"><span class="linenos">135</span></a><span class="sd">        Args:</span>
+</span><span id="SetuStage.run-136"><a href="#SetuStage.run-136"><span class="linenos">136</span></a><span class="sd">            parallel_mode (str, optional): _description_. Defaults to &quot;stage&quot;.</span>
+</span><span id="SetuStage.run-137"><a href="#SetuStage.run-137"><span class="linenos">137</span></a>
+</span><span id="SetuStage.run-138"><a href="#SetuStage.run-138"><span class="linenos">138</span></a><span class="sd">        Returns:</span>
+</span><span id="SetuStage.run-139"><a href="#SetuStage.run-139"><span class="linenos">139</span></a><span class="sd">            Callable: _description_</span>
+</span><span id="SetuStage.run-140"><a href="#SetuStage.run-140"><span class="linenos">140</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="SetuStage.run-141"><a href="#SetuStage.run-141"><span class="linenos">141</span></a>        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">use_spark</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">spark_present</span><span class="p">:</span>
+</span><span id="SetuStage.run-142"><a href="#SetuStage.run-142"><span class="linenos">142</span></a>            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_spark</span><span class="p">(</span><span class="n">parallel_mode</span><span class="o">=</span><span class="n">parallel_mode</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span id="SetuStage.run-143"><a href="#SetuStage.run-143"><span class="linenos">143</span></a>        <span class="k">else</span><span class="p">:</span>
+</span><span id="SetuStage.run-144"><a href="#SetuStage.run-144"><span class="linenos">144</span></a>            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_normal</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </span></pre></div>
 
 
-    
+            <div class="docstring"><p>run Method that triggers stage execution based on values of parallel_mode and if spark should be used.</p>
+
+<p>Args:
+    parallel_mode (str, optional): _description_. Defaults to "stage".</p>
+
+<p>Returns:
+    Callable: _description_</p>
+</div>
+
 
                             </div>
                 </section>
@@ -576,37 +853,68 @@ inheritance.</p>
 
     </div>
     <a class="headerlink" href="#SetuComponent"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="SetuComponent-82"><a href="#SetuComponent-82"><span class="linenos"> 82</span></a><span class="k">class</span> <span class="nc">SetuComponent</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
-</span><span id="SetuComponent-83"><a href="#SetuComponent-83"><span class="linenos"> 83</span></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">config</span><span class="p">:</span><span class="n">Namespace</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="SetuComponent-84"><a href="#SetuComponent-84"><span class="linenos"> 84</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
-</span><span id="SetuComponent-85"><a href="#SetuComponent-85"><span class="linenos"> 85</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_component_name</span><span class="p">()</span>
-</span><span id="SetuComponent-86"><a href="#SetuComponent-86"><span class="linenos"> 86</span></a>
-</span><span id="SetuComponent-87"><a href="#SetuComponent-87"><span class="linenos"> 87</span></a>    <span class="nd">@classmethod</span>
-</span><span id="SetuComponent-88"><a href="#SetuComponent-88"><span class="linenos"> 88</span></a>    <span class="nd">@abstractmethod</span>
-</span><span id="SetuComponent-89"><a href="#SetuComponent-89"><span class="linenos"> 89</span></a>    <span class="k">def</span> <span class="nf">add_cmdline_args</span><span class="p">(</span><span class="n">parser</span><span class="p">:</span><span class="n">ArgumentParser</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="SetuComponent-90"><a href="#SetuComponent-90"><span class="linenos"> 90</span></a>        <span class="k">pass</span>
-</span><span id="SetuComponent-91"><a href="#SetuComponent-91"><span class="linenos"> 91</span></a>    
-</span><span id="SetuComponent-92"><a href="#SetuComponent-92"><span class="linenos"> 92</span></a>    <span class="nd">@classmethod</span>
-</span><span id="SetuComponent-93"><a href="#SetuComponent-93"><span class="linenos"> 93</span></a>    <span class="k">def</span> <span class="nf">get_component_name</span><span class="p">(</span><span class="bp">cls</span><span class="p">:</span><span class="n">ABC</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span id="SetuComponent-94"><a href="#SetuComponent-94"><span class="linenos"> 94</span></a>        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span>
-</span><span id="SetuComponent-95"><a href="#SetuComponent-95"><span class="linenos"> 95</span></a>
-</span><span id="SetuComponent-96"><a href="#SetuComponent-96"><span class="linenos"> 96</span></a>    <span class="nd">@classmethod</span>
-</span><span id="SetuComponent-97"><a href="#SetuComponent-97"><span class="linenos"> 97</span></a>    <span class="nd">@abstractmethod</span>
-</span><span id="SetuComponent-98"><a href="#SetuComponent-98"><span class="linenos"> 98</span></a>    <span class="k">def</span> <span class="nf">get_stage_mapping</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-</span><span id="SetuComponent-99"><a href="#SetuComponent-99"><span class="linenos"> 99</span></a>        <span class="k">pass</span>
-</span><span id="SetuComponent-100"><a href="#SetuComponent-100"><span class="linenos">100</span></a>
-</span><span id="SetuComponent-101"><a href="#SetuComponent-101"><span class="linenos">101</span></a>    <span class="nd">@abstractmethod</span>
-</span><span id="SetuComponent-102"><a href="#SetuComponent-102"><span class="linenos">102</span></a>    <span class="k">def</span> <span class="nf">run_stage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="SetuComponent-103"><a href="#SetuComponent-103"><span class="linenos">103</span></a>        <span class="k">pass</span>
-</span><span id="SetuComponent-104"><a href="#SetuComponent-104"><span class="linenos">104</span></a>
-</span><span id="SetuComponent-105"><a href="#SetuComponent-105"><span class="linenos">105</span></a>    <span class="nd">@abstractmethod</span>
-</span><span id="SetuComponent-106"><a href="#SetuComponent-106"><span class="linenos">106</span></a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="SetuComponent-107"><a href="#SetuComponent-107"><span class="linenos">107</span></a>        <span class="k">pass</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="SetuComponent-146"><a href="#SetuComponent-146"><span class="linenos">146</span></a><span class="k">class</span> <span class="nc">SetuComponent</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+</span><span id="SetuComponent-147"><a href="#SetuComponent-147"><span class="linenos">147</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;SetuComponent Base Class for the different components in Setu Pipeline</span>
+</span><span id="SetuComponent-148"><a href="#SetuComponent-148"><span class="linenos">148</span></a>
+</span><span id="SetuComponent-149"><a href="#SetuComponent-149"><span class="linenos">149</span></a><span class="sd">    Args:</span>
+</span><span id="SetuComponent-150"><a href="#SetuComponent-150"><span class="linenos">150</span></a><span class="sd">        config (Namespace): The configuration file for the particular data type and language to be processed by the pipeline.</span>
+</span><span id="SetuComponent-151"><a href="#SetuComponent-151"><span class="linenos">151</span></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="SetuComponent-152"><a href="#SetuComponent-152"><span class="linenos">152</span></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">config</span><span class="p">:</span><span class="n">Namespace</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="SetuComponent-153"><a href="#SetuComponent-153"><span class="linenos">153</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+</span><span id="SetuComponent-154"><a href="#SetuComponent-154"><span class="linenos">154</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Configuration Namespace object for the particular component.&quot;&quot;&quot;</span>
+</span><span id="SetuComponent-155"><a href="#SetuComponent-155"><span class="linenos">155</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_component_name</span><span class="p">()</span>
+</span><span id="SetuComponent-156"><a href="#SetuComponent-156"><span class="linenos">156</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Name of the particular component.&quot;&quot;&quot;</span>
+</span><span id="SetuComponent-157"><a href="#SetuComponent-157"><span class="linenos">157</span></a>
+</span><span id="SetuComponent-158"><a href="#SetuComponent-158"><span class="linenos">158</span></a>    <span class="nd">@classmethod</span>
+</span><span id="SetuComponent-159"><a href="#SetuComponent-159"><span class="linenos">159</span></a>    <span class="nd">@abstractmethod</span>
+</span><span id="SetuComponent-160"><a href="#SetuComponent-160"><span class="linenos">160</span></a>    <span class="k">def</span> <span class="nf">add_cmdline_args</span><span class="p">(</span><span class="n">parser</span><span class="p">:</span><span class="n">ArgumentParser</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="SetuComponent-161"><a href="#SetuComponent-161"><span class="linenos">161</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;add_cmdline_args Abstract Method for adding command line arguments for the particular component</span>
+</span><span id="SetuComponent-162"><a href="#SetuComponent-162"><span class="linenos">162</span></a>
+</span><span id="SetuComponent-163"><a href="#SetuComponent-163"><span class="linenos">163</span></a><span class="sd">        Args:</span>
+</span><span id="SetuComponent-164"><a href="#SetuComponent-164"><span class="linenos">164</span></a><span class="sd">            parser (ArgumentParser): The argument parser object to which the current stage arguments need to be added.</span>
+</span><span id="SetuComponent-165"><a href="#SetuComponent-165"><span class="linenos">165</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="SetuComponent-166"><a href="#SetuComponent-166"><span class="linenos">166</span></a>        <span class="k">pass</span>
+</span><span id="SetuComponent-167"><a href="#SetuComponent-167"><span class="linenos">167</span></a>    
+</span><span id="SetuComponent-168"><a href="#SetuComponent-168"><span class="linenos">168</span></a>    <span class="nd">@classmethod</span>
+</span><span id="SetuComponent-169"><a href="#SetuComponent-169"><span class="linenos">169</span></a>    <span class="k">def</span> <span class="nf">get_component_name</span><span class="p">(</span><span class="bp">cls</span><span class="p">:</span><span class="n">ABC</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span id="SetuComponent-170"><a href="#SetuComponent-170"><span class="linenos">170</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;get_component_name Method to fetch the particular component name</span>
+</span><span id="SetuComponent-171"><a href="#SetuComponent-171"><span class="linenos">171</span></a>
+</span><span id="SetuComponent-172"><a href="#SetuComponent-172"><span class="linenos">172</span></a><span class="sd">        Args:</span>
+</span><span id="SetuComponent-173"><a href="#SetuComponent-173"><span class="linenos">173</span></a><span class="sd">            cls (ABC): The self cls of which the name should be returned</span>
+</span><span id="SetuComponent-174"><a href="#SetuComponent-174"><span class="linenos">174</span></a>
+</span><span id="SetuComponent-175"><a href="#SetuComponent-175"><span class="linenos">175</span></a><span class="sd">        Returns:</span>
+</span><span id="SetuComponent-176"><a href="#SetuComponent-176"><span class="linenos">176</span></a><span class="sd">            str: Name of the component</span>
+</span><span id="SetuComponent-177"><a href="#SetuComponent-177"><span class="linenos">177</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="SetuComponent-178"><a href="#SetuComponent-178"><span class="linenos">178</span></a>        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span>
+</span><span id="SetuComponent-179"><a href="#SetuComponent-179"><span class="linenos">179</span></a>
+</span><span id="SetuComponent-180"><a href="#SetuComponent-180"><span class="linenos">180</span></a>    <span class="nd">@classmethod</span>
+</span><span id="SetuComponent-181"><a href="#SetuComponent-181"><span class="linenos">181</span></a>    <span class="nd">@abstractmethod</span>
+</span><span id="SetuComponent-182"><a href="#SetuComponent-182"><span class="linenos">182</span></a>    <span class="k">def</span> <span class="nf">get_stage_mapping</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span id="SetuComponent-183"><a href="#SetuComponent-183"><span class="linenos">183</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;get_stage_mapping Method the provides the a dictionary mapping of the stage names as keys and their corresponding stage objects as values.</span>
+</span><span id="SetuComponent-184"><a href="#SetuComponent-184"><span class="linenos">184</span></a>
+</span><span id="SetuComponent-185"><a href="#SetuComponent-185"><span class="linenos">185</span></a><span class="sd">        Returns:</span>
+</span><span id="SetuComponent-186"><a href="#SetuComponent-186"><span class="linenos">186</span></a><span class="sd">            dict: Dictionary containing the different stage names and objects as key/value pairs.</span>
+</span><span id="SetuComponent-187"><a href="#SetuComponent-187"><span class="linenos">187</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="SetuComponent-188"><a href="#SetuComponent-188"><span class="linenos">188</span></a>        <span class="k">pass</span>
+</span><span id="SetuComponent-189"><a href="#SetuComponent-189"><span class="linenos">189</span></a>
+</span><span id="SetuComponent-190"><a href="#SetuComponent-190"><span class="linenos">190</span></a>    <span class="nd">@abstractmethod</span>
+</span><span id="SetuComponent-191"><a href="#SetuComponent-191"><span class="linenos">191</span></a>    <span class="k">def</span> <span class="nf">run_stage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="SetuComponent-192"><a href="#SetuComponent-192"><span class="linenos">192</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;run_stage Method the triggers the execution of a particular stage/omponent if the stage/component name is provided.</span>
+</span><span id="SetuComponent-193"><a href="#SetuComponent-193"><span class="linenos">193</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="SetuComponent-194"><a href="#SetuComponent-194"><span class="linenos">194</span></a>        <span class="k">pass</span>
+</span><span id="SetuComponent-195"><a href="#SetuComponent-195"><span class="linenos">195</span></a>
+</span><span id="SetuComponent-196"><a href="#SetuComponent-196"><span class="linenos">196</span></a>    <span class="nd">@abstractmethod</span>
+</span><span id="SetuComponent-197"><a href="#SetuComponent-197"><span class="linenos">197</span></a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="SetuComponent-198"><a href="#SetuComponent-198"><span class="linenos">198</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;run Method that triggers the execution of the component.</span>
+</span><span id="SetuComponent-199"><a href="#SetuComponent-199"><span class="linenos">199</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="SetuComponent-200"><a href="#SetuComponent-200"><span class="linenos">200</span></a>        <span class="k">pass</span>
 </span></pre></div>
 
 
-            <div class="docstring"><p>Helper class that provides a standard way to create an ABC using
-inheritance.</p>
+            <div class="docstring"><p>SetuComponent Base Class for the different components in Setu Pipeline</p>
+
+<p>Args:
+    config (Namespace): The configuration file for the particular data type and language to be processed by the pipeline.</p>
 </div>
 
 
@@ -618,7 +926,9 @@ inheritance.</p>
     </div>
     <a class="headerlink" href="#SetuComponent.config"></a>
     
-    
+            <div class="docstring"><p>Configuration Namespace object for the particular component.</p>
+</div>
+
 
                             </div>
                             <div id="SetuComponent.name" class="classattr">
@@ -629,7 +939,9 @@ inheritance.</p>
     </div>
     <a class="headerlink" href="#SetuComponent.name"></a>
     
-    
+            <div class="docstring"><p>Name of the particular component.</p>
+</div>
+
 
                             </div>
                             <div id="SetuComponent.add_cmdline_args" class="classattr">
@@ -645,14 +957,24 @@ inheritance.</p>
 
     </div>
     <a class="headerlink" href="#SetuComponent.add_cmdline_args"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="SetuComponent.add_cmdline_args-87"><a href="#SetuComponent.add_cmdline_args-87"><span class="linenos">87</span></a>    <span class="nd">@classmethod</span>
-</span><span id="SetuComponent.add_cmdline_args-88"><a href="#SetuComponent.add_cmdline_args-88"><span class="linenos">88</span></a>    <span class="nd">@abstractmethod</span>
-</span><span id="SetuComponent.add_cmdline_args-89"><a href="#SetuComponent.add_cmdline_args-89"><span class="linenos">89</span></a>    <span class="k">def</span> <span class="nf">add_cmdline_args</span><span class="p">(</span><span class="n">parser</span><span class="p">:</span><span class="n">ArgumentParser</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="SetuComponent.add_cmdline_args-90"><a href="#SetuComponent.add_cmdline_args-90"><span class="linenos">90</span></a>        <span class="k">pass</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="SetuComponent.add_cmdline_args-158"><a href="#SetuComponent.add_cmdline_args-158"><span class="linenos">158</span></a>    <span class="nd">@classmethod</span>
+</span><span id="SetuComponent.add_cmdline_args-159"><a href="#SetuComponent.add_cmdline_args-159"><span class="linenos">159</span></a>    <span class="nd">@abstractmethod</span>
+</span><span id="SetuComponent.add_cmdline_args-160"><a href="#SetuComponent.add_cmdline_args-160"><span class="linenos">160</span></a>    <span class="k">def</span> <span class="nf">add_cmdline_args</span><span class="p">(</span><span class="n">parser</span><span class="p">:</span><span class="n">ArgumentParser</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="SetuComponent.add_cmdline_args-161"><a href="#SetuComponent.add_cmdline_args-161"><span class="linenos">161</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;add_cmdline_args Abstract Method for adding command line arguments for the particular component</span>
+</span><span id="SetuComponent.add_cmdline_args-162"><a href="#SetuComponent.add_cmdline_args-162"><span class="linenos">162</span></a>
+</span><span id="SetuComponent.add_cmdline_args-163"><a href="#SetuComponent.add_cmdline_args-163"><span class="linenos">163</span></a><span class="sd">        Args:</span>
+</span><span id="SetuComponent.add_cmdline_args-164"><a href="#SetuComponent.add_cmdline_args-164"><span class="linenos">164</span></a><span class="sd">            parser (ArgumentParser): The argument parser object to which the current stage arguments need to be added.</span>
+</span><span id="SetuComponent.add_cmdline_args-165"><a href="#SetuComponent.add_cmdline_args-165"><span class="linenos">165</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="SetuComponent.add_cmdline_args-166"><a href="#SetuComponent.add_cmdline_args-166"><span class="linenos">166</span></a>        <span class="k">pass</span>
 </span></pre></div>
 
 
-    
+            <div class="docstring"><p>add_cmdline_args Abstract Method for adding command line arguments for the particular component</p>
+
+<p>Args:
+    parser (ArgumentParser): The argument parser object to which the current stage arguments need to be added.</p>
+</div>
+
 
                             </div>
                             <div id="SetuComponent.get_component_name" class="classattr">
@@ -667,13 +989,29 @@ inheritance.</p>
 
     </div>
     <a class="headerlink" href="#SetuComponent.get_component_name"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="SetuComponent.get_component_name-92"><a href="#SetuComponent.get_component_name-92"><span class="linenos">92</span></a>    <span class="nd">@classmethod</span>
-</span><span id="SetuComponent.get_component_name-93"><a href="#SetuComponent.get_component_name-93"><span class="linenos">93</span></a>    <span class="k">def</span> <span class="nf">get_component_name</span><span class="p">(</span><span class="bp">cls</span><span class="p">:</span><span class="n">ABC</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span id="SetuComponent.get_component_name-94"><a href="#SetuComponent.get_component_name-94"><span class="linenos">94</span></a>        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="SetuComponent.get_component_name-168"><a href="#SetuComponent.get_component_name-168"><span class="linenos">168</span></a>    <span class="nd">@classmethod</span>
+</span><span id="SetuComponent.get_component_name-169"><a href="#SetuComponent.get_component_name-169"><span class="linenos">169</span></a>    <span class="k">def</span> <span class="nf">get_component_name</span><span class="p">(</span><span class="bp">cls</span><span class="p">:</span><span class="n">ABC</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span id="SetuComponent.get_component_name-170"><a href="#SetuComponent.get_component_name-170"><span class="linenos">170</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;get_component_name Method to fetch the particular component name</span>
+</span><span id="SetuComponent.get_component_name-171"><a href="#SetuComponent.get_component_name-171"><span class="linenos">171</span></a>
+</span><span id="SetuComponent.get_component_name-172"><a href="#SetuComponent.get_component_name-172"><span class="linenos">172</span></a><span class="sd">        Args:</span>
+</span><span id="SetuComponent.get_component_name-173"><a href="#SetuComponent.get_component_name-173"><span class="linenos">173</span></a><span class="sd">            cls (ABC): The self cls of which the name should be returned</span>
+</span><span id="SetuComponent.get_component_name-174"><a href="#SetuComponent.get_component_name-174"><span class="linenos">174</span></a>
+</span><span id="SetuComponent.get_component_name-175"><a href="#SetuComponent.get_component_name-175"><span class="linenos">175</span></a><span class="sd">        Returns:</span>
+</span><span id="SetuComponent.get_component_name-176"><a href="#SetuComponent.get_component_name-176"><span class="linenos">176</span></a><span class="sd">            str: Name of the component</span>
+</span><span id="SetuComponent.get_component_name-177"><a href="#SetuComponent.get_component_name-177"><span class="linenos">177</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="SetuComponent.get_component_name-178"><a href="#SetuComponent.get_component_name-178"><span class="linenos">178</span></a>        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span>
 </span></pre></div>
 
 
-    
+            <div class="docstring"><p>get_component_name Method to fetch the particular component name</p>
+
+<p>Args:
+    cls (ABC): The self cls of which the name should be returned</p>
+
+<p>Returns:
+    str: Name of the component</p>
+</div>
+
 
                             </div>
                             <div id="SetuComponent.get_stage_mapping" class="classattr">
@@ -689,14 +1027,24 @@ inheritance.</p>
 
     </div>
     <a class="headerlink" href="#SetuComponent.get_stage_mapping"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="SetuComponent.get_stage_mapping-96"><a href="#SetuComponent.get_stage_mapping-96"><span class="linenos">96</span></a>    <span class="nd">@classmethod</span>
-</span><span id="SetuComponent.get_stage_mapping-97"><a href="#SetuComponent.get_stage_mapping-97"><span class="linenos">97</span></a>    <span class="nd">@abstractmethod</span>
-</span><span id="SetuComponent.get_stage_mapping-98"><a href="#SetuComponent.get_stage_mapping-98"><span class="linenos">98</span></a>    <span class="k">def</span> <span class="nf">get_stage_mapping</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-</span><span id="SetuComponent.get_stage_mapping-99"><a href="#SetuComponent.get_stage_mapping-99"><span class="linenos">99</span></a>        <span class="k">pass</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="SetuComponent.get_stage_mapping-180"><a href="#SetuComponent.get_stage_mapping-180"><span class="linenos">180</span></a>    <span class="nd">@classmethod</span>
+</span><span id="SetuComponent.get_stage_mapping-181"><a href="#SetuComponent.get_stage_mapping-181"><span class="linenos">181</span></a>    <span class="nd">@abstractmethod</span>
+</span><span id="SetuComponent.get_stage_mapping-182"><a href="#SetuComponent.get_stage_mapping-182"><span class="linenos">182</span></a>    <span class="k">def</span> <span class="nf">get_stage_mapping</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span id="SetuComponent.get_stage_mapping-183"><a href="#SetuComponent.get_stage_mapping-183"><span class="linenos">183</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;get_stage_mapping Method the provides the a dictionary mapping of the stage names as keys and their corresponding stage objects as values.</span>
+</span><span id="SetuComponent.get_stage_mapping-184"><a href="#SetuComponent.get_stage_mapping-184"><span class="linenos">184</span></a>
+</span><span id="SetuComponent.get_stage_mapping-185"><a href="#SetuComponent.get_stage_mapping-185"><span class="linenos">185</span></a><span class="sd">        Returns:</span>
+</span><span id="SetuComponent.get_stage_mapping-186"><a href="#SetuComponent.get_stage_mapping-186"><span class="linenos">186</span></a><span class="sd">            dict: Dictionary containing the different stage names and objects as key/value pairs.</span>
+</span><span id="SetuComponent.get_stage_mapping-187"><a href="#SetuComponent.get_stage_mapping-187"><span class="linenos">187</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="SetuComponent.get_stage_mapping-188"><a href="#SetuComponent.get_stage_mapping-188"><span class="linenos">188</span></a>        <span class="k">pass</span>
 </span></pre></div>
 
 
-    
+            <div class="docstring"><p>get_stage_mapping Method the provides the a dictionary mapping of the stage names as keys and their corresponding stage objects as values.</p>
+
+<p>Returns:
+    dict: Dictionary containing the different stage names and objects as key/value pairs.</p>
+</div>
+
 
                             </div>
                             <div id="SetuComponent.run_stage" class="classattr">
@@ -711,13 +1059,17 @@ inheritance.</p>
 
     </div>
     <a class="headerlink" href="#SetuComponent.run_stage"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="SetuComponent.run_stage-101"><a href="#SetuComponent.run_stage-101"><span class="linenos">101</span></a>    <span class="nd">@abstractmethod</span>
-</span><span id="SetuComponent.run_stage-102"><a href="#SetuComponent.run_stage-102"><span class="linenos">102</span></a>    <span class="k">def</span> <span class="nf">run_stage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="SetuComponent.run_stage-103"><a href="#SetuComponent.run_stage-103"><span class="linenos">103</span></a>        <span class="k">pass</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="SetuComponent.run_stage-190"><a href="#SetuComponent.run_stage-190"><span class="linenos">190</span></a>    <span class="nd">@abstractmethod</span>
+</span><span id="SetuComponent.run_stage-191"><a href="#SetuComponent.run_stage-191"><span class="linenos">191</span></a>    <span class="k">def</span> <span class="nf">run_stage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="SetuComponent.run_stage-192"><a href="#SetuComponent.run_stage-192"><span class="linenos">192</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;run_stage Method the triggers the execution of a particular stage/omponent if the stage/component name is provided.</span>
+</span><span id="SetuComponent.run_stage-193"><a href="#SetuComponent.run_stage-193"><span class="linenos">193</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="SetuComponent.run_stage-194"><a href="#SetuComponent.run_stage-194"><span class="linenos">194</span></a>        <span class="k">pass</span>
 </span></pre></div>
 
 
-    
+            <div class="docstring"><p>run_stage Method the triggers the execution of a particular stage/omponent if the stage/component name is provided.</p>
+</div>
+
 
                             </div>
                             <div id="SetuComponent.run" class="classattr">
@@ -732,13 +1084,17 @@ inheritance.</p>
 
     </div>
     <a class="headerlink" href="#SetuComponent.run"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="SetuComponent.run-105"><a href="#SetuComponent.run-105"><span class="linenos">105</span></a>    <span class="nd">@abstractmethod</span>
-</span><span id="SetuComponent.run-106"><a href="#SetuComponent.run-106"><span class="linenos">106</span></a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="SetuComponent.run-107"><a href="#SetuComponent.run-107"><span class="linenos">107</span></a>        <span class="k">pass</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="SetuComponent.run-196"><a href="#SetuComponent.run-196"><span class="linenos">196</span></a>    <span class="nd">@abstractmethod</span>
+</span><span id="SetuComponent.run-197"><a href="#SetuComponent.run-197"><span class="linenos">197</span></a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="SetuComponent.run-198"><a href="#SetuComponent.run-198"><span class="linenos">198</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;run Method that triggers the execution of the component.</span>
+</span><span id="SetuComponent.run-199"><a href="#SetuComponent.run-199"><span class="linenos">199</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="SetuComponent.run-200"><a href="#SetuComponent.run-200"><span class="linenos">200</span></a>        <span class="k">pass</span>
 </span></pre></div>
 
 
-    
+            <div class="docstring"><p>run Method that triggers the execution of the component.</p>
+</div>
+
 
                             </div>
                 </section>

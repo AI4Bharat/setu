@@ -1,6 +1,8 @@
+r'''
+The [run.py](../../setu/run.py)  is the script which is required to be submitted as part of the Spark Job. Make sure you provide the appropriate configuration file path, input data mode and to run on local or execute on GCP.
+'''
+
 import sys
-command = ' '.join(sys.argv)
-print("Command used to run this script: ", command)
 
 import os
 import subprocess
