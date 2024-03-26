@@ -1088,18 +1088,21 @@ of the given arguments and keywords.</p>
 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">get_word_count_udf</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">line</span></span><span class="return-annotation">):</span></span>
+        <span class="name">get_word_count_udf</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">line</span><span class="p">:</span> <span class="nb">str</span></span><span class="return-annotation">) -> <span class="nb">int</span>:</span></span>
 
                 <label class="view-source-button" for="get_word_count_udf-view-source"><span>View Source</span></label>
 
     </div>
     <a class="headerlink" href="#get_word_count_udf"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="get_word_count_udf-742"><a href="#get_word_count_udf-742"><span class="linenos">742</span></a><span class="k">def</span> <span class="nf">get_word_count</span><span class="p">(</span><span class="n">line</span><span class="p">):</span>
-</span><span id="get_word_count_udf-743"><a href="#get_word_count_udf-743"><span class="linenos">743</span></a>    <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">))</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="get_word_count_udf-757"><a href="#get_word_count_udf-757"><span class="linenos">757</span></a><span class="k">def</span> <span class="nf">get_word_count</span><span class="p">(</span><span class="n">line</span><span class="p">:</span><span class="nb">str</span><span class="p">)</span><span class="o">-&gt;</span><span class="nb">int</span><span class="p">:</span>
+</span><span id="get_word_count_udf-758"><a href="#get_word_count_udf-758"><span class="linenos">758</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns line word count&quot;&quot;&quot;</span>
+</span><span id="get_word_count_udf-759"><a href="#get_word_count_udf-759"><span class="linenos">759</span></a>    <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">))</span>
 </span></pre></div>
 
 
-    
+            <div class="docstring"><p>Returns line word count</p>
+</div>
+
 
                 </section>
                 <section id="get_char_count_udf">
@@ -1107,18 +1110,21 @@ of the given arguments and keywords.</p>
 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">get_char_count_udf</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">line</span></span><span class="return-annotation">):</span></span>
+        <span class="name">get_char_count_udf</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">line</span><span class="p">:</span> <span class="nb">str</span></span><span class="return-annotation">) -> <span class="nb">int</span>:</span></span>
 
                 <label class="view-source-button" for="get_char_count_udf-view-source"><span>View Source</span></label>
 
     </div>
     <a class="headerlink" href="#get_char_count_udf"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="get_char_count_udf-745"><a href="#get_char_count_udf-745"><span class="linenos">745</span></a><span class="k">def</span> <span class="nf">get_char_count</span><span class="p">(</span><span class="n">line</span><span class="p">):</span>
-</span><span id="get_char_count_udf-746"><a href="#get_char_count_udf-746"><span class="linenos">746</span></a>    <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="get_char_count_udf-761"><a href="#get_char_count_udf-761"><span class="linenos">761</span></a><span class="k">def</span> <span class="nf">get_char_count</span><span class="p">(</span><span class="n">line</span><span class="p">:</span><span class="nb">str</span><span class="p">)</span><span class="o">-&gt;</span><span class="nb">int</span><span class="p">:</span>
+</span><span id="get_char_count_udf-762"><a href="#get_char_count_udf-762"><span class="linenos">762</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns line character count&quot;&quot;&quot;</span>
+</span><span id="get_char_count_udf-763"><a href="#get_char_count_udf-763"><span class="linenos">763</span></a>    <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
 </span></pre></div>
 
 
-    
+            <div class="docstring"><p>Returns line character count</p>
+</div>
+
 
                 </section>
                 <section id="get_bytes_udf">
@@ -1126,18 +1132,21 @@ of the given arguments and keywords.</p>
 <div class="attr function">
             
         <span class="def">def</span>
-        <span class="name">get_bytes_udf</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">line</span></span><span class="return-annotation">):</span></span>
+        <span class="name">get_bytes_udf</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">line</span><span class="p">:</span> <span class="nb">str</span></span><span class="return-annotation">) -> <span class="nb">int</span>:</span></span>
 
                 <label class="view-source-button" for="get_bytes_udf-view-source"><span>View Source</span></label>
 
     </div>
     <a class="headerlink" href="#get_bytes_udf"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="get_bytes_udf-748"><a href="#get_bytes_udf-748"><span class="linenos">748</span></a><span class="k">def</span> <span class="nf">get_bytes</span><span class="p">(</span><span class="n">line</span><span class="p">):</span>
-</span><span id="get_bytes_udf-749"><a href="#get_bytes_udf-749"><span class="linenos">749</span></a>    <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span>    
+            <div class="pdoc-code codehilite"><pre><span></span><span id="get_bytes_udf-765"><a href="#get_bytes_udf-765"><span class="linenos">765</span></a><span class="k">def</span> <span class="nf">get_bytes</span><span class="p">(</span><span class="n">line</span><span class="p">:</span><span class="nb">str</span><span class="p">)</span><span class="o">-&gt;</span><span class="nb">int</span><span class="p">:</span>
+</span><span id="get_bytes_udf-766"><a href="#get_bytes_udf-766"><span class="linenos">766</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns line bytes count&quot;&quot;&quot;</span>
+</span><span id="get_bytes_udf-767"><a href="#get_bytes_udf-767"><span class="linenos">767</span></a>    <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span>    
 </span></pre></div>
 
 
-    
+            <div class="docstring"><p>Returns line bytes count</p>
+</div>
+
 
                 </section>
                 <section id="DocCleanStage">

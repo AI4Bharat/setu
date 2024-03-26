@@ -523,16 +523,20 @@ def restructure_nsfw_dists(arr:list)->dict:
             arr_dict[key] = arr_dict.get(key, 0) + val
     return arr_dict
 
-def is_nsfw_heavy(nsfw_count, word_count, threshold):
+def is_nsfw_heavy(nsfw_count:int, word_count:int, threshold:float)->bool:
+    """Returns Boolean Value that indicates if the provided values corresponde to nsfw heavy ratio."""
     return True if nsfw_count/word_count >= threshold else False
 
-def is_symbol_number_heavy(symbol_number_count, char_count, threshold):
+def is_symbol_number_heavy(symbol_number_count:int, char_count:int, threshold:float)->bool:
+    """Returns Boolean Value that indicates if the provided values corresponde to symbol heavy ratio."""
     return True if symbol_number_count/char_count >= threshold else False
 
-def is_non_li_heavy(count, text_len, threshold):
+def is_non_li_heavy(count:int, text_len:int, threshold:float)->bool:
+    """Returns Boolean Value that indicates if the provided values corresponding to non latin indic heavy ratio."""
     return True if count/text_len >= threshold else False    
 
-def get_repeated_line_dist(line_stats, text_key):
+def get_repeated_line_dist(line_stats:list, text_key:str)->Dict[str,int]:
+    """Returns a dict (str,int) containing repeated line and there distances"""
     line_counts: Dict[str, int] = {}
     for line in line_stats:
         line_counts[line[text_key]] = line_counts.get(line[text_key], 0) + 1
@@ -542,8 +546,8 @@ def get_char_ngram_repetition(
     d: str,
     ngrams_arr,
     for_spark: bool = True,
-):
-
+)->dict:
+    """Returns a dict contain char ngram repetition scores"""
     ngram_repetition = dict()
 
     for n in ngrams_arr:
@@ -572,8 +576,8 @@ def get_word_ngram_repetition(
     lang_code: str,
     ngrams_arr,
     for_spark: bool = True,
-):
-
+)->dict:
+    """Returns a dict contain word ngram repetition scores"""
     ngram_repetition = dict()
 
     for n in ngrams_arr:
@@ -597,8 +601,9 @@ def get_word_ngram_repetition(
 
     return ngram_repetition
 
-def has_repetition(repetition_scores, repetition_thresholds):
+def has_repetition(repetition_scores:dict, repetition_thresholds:dict)->bool:
     """
+    Checks if the scores correspond to repetitive n-grams or not.
     Use same function for word and character n-gram repetition.
     Just the repetition scores and thresholds will change.
     """
@@ -610,23 +615,23 @@ def has_repetition(repetition_scores, repetition_thresholds):
     return True if sum(flags) > 0 else False
 
 def extract_document_metadata(
-    doc_id, 
-    source, 
-    line_stats_list, 
-    lang,
+    doc_id:str, 
+    source:str, 
+    line_stats_list:list, 
+    lang:str,
     lang_code: str,
-    text_key, 
-    nsfw_count_key, 
-    words_count_key, 
-    char_count_key,
-    non_li_key, 
-    bytes_key, 
-    symbol_number_count_key,
+    text_key:str, 
+    nsfw_count_key:str, 
+    words_count_key:str, 
+    char_count_key:str,
+    non_li_key:str, 
+    bytes_key:str, 
+    symbol_number_count_key:str,
     word_ngrams: Tuple,
     char_ngrams: Tuple, 
     url,
-):
-    
+)->dict:
+    """Returns extracted document metadata"""
     lang, lang_code = __get_lang_code(lang, lang_code)
 
     output = {
@@ -665,7 +670,7 @@ def extract_document_metadata(
     return output        
 
 def perform_doc_flagging(
-    doc,
+    doc:dict,
     min_line_count: int = 0,
     min_mean_line_len: int = 0,
     nsfw_threshold: float = 1.0,
@@ -683,7 +688,8 @@ def perform_doc_flagging(
         "7": 1.0,
         "8": 1.0
     },
-):
+)->dict:
+    """Returns document flags with corresponding boolean values"""
     flags = {
         "has_less_lines": False,
         "is_short_lines_heavy": False,
@@ -715,40 +721,17 @@ def perform_doc_flagging(
     flags["has_character_repetition"] = has_repetition(char_repetition_scores, char_ngram_cum_thresholds)
 
     return flags
-
-
-if __name__ == "__main__":
-
-    text = """Till today we have got total 2911 comments from the users and total 1329 articles has been published.
-(Data as on 5 March 2012)
-- Updated on 19 Jan 2021
-- Total visited users: 5,85,227
-- Total page read: 3,034,600
-- Avg. Session Duration: 6 min 6 sec
-    """
-    # with open('/mnt/phallm-data/priyam/setu/text.txt') as f:
-        # text = f.read()
-
-    # print(sentence_split(text, "eng"))
-    # print(text)
-    # print("********************")
-    # print([text])
-
-    output = split_with_delimiter(text)
-    print(output) 
-    # print(output[0])
-    # print([output])
-    # with open("/mnt/phallm-data/priyam/setu/output.txt", 'w') as f:
-        # f.write(output[0])
     
-def get_stop_word_dist(line, lang):
+def get_stop_word_dist(line:str, lang:str)->dict:
+    """Returns stop word distances"""
     extracted_kws = KW_PROCESSORS[lang]["stopwords"].extract_keywords(line, span_info=True)
     word_dist = {}
     for word, _, _ in extracted_kws:
         word_dist[word] = word_dist.get(word, 0) + 1
     return word_dist
 
-def get_nsfw_words_pos(line, lang, for_spark=True):
+def get_nsfw_words_pos(line:str, lang:str, for_spark:bool=True)->list:
+    """Returns NSFW word positions in line"""
     extracted_kws = KW_PROCESSORS[lang]["nsfw_words"].extract_keywords(line, span_info=True)
     if for_spark:
         word_positions = [(start, end) for _, start, end in extracted_kws]
@@ -756,49 +739,66 @@ def get_nsfw_words_pos(line, lang, for_spark=True):
     else:
         return extracted_kws
 
-def get_nsfw_word_dist(line, lang):
+def get_nsfw_word_dist(line:str, lang:str)->dict:
+    """Returns NSFW word distances"""
     nsfw_dist = {}
     nsfw_spans = get_nsfw_words_pos(line, lang, for_spark=False)
     for word, _, _ in nsfw_spans:
         nsfw_dist[word] = nsfw_dist.get(word, 0) + 1
     return nsfw_dist
 
-def non_li_chars_total_count(text):
+def non_li_chars_total_count(text:str)->int:
+    """Returns Non Latin-Indic word count"""
     non_latin_indic = regex.findall(CONSTANTS.non_indic_non_latin_re_pattern, text)
     return len(non_latin_indic)
 
 # Step 1: Filter lines stats
-def get_word_count(line):
+def get_word_count(line:str)->int:
+    """Returns line word count"""
     return len(line.split(" "))
 
-def get_char_count(line):
+def get_char_count(line:str)->int:
+    """Returns line character count"""
     return len(line)
 
-def get_bytes(line):
+def get_bytes(line:str)->int:
+    """Returns line bytes count"""
     return len(line.encode("utf-8"))    
     
-def get_nsfw_words_total_count(nsfw_words_dist):
+def get_nsfw_words_total_count(nsfw_words_dist)->int:
+    """Returns NSFW word count"""
     return sum(nsfw_words_dist.values())
 
 # Step 3: Filter lines containing only numbers
-def is_numbers(line, lang):
+def is_numbers(line:str, lang:str)->bool:
+    """Returns True if line has only numbers"""
     return line.isdigit()
 
-def get_stopword_total_count(stop_word_dist):
+def get_stopword_total_count(stop_word_dist:dict)->int:
+    """Returns stopword total count"""
     return sum(stop_word_dist.values())
 
 def __get_lang_code(lang: str, lang_code: str):
+    """__get_lang_code Functions that returns a tuple containing language and it's ISO Code.
+
+    Args:
+        lang (str): Language Name.
+        lang_code (str): Language ISO Code.
+
+    Returns:
+        tuple: Tuple containing Language, ISO Code.
+    """
     return ("urdu", "ur") if lang == "urdu" and lang_code == "urd" else (lang, lang_code)
 
 def extract_line_metadata(
-    doc_id,
-    source,
-    text,
-    lang,
-    lang_code,
-    url,
-):
-    
+    doc_id:str,
+    source:str,
+    text:str,
+    lang:str,
+    lang_code:str,
+    url:str,
+)->dict:
+    """Returns line associated stats and metadata"""
     lang, lang_code = __get_lang_code(lang, lang_code)
     output = {
         "doc_id": doc_id,
