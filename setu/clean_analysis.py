@@ -3,6 +3,7 @@ import subprocess
 from base import SetuComponent,SetuStage
 from lid import LIDStage
 from analysis import AnalysisStage
+from pyspark.sql import DataFrame
 from utilities import ChunkHandler,str2bool
 from pyspark.sql.functions import (
     udf, 
@@ -62,16 +63,33 @@ get_char_count_udf = udf(get_char_count, IntegerType())
 get_bytes_udf = udf(get_bytes, IntegerType())
 
 class DocCleanStage(SetuStage):
+    """DocCleanStage The SetuStage Class extension for document cleaning.
 
+    Args:
+        SetuStage (class): SetuStage class to inherit
+    """
     def __init__(self, config):
+        """__init__ Initialize the ExtractTextStage with the configuration provided
+
+        Args:
+            config (Namespace): Configuration Namespace object for the particular language and data source.
+        """
         super().__init__(config)
 
         if self.spark_present:
             self.chunk_handler = ChunkHandler()
+            """The ChunkHandler Object"""
 
     @staticmethod
     def add_cmdline_args(parser):
+        """add_cmdline_args Method that adds the ExtractTextStage arguments to the main setu parser.
 
+        Args:
+            parser (ArgumentParser): Main Setu parser
+
+        Returns:
+            ArgumentParser: Modified Setu parser object with stage arguments
+        """
         parser.add_argument(
             "--doc_df_parquets_path",
             type=str,
@@ -148,9 +166,23 @@ class DocCleanStage(SetuStage):
 
         return parser
 
-    def doc_clean_stage(self, df, text_col, doc_id_col,
-                        use_symbol_filter, save_symbol_heavy_docs, 
-                        symbol_filter_output_path, verbose):
+    def doc_clean_stage(self, df:DataFrame, text_col:str, doc_id_col:str,
+                        use_symbol_filter:bool, save_symbol_heavy_docs:bool, 
+                        symbol_filter_output_path:str, verbose:bool) -> DataFrame:
+        """doc_clean_stage Method that performs document cleaning on the given dataframe.
+
+        Args:
+            df (DataFrame): The input dataframe.
+            text_col (str): The column name for the text content.
+            doc_id_col (str): The column name for the document identifier.
+            use_symbol_filter (bool): Whether to use symbol filters.
+            save_symbol_heavy_docs (bool): Whether to save symbol heavy documents.
+            symbol_filter_output_path (str): The output path to save the filtered output.
+            verbose (bool): Whether to display cleaning progress.
+
+        Returns:
+            DataFrame: _description_
+        """
 
         curr_cols = list(df.schema.names)
         
@@ -254,13 +286,24 @@ class DocCleanStage(SetuStage):
 
     def run_preprocessing(
         self,
-        df,
-        additional_cols_to_use,
-        doc_id_col,
-        text_col,
-        docs_per_partition        
-    ):
+        df:DataFrame,
+        additional_cols_to_use:list,
+        doc_id_col:str,
+        text_col:str,
+        docs_per_partition:int        
+    )->DataFrame:
+        """run_preprocessing Method to run preprocessing on the given dataframe.
 
+        Args:
+            df (DataFrame): The input dataframe
+            additional_cols_to_use (list): Additional columns to use while preprocessing
+            doc_id_col (str): The column name for the document identifier.
+            text_col (str): The column name for the text content.
+            docs_per_partition (int): The number of documents per spark partition
+
+        Returns:
+            DataFrame: _description_
+        """
         if "successful_extraction" in additional_cols_to_use and "successful_extraction" in list(df.schema.names):
             df = df.filter(df.successful_extraction == True)
 

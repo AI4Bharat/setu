@@ -120,5 +120,4 @@ The deduplication stage of Setu performs fuzzy deduplication using MinHashLSH im
 # Usage
 
 For running the different stages in setu, You can refer to the [commands](../examples/commands.md) file and the also utilize the [demo](../examples/demo.ipynb) to understand the usage and output of the different stages. Make sure you configure the `$USER` and `--master` to point to your user folder and corresponding spark master URL. If you choose to store your datasets in a different location make sure you modify the different path arguments for the commands accordingly.
-
 '''
