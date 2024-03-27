@@ -15,7 +15,7 @@ Setu is a comprehensive pipeline designed to clean, filter, and deduplicate dive
 - Added Documentation
 - Flat Project Structure
 
-### Future Updates :
+#### Future Updates :
 
 - Add support for speech transcripts
 - Add support for multiple data formats
