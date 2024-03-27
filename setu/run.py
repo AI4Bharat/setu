@@ -1,6 +1,8 @@
+r'''
+The [run.py](../../setu/run.py)  is the script which is required to be submitted as part of the Spark Job. Make sure you provide the appropriate configuration file path, input data mode and to run on local or execute on GCP.
+'''
+
 import sys
-command = ' '.join(sys.argv)
-print("Command used to run this script: ", command)
 
 import os
 import subprocess
@@ -24,7 +26,7 @@ import argparse
 from pyspark.sql import SparkSession
 import threading
 import traceback
-from setu import Setu
+from main import Setu
 
 if __name__ == "__main__":
 
@@ -42,8 +44,9 @@ if __name__ == "__main__":
                 .appName(setu.config.appname) \
                 .getOrCreate()
     
+    spark.conf.set("spark.sql.parquet.compression.codec", "gzip")
+    
     try:
-
         if args.stage not in list(Setu.get_stage_component_mapping().keys()):
             raise ValueError(f"`Setu` doesn't contain `{args.stage}` stage/component. Contained stages & component: {list(Setu.get_stage_component_mapping())}")
         else:
