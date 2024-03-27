@@ -1,6 +1,6 @@
 # Setu: A Comprehensive Pipeline for Data Cleaning, Filtering and Deduplication
 
-![Overview of the Setu Pipeline](./setu.png)
+<img src="../setu.png" alt="image" width="700" height="auto">
 
 Setu is a comprehensive pipeline designed to clean, filter, and deduplicate diverse data sources including Web, PDF, and Speech data. Built on Apache Spark, Setu encompasses four key stages: document preparation, document cleaning and analysis, flagging and filtering, and deduplication.
 
@@ -9,6 +9,16 @@ Setu is a comprehensive pipeline designed to clean, filter, and deduplicate dive
 1. [Quickstart](#quickstart)
 2. [Overview](#overview)
 3. [Usage](#usage)
+
+#### Updates :
+
+- Added Documentation
+- Flat Project Structure
+
+### Future Updates :
+
+- Add support for speech transcripts
+- Add support for multiple data formats
 
 # Quickstart
 
@@ -80,7 +90,7 @@ You can now directly create the conda environment from the environment.yaml file
 conda env create -f environment.yml
 ```
 
-- Refer the [packages](./packages.txt) text file for verification of libraries downloaded. Some libraries need to be downloaded utilizing pip.
+- Refer the [packages](../packages.txt) text file for verification of libraries downloaded. Some libraries need to be downloaded utilizing pip.
 
 Make sure that Pyspark is working by running pyspark on the terminal
 
@@ -118,4 +128,4 @@ The deduplication stage of Setu performs fuzzy deduplication using MinHashLSH im
 
 # Usage
 
-For running the different stages in setu, You can refer to the [commands](./examples/commands.md) file and the also utilize the [demo](./examples/demo.ipynb) to understand the usage and output of the different stages. Make sure you configure the `$USER` and `--master` to point to your user folder and corresponding spark master URL. If you choose to store your datasets in a different location make sure you modify the different path arguments for the commands accordingly.
+For running the different stages in setu, You can refer to the [commands](../examples/commands.md) file and the also utilize the [demo](../examples/demo.ipynb) to understand the usage and output of the different stages. Make sure you configure the `$USER` and `--master` to point to your user folder and corresponding spark master URL. If you choose to store your datasets in a different location make sure you modify the different path arguments for the commands accordingly.

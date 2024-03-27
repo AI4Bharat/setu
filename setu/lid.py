@@ -31,62 +31,98 @@ import gc
 from base import SetuStage
 from utilities import str2bool,list_of_strings
 
+
 class IndicBERT_Data(Dataset):
-    def __init__(self, indices, X):
+    def __init__(self, indices: list, X: list) -> None:
+        """
+        Dataset for IndicBERT.
+
+        Args:
+            indices (List[int]): List of indices.
+            X (List[str]): List of texts.
+
+        Returns:
+            None
+        """
         self.size = len(X)
+        """Size of the text dataset."""
         self.x = X
+        """A list of text strings."""
         self.i = indices
+        """A list of index values."""
 
-        # self.y = Y
-        # self.transform = transform
+    def __len__(self) -> int:
+        """
+        Get the length of the dataset.
 
-    def __len__(self):
-        return (self.size)
+        Returns:
+            int: The length of the dataset.
+        """
+        return self.size
 
-    def __getitem__(self, idx):
-        # print(self.x)
-        
+    def __getitem__(self, idx: int) -> tuple:
+        """
+        Get an item from the dataset by index.
+
+        Args:
+            idx (int): Index of the item to retrieve.
+
+        Returns:
+            Tuple[int, str]: A tuple containing the index and text.
+        """
         text = self.x[idx]
-        # text = sample[0]
-
         index = self.i[idx]
-        
-
-
-        # if self.transform:
-        #     sample = self.transform(sample)
-        # target = self.IndicLID_lang_code_dict[ label[9:] ]
-        
         return tuple([index, text])
 
 
 class IndicLID():
-
+    """IndicLID Main class representation for the IndicLID Model.
+    """
     def __init__(self, 
-                 indiclid_ftn_path = 'models/indiclid-ftn/model_baseline_roman.bin',
-                 indiclid_ftr_path = 'models/indiclid-ftr/model_baseline_roman.bin',
-                 indiclid_bert_path = 'models/indiclid-bert/basline_nn_simple.pt',
-                 input_threshold = 0.5, roman_lid_threshold = 0.6):
+                 indiclid_ftn_path:str = 'models/indiclid-ftn/model_baseline_roman.bin',
+                 indiclid_ftr_path:str = 'models/indiclid-ftr/model_baseline_roman.bin',
+                 indiclid_bert_path:str = 'models/indiclid-bert/basline_nn_simple.pt',
+                 input_threshold:float = 0.5, roman_lid_threshold:float = 0.6):
+        """__init__ Method to initialize the IndicLID Class.
+
+        Args:
+            indiclid_ftn_path (str, optional): Path to the Indic Native Model. Defaults to 'models/indiclid-ftn/model_baseline_roman.bin'.
+            indiclid_ftr_path (str, optional): Path to the Indic Roman Model. Defaults to 'models/indiclid-ftr/model_baseline_roman.bin'.
+            indiclid_bert_path (str, optional): Path to the Indic Bert based Model. Defaults to 'models/indiclid-bert/basline_nn_simple.pt'.
+            input_threshold (float, optional): Threshold for difference between native and roman script. Defaults to 0.5.
+            roman_lid_threshold (float, optional): Threshold for the roman LID model. Defaults to 0.6.
+        """
         # define dictionary for roman and native languages to langauge code
         # define input_threhsold percentage for native and roman script input diversion 
         # define model_threhsold for roman script model
 
         # self.device = torch.device('cuda:1' if torch.cuda.is_available() else 'cpu')
         self.device = torch.device('cpu')
+        """@private"""
 
         self.indiclid_ftn_path = indiclid_ftn_path
+        """@private"""
         self.indiclid_ftr_path = indiclid_ftr_path
+        """@private"""
         self.indiclid_bert_path = indiclid_bert_path
+        """@private"""
 
         self.IndicLID_FTN = fasttext.load_model(self.indiclid_ftn_path)
+        """@private"""
         self.IndicLID_FTR = fasttext.load_model(self.indiclid_ftr_path)
+        """@private"""
         self.IndicLID_BERT = torch.load(self.indiclid_bert_path, map_location = self.device)
+        """@private"""
         self.IndicLID_BERT.eval()
         self.IndicLID_BERT_tokenizer = AutoTokenizer.from_pretrained("ai4bharat/IndicBERTv2-MLM-only", cache_dir=".hf_cache/tokenizer")
+        """@private"""
             
         self.input_threshold = input_threshold
+        """@private"""
         self.model_threshold = roman_lid_threshold
-        self.classes = 47     
+        """@private"""
+        self.classes = 47
+        """@private"""     
         
         self.IndicLID_lang_code_dict = {
             'asm_Latn' : 0,
@@ -136,6 +172,7 @@ class IndicLID():
             'tel_Telu' : 44,
             'urd_Arab' : 45
         }
+        """@private"""
 
 
 
@@ -187,14 +224,29 @@ class IndicLID():
             44 : 'tel_Telu',
             45 : 'urd_Arab'
         }
+        """@private"""
 
-    def pre_process(self, input):
-        # pre-process the input in the same way as we pro-process the training sample
+    def pre_process(self, input:str)->str:
+        """pre_process pre-process the input in the same way as we pro-process the training sample
+
+        Args:
+            input (str): The input text string.
+
+        Returns:
+            str: The output text string.
+        """
         return input
 
 
-    def char_percent_check(self, input):
-        # check whether input has input_threhsold of roman characters
+    def char_percent_check(self, input:str)->float:
+        """char_percent_check Checks whether input has input_threhsold of roman characters
+
+        Args:
+            input (str): The input text string.
+
+        Returns:
+            float: Value indicating the percentage of roman characters.
+        """
         
         # count total number of characters in string
         input_len = len(list(input))
@@ -222,7 +274,16 @@ class IndicLID():
 
 
 
-    def native_inference(self, input_list, output_dict):
+    def native_inference(self, input_list:list, output_dict:dict)->dict:
+        """native_inference Method that performance Indic Native inference on the input list of strings.
+
+        Args:
+            input_list (list): A list of text strings.
+            output_dict (dict): A dictionary containing the input string followed by label, score and model type.
+
+        Returns:
+            dict: A dictionary containing the input string followed by label, score and model type.
+        """
 
         if not input_list:
             return output_dict
@@ -238,8 +299,17 @@ class IndicLID():
 
         return output_dict
 
-    def roman_inference(self, input_list, output_dict, batch_size):
+    def roman_inference(self, input_list:list, output_dict:dict, batch_size:int)->dict:
+        """roman_inference Method that performance Indic Roman inference on the input list of strings.
 
+        Args:
+            input_list (list): A list of text strings.
+            output_dict (dict): A dictionary containing the input string followed by label, score and model type.
+            batch_size (int): Value indicating the number of samples in the input batch during prediction.
+
+        Returns:
+            dict: A dictionary containing the input string followed by label, score and model type.
+        """
         if not input_list:
             return output_dict
         
@@ -261,9 +331,18 @@ class IndicLID():
         return output_dict
 
     
-    def IndicBERT_roman_inference(self, IndicLID_BERT_inputs, output_dict, batch_size):
+    def IndicBERT_roman_inference(self, IndicLID_BERT_inputs:list, output_dict:dict, batch_size:int)->dict:
         # inference for IndicBERT roman script model
+        """IndicBERT_roman_inference Method that performance Indic Roman inference on the input list of strings.
 
+        Args:
+            input_list (list): A list of text strings.
+            output_dict (dict): A dictionary containing the input string followed by label, score and model type.
+            batch_size (int): Value indicating the number of samples in the input batch during prediction.
+
+        Returns:
+            dict: A dictionary containing the input string followed by label, score and model type.
+        """
         if not IndicLID_BERT_inputs:
             return output_dict
         
@@ -299,7 +378,15 @@ class IndicLID():
         return output_dict
 
 
-    def post_process(self, output_dict):
+    def post_process(self, output_dict:dict)->list:
+        """post_process Post-process the outputs from the inference stage.
+
+        Args:
+            output_dict (dict): A dictionary containing the input string followed by label, score and model type.
+
+        Returns:
+            list: The output text string.
+        """
         # output the result in some consistent language code format
         results = []
         keys = list(output_dict.keys())
