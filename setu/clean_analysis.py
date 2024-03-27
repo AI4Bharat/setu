@@ -3,7 +3,7 @@ import subprocess
 from base import SetuComponent,SetuStage
 from lid import LIDStage
 from analysis import AnalysisStage
-from pyspark.sql import DataFrame
+from pyspark.sql import DataFrame,SparkSession
 from utilities import ChunkHandler,str2bool
 from pyspark.sql.functions import (
     udf, 
@@ -40,6 +40,7 @@ from filters import (
 import pyarrow as pa
 import pyarrow.parquet as pq
 import os
+from typing import Callable,Iterable
 
 find_code_spans_udf = udf(
     find_code_spans_spark, 
@@ -326,18 +327,35 @@ class DocCleanStage(SetuStage):
 
     def run_stage_parallelized(
         self,
-        df,
-        additional_cols_to_use,
-        doc_id_col,
-        text_col,   
-        docs_per_partition,
-        use_symbol_filter,
-        save_symbol_heavy_docs,
-        symbol_filter_output_path,
-        cleaned_doc_output_path,
+        df: DataFrame,
+        additional_cols_to_use: list,
+        doc_id_col: str,
+        text_col: str,
+        docs_per_partition: int,
+        use_symbol_filter: bool,
+        save_symbol_heavy_docs: bool,
+        symbol_filter_output_path: str,
+        cleaned_doc_output_path: str,
         verbose: bool = True,
-    ):
+        ) -> None:
+        """
+    run_stage_parallelized Runs a stage in parallelized mode.
 
+    Args:
+        df (Dataframe): The DataFrame containing the data to be processed.
+        additional_cols_to_use (list): List of additional columns to use from the DataFrame.
+        doc_id_col (str): The name of the column containing document IDs.
+        text_col (str): The name of the column containing text data.
+        docs_per_partition (int): Number of documents per partition for processing.
+        use_symbol_filter (bool): Whether to use a symbol filter for processing.
+        save_symbol_heavy_docs (bool): Whether to save symbol-heavy documents.
+        symbol_filter_output_path (str): The output path for symbol filter results.
+        cleaned_doc_output_path (str): The output path for cleaned documents.
+        verbose (bool, optional): Whether to display verbose output. Defaults to True.
+
+    Returns:
+        None
+    """
         df = self.run_preprocessing(
             df=df,
             additional_cols_to_use=additional_cols_to_use,
@@ -364,28 +382,62 @@ class DocCleanStage(SetuStage):
 
     def run_data_parallelized(
         self,
-        spark,
-        df,
-        additional_cols_to_use,
-        doc_id_col,
-        text_col,
-        docs_per_partition,
-        use_symbol_filter,
-        save_symbol_heavy_docs,
-        symbol_filter_output_path,
-        cleaned_doc_output_path,
-        verbose
-    ):
+        spark: SparkSession,
+        df: DataFrame,
+        additional_cols_to_use: list,
+        doc_id_col: str,
+        text_col: str,
+        docs_per_partition: int,
+        use_symbol_filter: bool,
+        save_symbol_heavy_docs: bool,
+        symbol_filter_output_path: str,
+        cleaned_doc_output_path: str,
+        verbose: bool
+    ) -> None:
+        """
+        Run data processing in parallel.
+
+        Args:
+            spark (SparkSession): The Spark session.
+            df (DataFrame): The DataFrame containing the data.
+            additional_cols_to_use (list): List of additional columns to use in processing.
+            doc_id_col (str): The name of the column containing document IDs.
+            text_col (str): The name of the column containing text data.
+            docs_per_partition (int): Number of documents per partition.
+            use_symbol_filter (bool): Flag indicating whether to use a symbol filter.
+            save_symbol_heavy_docs (bool): Flag indicating whether to save symbol-heavy documents.
+            symbol_filter_output_path (str): The output path for symbol filter results.
+            cleaned_doc_output_path (str): The output path for cleaned documents.
+            verbose (bool): Flag indicating whether to display verbose output.
+
+        Returns:
+            None
+        """
 
         def clean_docs(
-            idx,
-            partition, 
-            doc_id_col,
-            text_col,
-            additional_cols_to_use,
-            use_symbol_filter,
-            symbol_filter_output_path,
-        ):
+            idx: int,
+            partition: Iterable, 
+            doc_id_col: str,
+            text_col: str,
+            additional_cols_to_use: list,
+            use_symbol_filter: bool,
+            symbol_filter_output_path: str,
+        ) -> Iterable:
+            """
+            Clean documents in a partition.
+
+            Args:
+                idx (int): Index of the partition.
+                partition (Iterable): The partition to clean, where each element is a tuple representing a row.
+                doc_id_col (str): The name of the column containing document IDs.
+                text_col (str): The name of the column containing text data.
+                additional_cols_to_use (list): List of additional columns to use in processing.
+                use_symbol_filter (bool): Flag indicating whether to use a symbol filter.
+                symbol_filter_output_path (str): The output path for symbol filter results.
+
+            Yields:
+                Iterable: A Iterable representing a cleaned document row.
+            """
 
             print(f"Performing Document Cleaning on partition {idx}......")
 
@@ -549,20 +601,41 @@ class DocCleanStage(SetuStage):
 
     def run_spark(
         self,
-        spark,
-        doc_df_parquets_path,
-        is_doc_df_path_batched,
-        doc_clean_additional_cols_to_use,
-        use_symbol_filter,
-        doc_clean_samples_per_partition,
-        doc_clean_verbose,
-        doc_clean_run_mode,
-        save_symbol_heavy_docs,
-        symbol_filter_output_path,
-        cleaned_doc_output_path,
-        run_local,
+        spark: SparkSession,
+        doc_df_parquets_path: str,
+        is_doc_df_path_batched: bool,
+        doc_clean_additional_cols_to_use: list,
+        use_symbol_filter: bool,
+        doc_clean_samples_per_partition: int,
+        doc_clean_verbose: bool,
+        doc_clean_run_mode: str,
+        save_symbol_heavy_docs: bool,
+        symbol_filter_output_path: str,
+        cleaned_doc_output_path: str,
+        run_local: bool,
         **kwargs
-    ):
+    ) -> None:
+        """
+        Run Spark processing.
+
+        Args:
+            spark (SparkSession): The Spark session.
+            doc_df_parquets_path (str): Path to the parquet files containing document data.
+            is_doc_df_path_batched (bool): Flag indicating whether the document DataFrame path is batched.
+            doc_clean_additional_cols_to_use (list): List of additional columns to use in document cleaning.
+            use_symbol_filter (bool): Flag indicating whether to use a symbol filter.
+            doc_clean_samples_per_partition (int): Number of document samples per partition.
+            doc_clean_verbose (bool): Flag indicating whether to display verbose output during document cleaning.
+            doc_clean_run_mode (str): The run mode for document cleaning.
+            save_symbol_heavy_docs (bool): Flag indicating whether to save symbol-heavy documents.
+            symbol_filter_output_path (str): The output path for symbol filter results.
+            cleaned_doc_output_path (str): The output path for cleaned documents.
+            run_local (bool): Flag indicating whether to run locally.
+            **kwargs: Additional keyword arguments.
+
+        Returns:
+            None
+        """
 
         if is_doc_df_path_batched:
             if not run_local:
@@ -617,22 +690,49 @@ class DocCleanStage(SetuStage):
 
     def run_normal(
         self,
-        doc_df_parquets_path,
-        is_doc_df_path_batched,
-        doc_clean_additional_cols_to_use,
-        use_symbol_filter,
-        doc_clean_samples_per_partition,
-        doc_clean_verbose,
-        doc_clean_run_mode,
-        save_symbol_heavy_docs,
-        symbol_filter_output_path,
-        cleaned_doc_output_path,
-        run_local,
-    ):
+        doc_df_parquets_path: str,
+        is_doc_df_path_batched: bool,
+        doc_clean_additional_cols_to_use: list,
+        use_symbol_filter: bool,
+        doc_clean_samples_per_partition: int,
+        doc_clean_verbose: bool,
+        doc_clean_run_mode: str,
+        save_symbol_heavy_docs: bool,
+        symbol_filter_output_path: str,
+        cleaned_doc_output_path: str,
+        run_local: bool,
+    ) -> None:
+        """
+        run_normal Method which triggers normal execution of the particular stage.
+
+        Args:
+            doc_df_parquets_path (str): Path to the parquet files containing document data.
+            is_doc_df_path_batched (bool): Flag indicating whether the document DataFrame path is batched.
+            doc_clean_additional_cols_to_use (list): List of additional columns to use in document cleaning.
+            use_symbol_filter (bool): Flag indicating whether to use a symbol filter.
+            doc_clean_samples_per_partition (int): Number of document samples per partition.
+            doc_clean_verbose (bool): Flag indicating whether to display verbose output during document cleaning.
+            doc_clean_run_mode (str): The run mode for document cleaning.
+            save_symbol_heavy_docs (bool): Flag indicating whether to save symbol-heavy documents.
+            symbol_filter_output_path (str): The output path for symbol filter results.
+            cleaned_doc_output_path (str): The output path for cleaned documents.
+            run_local (bool): Flag indicating whether to run locally.
+
+        Raises:
+            NotImplementedError: Indicates that the function has not been implemented.
+
+        Returns:
+            None
+        """
         raise NotImplementedError("`run_normal` function has not been implemented for class `DocCleanStage`")
 
 
 class CleanAnalysisComponent(SetuComponent):
+    """CleanAnalysisComponent The SetuComponent Class extension for performing cleaning, language identification and analysis on the extracted text data.
+
+    Args:
+        SetuComponent (class): The SetuComponent to inherit.
+    """
     def __init__(self, config: argparse.Namespace) -> None:
         super().__init__(config)
 
