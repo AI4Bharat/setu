@@ -616,7 +616,7 @@ class DocCleanStage(SetuStage):
         **kwargs
     ) -> None:
         """
-        Run Spark processing.
+        run_spark Run Spark processing.
 
         Args:
             spark (SparkSession): The Spark session.
