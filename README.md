@@ -49,7 +49,8 @@ wget https://dlcdn.apache.org/spark/spark-3.5.1/spark-3.5.1-bin-hadoop3.tgz
 ```
 
 ```bash
-mkdir ~/hadoop/spark-3.3.0
+mkdir hadoop
+mkdir hadoop/spark-3.3.0
 tar -xvzf spark-3.3.0-bin-hadoop3.tgz -C ~/hadoop/spark-3.3.0 --strip 1
 ```
 
