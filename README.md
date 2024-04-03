@@ -50,8 +50,8 @@ wget https://dlcdn.apache.org/spark/spark-3.5.1/spark-3.5.1-bin-hadoop3.tgz
 
 ```bash
 mkdir hadoop
-mkdir hadoop/spark-3.3.0
-tar -xvzf spark-3.3.0-bin-hadoop3.tgz -C ~/hadoop/spark-3.3.0 --strip 1
+mkdir hadoop/spark-3.5.1
+tar -xvzf spark-3.5.1-bin-hadoop3.tgz -C ~/hadoop/spark-3.5.1 --strip 1
 ```
 
 ### Configuration
@@ -59,7 +59,7 @@ tar -xvzf spark-3.3.0-bin-hadoop3.tgz -C ~/hadoop/spark-3.3.0 --strip 1
 - Edit your bashrc file and add the following lines
 
 ```
-export SPARK_HOME= ~/hadoop/spark-3.3.0
+export SPARK_HOME= ~/hadoop/spark-3.5.1
 export PATH=$SPARK_HOME/bin:$PATH
 source ~/.bashrc
 ```
