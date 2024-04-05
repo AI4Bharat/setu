@@ -54,7 +54,6 @@ SETU_DIR=/home/$USER/setu SETU_TMP_DIR=/home/$USER/tmp/ FILTER_DATA_ROOT=/home/$
     --json_glob_path "/home/$USER/setu/examples/sample_data/*.json" \
     --language english \
     --j2p_samples_per_partition 1500 \
-    --j2p_verbose False \
     --j2p_run_mode data \
     --j2p_parquet_output_path /home/$USER/setu/examples/output/j2p_output
 ```
@@ -137,7 +136,6 @@ SETU_DIR=/home/$USER/setu SETU_TMP_DIR=/home/$USER/tmp/ FILTER_DATA_ROOT=/home/$
     --doc_clean_additional_cols_to_use "url,source,language" \
     --use_symbol_filter True \
     --doc_clean_samples_per_partition 1500 \
-    --doc_clean_verbose False \
     --doc_clean_run_mode data \
     --save_symbol_heavy_docs True \
     --symbol_filter_output_path "/home/$USER/setu/examples/output/symbol_filter/" \
@@ -182,7 +180,6 @@ SETU_DIR=/home/$USER/setu SETU_TMP_DIR=/home/$USER/tmp/ FILTER_DATA_ROOT=/home/$
     --is_lid_df_path_batched False \
     --lid_additional_cols "url,source,language" \
     --lid_samples_per_partition 1500 \
-    --lid_verbose False \
     --lid_run_mode data \
     --doc_lid_output_path "/home/$USER/setu/examples/output/lid/"
 ```
@@ -225,7 +222,6 @@ SETU_DIR=/home/$USER/setu SETU_TMP_DIR=/home/$USER/tmp/ FILTER_DATA_ROOT=/home/$
     --is_analysis_df_path_batched False \
     --analysis_additional_cols_to_use "url,source,language,doc_lang,doc_lang_iso" \
     --analysis_samples_per_partition 1500 \
-    --analysis_verbose False \
     --analysis_run_mode stage \
     --line_stats_output_path "/home/$USER/setu/examples/output/line_stats/" \
     --doc_stats_output_path "/home/$USER/setu/examples/output/doc_stats/" \
@@ -268,7 +264,6 @@ SETU_DIR=/home/$USER/setu SETU_TMP_DIR=/home/$USER/tmp/ FILTER_DATA_ROOT=/home/$
     --doc_stats_parquets_path "/home/$USER/setu/examples/output/doc_stats/*/*.parquet" \
     --is_doc_stats_path_batched False \
     --fnf_samples_per_partition 1500 \
-    --fnf_verbose False \
     --fnf_run_mode stage \
     --save_nsfw_data True \
     --nsfw_output_path "/home/$USER/setu/examples/output/nsfw/" \
@@ -312,7 +307,6 @@ SETU_DIR=/home/$USER/setu SETU_TMP_DIR=/home/$USER/tmp/ FILTER_DATA_ROOT=/home/$
     --doc_stats_path "/home/$USER/examples/output/doc_stats/*/*.parquet" \
     --doc_removal_join_col "doc_id" \
     --doc_removal_samples_per_partition 1500 \
-    --doc_removal_verbose False \
     --doc_removal_run_mode stage \
     --filtered_docs_path "/home/$USER/examples/output/filtered_doc_stats/"
 ```
