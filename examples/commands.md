@@ -12,6 +12,8 @@ Once you start the master session you can copy the session URL by viewing the de
 $SPARK_HOME/sbin/start-worker.sh $SPARK_MASTER_URL
 ```
 
+Before running the commands make sure you run the prepare_for_spark.sh file to create the archive for dataproc.
+
 # Stage Wise Commands
 
 Before running the commands make see to that you are in the setu/setu directory and ensure that all data paths and arguments are set accordingly.
