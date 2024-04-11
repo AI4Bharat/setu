@@ -8,6 +8,7 @@ from pyspark.sql.types import (
     StructField,
     BooleanType
 )
+import pandas as pd
 from pyspark.sql.functions import lit, rand, col
 import glob
 import json
@@ -242,7 +243,35 @@ class JSON2ParquetStage(SetuStage):
         df = self.salting(df, self.n_splits)
         df.write.mode("overwrite") \
             .parquet(output_path)
-        
+
+    def convert_crawl_normal(self,json_list:str,output_path:str,lang:str,**kwargs):
+        """convert_crawl_normal Method that converts the crawl jsons to parquets.
+
+        Args:
+            json_list (str): The input jsons path.
+            output_path (str): The output path to save the parquets.
+            lang (str): The language for the input data.
+        """
+        dfs = []
+        for json_file in glob.glob(json_list):
+            with open(json_file, "r") as jf:
+                content = json.load(jf)
+                out = [
+                content["doc_id"],
+                content["url"],
+                content["source"],
+                lang,
+                content.get("html", content.get("text", "")),  
+                content["timestamp"]
+            ]
+            
+            df = pd.DataFrame([out], columns=["doc_id", "url", "source", "lang", "content", "timestamp"])
+            
+            dfs.append(df)
+
+        combined_df = pd.concat(dfs, ignore_index=True)
+        combined_df.to_parquet(f"{output_path}/output.parquet")
+
     def convert_ocr_output(
             self,
             spark:SparkSession,
@@ -440,9 +469,11 @@ class JSON2ParquetStage(SetuStage):
         j2p_parquet_output_path:str,
         run_local:bool,
         j2p_bucket:str,
-        j2p_bucket_prefix:str
+        j2p_bucket_prefix:str,
+        **kwargs
     ):
-        raise NotImplementedError("`run_normal` function has not been implemented for class `JSON2Parquet`")
+        return self.convert_crawl_normal(json_glob_path,j2p_parquet_output_path,language)
+        # raise NotImplementedError("`run_normal` function has not been implemented for class `JSON2Parquet`")
 
 
 class ExtractTextStage(SetuStage):

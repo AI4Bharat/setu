@@ -24,7 +24,8 @@ class SetuStage(ABC):
             except ImportError as e:
                 print(f"PySpark not present. Falling back to normal execution for {self.__class__.__name__}")
                 self.spark_present = False
-        
+        else :
+            self.spark_present = False
         self.df_total_rows = None
         """Total number of rows in the given Dataframe Object."""
     
