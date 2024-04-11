@@ -1,5 +1,5 @@
 {
-  "use_spark": true,
+  "use_spark": false,
   "appname": "Sangraha Anaylsis",
   "symbol_threshold": 0.2,
   "filter_data_root": "/home/shanks/setu-refactor/setu/data/",
