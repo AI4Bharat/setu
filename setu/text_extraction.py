@@ -265,7 +265,7 @@ class JSON2ParquetStage(SetuStage):
                 content["timestamp"]
             ]
             
-            df = pd.DataFrame([out], columns=["doc_id", "url", "source", "lang", "content", "timestamp"])
+            df = pd.DataFrame([out], columns=["doc_id", "url", "source", "language", "text", "timestamp"])
             
             dfs.append(df)
 
