@@ -44,7 +44,6 @@ if __name__ == "__main__":
                 .appName(setu.config.appname) \
                 .getOrCreate()
     
-    spark.conf.set("spark.sql.parquet.compression.codec", "gzip")
     
     try:
         if args.stage not in list(Setu.get_stage_component_mapping().keys()):

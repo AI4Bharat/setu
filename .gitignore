@@ -175,3 +175,4 @@ examples/my_commands.md
 examples/output
 e2e_download.py
 snippets.txt
+shutdown_spark.sh

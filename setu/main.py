@@ -8,6 +8,7 @@ from typing import Callable
 from text_extraction import TextExtractionComponent
 from clean_analysis import CleanAnalysisComponent
 from flagging_and_removal import FlagAndRemoveComponent
+from ocr_processing import OCRProcessingComponent
 from pyspark.sql import SparkSession
 
 class Setu():
@@ -37,11 +38,13 @@ class Setu():
         """The CleanAnalysis Component of the pipeline."""
         self.fr_component = FlagAndRemoveComponent(self.config)
         """The FlagAndRemove Component of the pipeline"""
+        self.ocr_component = OCRProcessingComponent(self.config)
 
         self.components = {
             self.te_component.name : self.te_component,
             self.ca_component.name: self.ca_component,
             self.fr_component.name: self.fr_component,
+            self.ocr_component.name: self.ocr_component
         }
         """The dictionary mapping of the different components and their names."""
 
@@ -90,11 +93,12 @@ class Setu():
         stage_parser = TextExtractionComponent.add_cmdline_args(stage_parser)
         stage_parser = CleanAnalysisComponent.add_cmdline_args(stage_parser)
         stage_parser = FlagAndRemoveComponent.add_cmdline_args(stage_parser)
-
+        stage_parser = OCRProcessingComponent.add_cmdline_args(stage_parser)
         stage_parser = stage_parser.add_parser(cls.get_pipeline_name(), help=f'Run complete end-to-end {cls.get_pipeline_name()}')
         stage_parser = TextExtractionComponent.add_cmdline_args(stage_parser,for_full_pipeline=True)
         stage_parser = CleanAnalysisComponent.add_cmdline_args(stage_parser,for_full_pipeline=True)
         stage_parser = FlagAndRemoveComponent.add_cmdline_args(stage_parser,for_full_pipeline=True)
+        stage_parser = OCRProcessingComponent.add_cmdline_args(stage_parser,for_full_pipeline=True)
         args = parser.parse_args()
         
         return args
@@ -121,7 +125,8 @@ class Setu():
         for component in [
             TextExtractionComponent,
             CleanAnalysisComponent,
-            FlagAndRemoveComponent
+            FlagAndRemoveComponent,
+            OCRProcessingComponent
         ]:
             stage_component_map = stage_component_map | component.get_stage_mapping()
 
@@ -173,7 +178,7 @@ class Setu():
             Callable: Returns the run_component function of the particular component
         """
         if component == self.name:
-            for subcomponent in ["TextExtractionComponent","CleanAnalysisComponent","FlagAndRemoveComponent"]:
+            for subcomponent in ["TextExtractionComponent","CleanAnalysisComponent","FlagAndRemoveComponent","OCRProcessingComponent"]:
                 self.run_component(spark=spark, component=subcomponent, **kwargs)
         else:
             return self.run_component(spark=spark, component=component, **kwargs)
