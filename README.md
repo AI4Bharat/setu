@@ -2,7 +2,7 @@
 
 <img src="setu.png" alt="image" width="700" height="auto">
 
-Setu is a comprehensive pipeline designed to clean, filter, and deduplicate diverse data sources including Web, PDF, and Speech data. Built on Apache Spark, Setu encompasses four key stages: document preparation, document cleaning and analysis, flagging and filtering, and deduplication.
+Setu is a comprehensive pipeline designed to clean, filter, and deduplicate diverse data sources including Web, PDF, and Speech data. Built on Apache Spark, Setu encompasses four key stages: document preparation, document cleaning and analysis, flagging and filtering, and deduplication. For detailed codebase documentation visit [Setu Documentation](https://ai4bharat.github.io/setu/setu.html)
 
 # Table of Contents
 
