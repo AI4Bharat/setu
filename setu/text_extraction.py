@@ -638,7 +638,48 @@ class ExtractTextStage(SetuStage):
         df = self.salting(df, self.n_splits)
         df.write.mode("overwrite") \
             .parquet(output_path)
-        
+
+    def extract_text_trafilatura_normal(
+        self,
+        df:DataFrame,
+        output_path:str,
+        **kwargs
+    ):
+        traf_cols = [
+            "title", "description", "text", "comments", "author",
+            "hostname", "sitename", "date", "categories", "tags",
+            "fingerprint", "id", "license", "body", "commentsbody",
+            "raw_text", "image", "pagetype"
+        ]
+        results = []
+        for idx, row in df.iterrows():
+            out = [row["doc_id"], row["url"], row["source"], row["timestamp"], row["language"]]
+            print(f"Performing extraction on: {row['url']}")
+            try:
+                if bool(BeautifulSoup(row["text"], "html.parser").find()):
+                    res = trafilatura.bare_extraction(row['text'], include_images=False)
+                else:
+                    res = None
+            except Exception as e:
+                print(f"Encountered error for URL: {row['url']}. Error: {e}")
+                res = None
+
+            if res:
+                print("Extraction complete. Now, appending values.")
+                out.append(True)
+                for col in traf_cols:
+                    out.append(res.get(col, None))
+            else:
+                print(f"No text extracted from: {row['url']}")
+                out.append(False)
+                out.extend([None] * len(traf_cols))
+
+            results.append(out)
+
+        result_df = pd.DataFrame(results, columns=["doc_id", "url", "source", "timestamp", "language", "successful_extraction"] + traf_cols)
+    
+        result_df.to_parquet(f"{output_path}/output.parquet")
+                
     def run_spark(
         self,
         spark:SparkSession,
@@ -696,9 +737,12 @@ class ExtractTextStage(SetuStage):
         te_samples_per_partition:int,
         te_run_mode:str,
         te_output_path:str,
-        run_local:bool
+        run_local:bool,
+        **kwargs
     ):
-        raise NotImplementedError("`run_normal` function has not been implemented for class `TextExtractionStage`")
+        df = pd.concat([pd.read_parquet(file) for file in glob.glob(te_parquets_path)], ignore_index=True)
+        self.extract_text_trafilatura_normal(df,te_output_path)
+        # raise NotImplementedError("`run_normal` function has not been implemented for class `TextExtractionStage`")
 
 class TextExtractionComponent(SetuComponent):
     """TextExtractionComponent The SetuComponent Class extension for converting jsons to parquet files and extracting the text from them.
