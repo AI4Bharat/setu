@@ -12,6 +12,9 @@ from pyspark.sql.functions import (
     spark_partition_id,
     count
 )
+import numpy as np
+import pandas as pd
+import glob
 from pyspark.sql.types import (
     BooleanType,
     IntegerType, 
@@ -599,6 +602,191 @@ class DocCleanStage(SetuStage):
 
         print(f"Completed `doc_clean` level `cleaned_doc_df` parquet write.... to: {cleaned_doc_output_path}")
 
+
+    def run_preprocessing_normal(
+        self,
+        df: pd.DataFrame,
+        additional_cols_to_use: list,
+        doc_id_col: str,
+        text_col: str,
+        docs_per_partition: int
+    ) -> pd.DataFrame:
+        """
+        Method to run preprocessing on the given DataFrame.
+
+        Args:
+            df (pd.DataFrame): The input DataFrame.
+            additional_cols_to_use (list): Additional columns to use while preprocessing.
+            doc_id_col (str): The column name for the document identifier.
+            text_col (str): The column name for the text content.
+            docs_per_partition (int): The number of documents per partition.
+
+        Returns:
+            pd.DataFrame: The preprocessed DataFrame.
+        """
+        if "successful_extraction" in additional_cols_to_use and "successful_extraction" in df.columns:
+            df = df[df["successful_extraction"] == True]
+
+        df = df.drop_duplicates(subset=[doc_id_col]) \
+            .loc[:, [doc_id_col, text_col] + additional_cols_to_use]
+
+        print(f"Count after filtering for extraction: {len(df)}")
+
+        df = df.dropna(subset=[text_col])
+
+        self.df_total_rows = len(df)
+
+        print(f"Count after filtering for 'None' values in '{text_col}' column: {self.df_total_rows}")
+
+        return df
+
+    def clean_docs_normal(
+        self,
+        df: DataFrame,
+        additional_cols_to_use: list,
+        doc_id_col: str,
+        text_col: str,
+        docs_per_partition: int,
+        use_symbol_filter: bool,
+        save_symbol_heavy_docs: bool,
+        symbol_filter_output_path: str,
+        cleaned_doc_output_path: str,
+        verbose: bool
+    ) -> None:
+        """
+        Run data processing in parallel.
+
+        Args:
+            df (DataFrame): The DataFrame containing the data.
+            additional_cols_to_use (list): List of additional columns to use in processing.
+            doc_id_col (str): The name of the column containing document IDs.
+            text_col (str): The name of the column containing text data.
+            docs_per_partition (int): Number of documents per partition.
+            use_symbol_filter (bool): Flag indicating whether to use a symbol filter.
+            save_symbol_heavy_docs (bool): Flag indicating whether to save symbol-heavy documents.
+            symbol_filter_output_path (str): The output path for symbol filter results.
+            cleaned_doc_output_path (str): The output path for cleaned documents.
+            verbose (bool): Flag indicating whether to display verbose output.
+
+        Returns:
+            None
+        """
+        def clean_docs_partition(partition):
+            """
+            Clean documents in a partition.
+
+            Args:
+                partition (pd.DataFrame): The partition to clean.
+
+            Returns:
+                pd.DataFrame: A DataFrame representing cleaned documents.
+            """
+
+            symbol_heavy_out = {
+                "doc_id": [],
+                "text": [],
+                **{col: [] for col in additional_cols_to_use},
+                "code_spans": [],
+                "uncleaned_chars_count": [],
+                "uncleaned_words_count": [],
+                "uncleaned_bytes": [],
+                "symbol_ratio": [],
+                "invalid_char_count": [],
+                "uncleaned_text": []
+            }
+
+            for _, row in partition.iterrows():
+                code_spans = find_code_spans(row[doc_id_col], row[text_col])
+                text = row[text_col]
+
+                if "remove_code" in self.config and self.config.remove_code:
+                    text = remove_code(text, code_spans)
+
+                if not len(text):
+                    continue
+
+                uncleaned_chars_count = get_char_count(text)
+                uncleaned_words_count = get_word_count(text)
+                uncleaned_bytes = get_bytes(text)
+
+                symbol_ratio, invalid_char_count = get_symbol_ratio(text, uncleaned_chars_count)
+
+                if use_symbol_filter and symbol_ratio >= self.config.symbol_threshold:
+                    symbol_heavy_out["doc_id"].append(row[doc_id_col])
+                    symbol_heavy_out["text"].append(None)
+                    for col in additional_cols_to_use:
+                        symbol_heavy_out[col].append(row[col])
+                    symbol_heavy_out["code_spans"].append(code_spans)
+                    symbol_heavy_out["uncleaned_chars_count"].append(uncleaned_chars_count)
+                    symbol_heavy_out["uncleaned_words_count"].append(uncleaned_words_count)
+                    symbol_heavy_out["uncleaned_bytes"].append(uncleaned_bytes)
+                    symbol_heavy_out["symbol_ratio"].append(symbol_ratio)
+                    symbol_heavy_out["invalid_char_count"].append(invalid_char_count)
+                    symbol_heavy_out["uncleaned_text"].append(row[text_col])
+                else:
+                    cleaned_text = ""
+                    for chunk in text.split("\n"):
+                        is_num_or_punc_valid = True
+                        if "remove_only_num_or_punc_chunks" in self.config and self.config.remove_only_num_or_punc_chunks:
+                            if is_num_or_punc_only(chunk):
+                                is_num_or_punc_valid = False
+
+                        is_chunk_terminal_valid = True
+                        if "remove_terminal_invalid" in self.config and self.config.remove_terminal_invalid:
+                            if not is_terminal_valid(chunk):
+                                is_chunk_terminal_valid = False
+
+                        is_chunk_long_enough = True
+                        if "chunk_length_filter" in self.config and self.config.chunk_length_filter:
+                            if get_word_count(chunk) <= 1:
+                                is_chunk_long_enough = False
+
+                        if is_num_or_punc_valid and is_chunk_terminal_valid and is_chunk_long_enough:
+                            cleaned_text += chunk + "\n"
+
+                    if not len(cleaned_text):
+                        cleaned_text = None
+
+
+                    symbol_heavy_out["doc_id"].append(row[doc_id_col])
+                    symbol_heavy_out["text"].append(cleaned_text)
+                    for col in additional_cols_to_use:
+                        symbol_heavy_out[col].append(row[col])
+                    symbol_heavy_out["code_spans"].append(code_spans)
+                    symbol_heavy_out["uncleaned_chars_count"].append(uncleaned_chars_count)
+                    symbol_heavy_out["uncleaned_words_count"].append(uncleaned_words_count)
+                    symbol_heavy_out["uncleaned_bytes"].append(uncleaned_bytes)
+                    symbol_heavy_out["symbol_ratio"].append(symbol_ratio)
+                    symbol_heavy_out["invalid_char_count"].append(invalid_char_count)
+                    symbol_heavy_out["uncleaned_text"].append(row[text_col])
+
+            return pd.DataFrame(symbol_heavy_out)
+        
+        df = self.run_preprocessing_normal(
+            df=df,
+            additional_cols_to_use=additional_cols_to_use,
+            doc_id_col=doc_id_col,
+            text_col=text_col,
+            docs_per_partition=docs_per_partition
+        )
+        # Applying cleaning function to each partition
+        cleaned_doc_df = clean_docs_partition(df)
+
+
+        if "repeated_chunk_filter" in self.config and self.config.repeated_chunk_filter:
+            spans_df = self.chunk_handler.doc2lines(cleaned_doc_df, text_col, "\n")
+            filtered_chunks = spans_df.groupby(["url", text_col]).size().reset_index(name="repetition_count")
+            spans_df = spans_df.merge(filtered_chunks[filtered_chunks["repetition_count"] == 1][["url", text_col]], on=["url", text_col], how="inner")
+            doc_df = self.chunk_handler.lines2doc(spans_df, text_col, doc_id_col, "pos", '\n')
+            cleaned_doc_df = cleaned_doc_df.drop(columns=[text_col]).merge(doc_df, on=[doc_id_col], how="left")
+
+        os.makedirs(cleaned_doc_output_path, exist_ok=True)
+
+        # Saving cleaned DataFrame to parquet
+        cleaned_doc_df.to_parquet(f"{cleaned_doc_output_path}/output.parquet", index=False, compression="snappy")
+
+        print(f"Completed 'doc_clean' level 'cleaned_doc_df' parquet write to: {cleaned_doc_output_path}/output.parquet")
+
     def run_spark(
         self,
         spark: SparkSession,
@@ -724,7 +912,19 @@ class DocCleanStage(SetuStage):
         Returns:
             None
         """
-        raise NotImplementedError("`run_normal` function has not been implemented for class `DocCleanStage`")
+        doc_df = pd.concat([pd.read_parquet(file) for file in glob.glob(doc_df_parquets_path)], ignore_index=True)
+        self.clean_docs_normal(               
+                df=doc_df,
+                additional_cols_to_use=doc_clean_additional_cols_to_use,
+                doc_id_col="doc_id",
+                text_col="text",
+                docs_per_partition=doc_clean_samples_per_partition,
+                use_symbol_filter=use_symbol_filter,
+                save_symbol_heavy_docs=save_symbol_heavy_docs,
+                symbol_filter_output_path=symbol_filter_output_path,
+                cleaned_doc_output_path=cleaned_doc_output_path,
+                verbose=doc_clean_verbose,)
+        # raise NotImplementedError("`run_normal` function has not been implemented for class `DocCleanStage`")
 
 
 class CleanAnalysisComponent(SetuComponent):
