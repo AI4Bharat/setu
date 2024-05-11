@@ -59,7 +59,6 @@
                     <li><a href="setu/flagging_and_removal.html">flagging_and_removal</a></li>
                     <li><a href="setu/lid.html">lid</a></li>
                     <li><a href="setu/main.html">main</a></li>
-                    <li><a href="setu/ocr_processing.html">ocr_processing</a></li>
                     <li><a href="setu/run.html">run</a></li>
                     <li><a href="setu/text_extraction.html">text_extraction</a></li>
                     <li><a href="setu/utilities.html">utilities</a></li>
@@ -83,7 +82,7 @@ setu    </h1>
 
 <p><img src="setu.png" alt="image" width="700" height="auto"></p>
 
-<p>Setu is a comprehensive pipeline designed to clean, filter, and deduplicate diverse data sources including Web, PDF, and Speech data. Built on Apache Spark, Setu encompasses four key stages: document preparation, document cleaning and analysis, flagging and filtering, and deduplication.</p>
+<p>Setu is a comprehensive pipeline designed to clean, filter, and deduplicate diverse data sources including Web, PDF, and Speech data. Built on Apache Spark, Setu encompasses four key stages: document preparation, document cleaning and analysis, flagging and filtering, and deduplication. For detailed codebase documentation visit <a href="https://ai4bharat.github.io/setu/setu.html">Setu Documentation</a></p>
 
 <h1 id="table-of-contents">Table of Contents</h1>
 
@@ -140,8 +139,9 @@ java<span class="w"> </span>--version
 </div>
 
 <div class="pdoc-code codehilite">
-<pre><span></span><code>mkdir<span class="w"> </span>~/hadoop/spark-3.3.0
-tar<span class="w"> </span>-xvzf<span class="w"> </span>spark-3.3.0-bin-hadoop3.tgz<span class="w"> </span>-C<span class="w"> </span>~/hadoop/spark-3.3.0<span class="w"> </span>--strip<span class="w"> </span><span class="m">1</span>
+<pre><span></span><code>mkdir<span class="w"> </span>hadoop
+mkdir<span class="w"> </span>hadoop/spark-3.5.1
+tar<span class="w"> </span>-xvzf<span class="w"> </span>spark-3.5.1-bin-hadoop3.tgz<span class="w"> </span>-C<span class="w"> </span>~/hadoop/spark-3.5.1<span class="w"> </span>--strip<span class="w"> </span><span class="m">1</span>
 </code></pre>
 </div>
 
@@ -151,7 +151,7 @@ tar<span class="w"> </span>-xvzf<span class="w"> </span>spark-3.3.0-bin-hadoop3.
 <li>Edit your bashrc file and add the following lines</li>
 </ul>
 
-<pre><code>export SPARK_HOME= ~/hadoop/spark-3.3.0
+<pre><code>export SPARK_HOME= ~/hadoop/spark-3.5.1
 export PATH=$SPARK_HOME/bin:$PATH
 source ~/.bashrc
 </code></pre>
@@ -250,6 +250,8 @@ spark.driver.host   localhost
 </code></pre>
 </div>
 
+<p>Before running the commands make sure you run the prepare_for_spark.sh file to create the archive for dataproc.</p>
+
 <h1 id="stage-wise-commands">Stage Wise Commands</h1>
 
 <p>Before running the commands make see to that you are in the setu/setu directory and ensure that all data paths and arguments are set accordingly.</p>
@@ -290,7 +292,6 @@ spark.driver.host   localhost
 <span class="w">    </span>--json_glob_path<span class="w"> </span><span class="s2">&quot;/home/</span><span class="nv">$USER</span><span class="s2">/setu/examples/sample_data/*.json&quot;</span><span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--language<span class="w"> </span>english<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--j2p_samples_per_partition<span class="w"> </span><span class="m">1500</span><span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>--j2p_verbose<span class="w"> </span>False<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--j2p_run_mode<span class="w"> </span>data<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--j2p_parquet_output_path<span class="w"> </span>/home/<span class="nv">$USER</span>/setu/examples/output/j2p_output
 </code></pre>
@@ -374,7 +375,6 @@ spark.driver.host   localhost
 <span class="w">    </span>--doc_clean_additional_cols_to_use<span class="w"> </span><span class="s2">&quot;url,source,language&quot;</span><span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--use_symbol_filter<span class="w"> </span>True<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--doc_clean_samples_per_partition<span class="w"> </span><span class="m">1500</span><span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>--doc_clean_verbose<span class="w"> </span>False<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--doc_clean_run_mode<span class="w"> </span>data<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--save_symbol_heavy_docs<span class="w"> </span>True<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--symbol_filter_output_path<span class="w"> </span><span class="s2">&quot;/home/</span><span class="nv">$USER</span><span class="s2">/setu/examples/output/symbol_filter/&quot;</span><span class="w"> </span><span class="se">\</span>
@@ -419,7 +419,6 @@ spark.driver.host   localhost
 <span class="w">    </span>--is_lid_df_path_batched<span class="w"> </span>False<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--lid_additional_cols<span class="w"> </span><span class="s2">&quot;url,source,language&quot;</span><span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--lid_samples_per_partition<span class="w"> </span><span class="m">1500</span><span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>--lid_verbose<span class="w"> </span>False<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--lid_run_mode<span class="w"> </span>data<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--doc_lid_output_path<span class="w"> </span><span class="s2">&quot;/home/</span><span class="nv">$USER</span><span class="s2">/setu/examples/output/lid/&quot;</span>
 </code></pre>
@@ -462,7 +461,6 @@ spark.driver.host   localhost
 <span class="w">    </span>--is_analysis_df_path_batched<span class="w"> </span>False<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--analysis_additional_cols_to_use<span class="w"> </span><span class="s2">&quot;url,source,language,doc_lang,doc_lang_iso&quot;</span><span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--analysis_samples_per_partition<span class="w"> </span><span class="m">1500</span><span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>--analysis_verbose<span class="w"> </span>False<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--analysis_run_mode<span class="w"> </span>stage<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--line_stats_output_path<span class="w"> </span><span class="s2">&quot;/home/</span><span class="nv">$USER</span><span class="s2">/setu/examples/output/line_stats/&quot;</span><span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--doc_stats_output_path<span class="w"> </span><span class="s2">&quot;/home/</span><span class="nv">$USER</span><span class="s2">/setu/examples/output/doc_stats/&quot;</span><span class="w"> </span><span class="se">\</span>
@@ -506,7 +504,6 @@ spark.driver.host   localhost
 <span class="w">    </span>--doc_stats_parquets_path<span class="w"> </span><span class="s2">&quot;/home/</span><span class="nv">$USER</span><span class="s2">/setu/examples/output/doc_stats/*/*.parquet&quot;</span><span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--is_doc_stats_path_batched<span class="w"> </span>False<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--fnf_samples_per_partition<span class="w"> </span><span class="m">1500</span><span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>--fnf_verbose<span class="w"> </span>False<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--fnf_run_mode<span class="w"> </span>stage<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--save_nsfw_data<span class="w"> </span>True<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--nsfw_output_path<span class="w"> </span><span class="s2">&quot;/home/</span><span class="nv">$USER</span><span class="s2">/setu/examples/output/nsfw/&quot;</span><span class="w"> </span><span class="se">\</span>
@@ -551,7 +548,6 @@ spark.driver.host   localhost
 <span class="w">    </span>--doc_stats_path<span class="w"> </span><span class="s2">&quot;/home/</span><span class="nv">$USER</span><span class="s2">/examples/output/doc_stats/*/*.parquet&quot;</span><span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--doc_removal_join_col<span class="w"> </span><span class="s2">&quot;doc_id&quot;</span><span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--doc_removal_samples_per_partition<span class="w"> </span><span class="m">1500</span><span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>--doc_removal_verbose<span class="w"> </span>False<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--doc_removal_run_mode<span class="w"> </span>stage<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--filtered_docs_path<span class="w"> </span><span class="s2">&quot;/home/</span><span class="nv">$USER</span><span class="s2">/examples/output/filtered_doc_stats/&quot;</span>
 </code></pre>
